@@ -15,7 +15,7 @@ namespace acceleration_partials
 
 
 //! Function to compute partial of TVGP w.r.t. position of body undergoing acceleration
-Eigen::Matrix3d computePartialOfTVGPWrtPosition(
+void computePartialOfTVGPWrtPosition(
         const Eigen::Vector6d& currentRelativeState,
         Eigen::Matrix3d& partialMatrix,
         const double gravitationalParameter,
