@@ -9,7 +9,6 @@ namespace acceleration_partials
 {
 
 
-
 //! Function to compute partial of TVGP w.r.t. position of body undergoing acceleration
 void computePartialOfTVGPWrtPosition(
         const Eigen::Vector6d& currentRelativeState,
@@ -27,6 +26,7 @@ void computePartialOfTVGPWrtPosition(
             * -2.0
             * position * position.transpose()
             / (distance*distance*distance*distance);
+
 }
 
 
@@ -34,7 +34,6 @@ void computePartialOfTVGPWrtPosition(
 void computePartialOfTVGPWrtGravitationalParameter(
         const Eigen::Vector6d& currentRelativeState,
         Eigen::MatrixXd& partialMatrix,
-        const double gravitationalParameter,
         const double timeVaryingGravitationalParameter,
         const double currentTime )
 {
@@ -52,7 +51,6 @@ void computePartialOfTVGPWrtTimeVaryingGravitationalParameter(
         const Eigen::Vector6d& currentRelativeState,
         Eigen::MatrixXd& partialMatrix,
         const double gravitationalParameter,
-        const double timeVaryingGravitationalParameter,
         const double currentTime )
 {
     Eigen::Array3d position = currentRelativeState.segment( 0, 3 );
@@ -62,8 +60,6 @@ void computePartialOfTVGPWrtTimeVaryingGravitationalParameter(
             * position
             * positionCubed;
 }
-
-
 
 
 
@@ -88,6 +84,7 @@ TimeVaryingGravitationalParameterPartial::getParameterPartialFunction(
         case estimatable_parameters::time_varying_gravitational_parameter:
             partialFunction = std::bind( &TimeVaryingGravitationalParameterPartial::wrtTimeVaryingGravitationalParameter, this, std::placeholders::_1);
             numberOfRows = 1;
+            break;
         default:
             break;
         }
@@ -97,23 +94,29 @@ TimeVaryingGravitationalParameterPartial::getParameterPartialFunction(
     return std::make_pair( partialFunction, numberOfRows );
 }
 
-//! Function for updating partial w.r.t. the bodies' states
-void TimeVaryingGravitationalParameterPartial::update( const double currentTime )
-{
-    if( !( currentTime_ == currentTime ) )
-    {
-        currentRelativeState_ = ( acceleratedBodyState_( ) - centralBodyState_( ) );
-        currentAcceleration_ = currentAccelerationFunction_( );
 
-        computePartialOfTVGPWrtPosition(
-                    currentRelativeState_, currentPartialWrtPosition_,
-                    centralBodyGravitationalParameterFunction_( ),
-                    timeVaryingGravitationalParameterFunction_( ),
-                    currentTime_);
 
-        currentTime_ = currentTime;
-    }
-}
+// verplaatst naar update() in .h file
+
+// //! Function for updating partial w.r.t. the bodies' states
+//void TimeVaryingGravitationalParameterPartial::update( const double currentTime ) // 13/mar: Hier gaat het nu mis, functies toevoegen in constructor?
+//{
+//    if( !( currentTime_ == currentTime ) )
+//    {
+//        currentRelativeState_ = ( acceleratedBodyState_( ) - centralBodyState_( ) );
+// //        currentAcceleration_ = currentAccelerationFunction_( );
+
+//        currentTime_ = currentTime;
+
+//        computePartialOfTVGPWrtPosition(
+//                    currentRelativeState_,
+//                    currentPartialWrtPosition_,
+//                    centralBodyGravitationalParameterFunction_( ),
+//                    timeVaryingGravitationalParameterFunction_( ),
+//                    currentTime_);
+
+//    }
+//}
 
 }
 
