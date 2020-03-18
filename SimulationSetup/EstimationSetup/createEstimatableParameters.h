@@ -617,13 +617,15 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
         }
         case time_varying_gravitational_parameter:
         {
-            std::shared_ptr< gravitation::TVGPModel > tvgpModel;
-            tvgpModel = currentBody->getTVGPModel( );
+            doubleParameterToEstimate = std::make_shared< TimeVaryingGravitationalParameter >( relativity::ppnParameterSet );
 
-            doubleParameterToEstimate =
-                    std::make_shared< TimeVaryingGravitationalParameter > ( tvgpModel, currentBodyName );
             break;
 
+//            std::shared_ptr< gravitation::TVGPModel > tvgpModel;
+//            tvgpModel = currentBody->getTVGPModel( );
+//            doubleParameterToEstimate =
+//                    std::make_shared< TimeVaryingGravitationalParameter > ( tvgpModel, currentBodyName );
+//            break;
 //            std::shared_ptr< GravityFieldModel > gravityFieldModel = currentBody->getGravityFieldModel( );
 //            doubleParameterToEstimate = std::make_shared< GravitationalParameter >
 //                    ( gravityFieldModel, currentBodyName );

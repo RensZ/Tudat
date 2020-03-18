@@ -67,6 +67,12 @@ public:
         return parameterBeta_;
     }
 
+    //! Function to retrieve value of TVGP.
+    double getTimeVaryingGravitationalParameter( )
+    {
+        return timeVaryingGravitationalParameter_;
+    }
+
     //! Function to reset value of PPN parameter gamma.
     /*!
      * Function to reset value of PPN parameter gamma.
@@ -87,6 +93,12 @@ public:
         parameterBeta_ = parameterBeta;
     }
 
+    //! Function to reset value of TVGP.
+    void setTimeVaryingGravitationalParameter( const double timeVaryingGravitationalParameter )
+    {
+        timeVaryingGravitationalParameter_ = timeVaryingGravitationalParameter;
+    }
+
 protected:
 
     //! Value of PPN parameter gamma.
@@ -95,6 +107,9 @@ protected:
     //! Value of PPN parameter beta.
     double parameterBeta_;
 
+    //! Value of PPN parameter beta.
+    double timeVaryingGravitationalParameter_;
+
 };
 
 //! Global PPN parameter set, initialized upon compilation (with values equal to GR).
@@ -102,6 +117,9 @@ extern std::shared_ptr< PPNParameterSet > ppnParameterSet;
 
 //! Global parameter denoting EP violation in proper time rate, initialized to GR value of 0 upon compilation.
 extern double equivalencePrincipleLpiViolationParameter;
+
+//! Global parameter denoting time varying gravitational parameter, initialized as zero.
+extern double timeVaryingGravitationalParameter;
 
 }
 

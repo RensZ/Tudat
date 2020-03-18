@@ -877,6 +877,8 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
         const std::string& nameOfBodyExertingAcceleration,
         const std::shared_ptr< AccelerationSettings > accelerationSettings)
 {
+    using namespace relativity;
+
     // Declare pointer to return object
     std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > accelerationModel;
 
@@ -906,14 +908,20 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
         centralBodyGravitationalParameterFunction =
                 std::bind( &GravityFieldModel::getGravitationalParameter, bodyExertingAcceleration->getGravityFieldModel( ) );
 
-        std::function< double( ) >  timeVaryingGravitationalParameterFunction;
-        timeVaryingGravitationalParameterFunction = [=]() {return
-                timeVaryingGravitationalParameterAccelerationSettings->timeVaryingGravitationalParameter_;};
+        ppnParameterSet->setTimeVaryingGravitationalParameter(
+                    timeVaryingGravitationalParameterAccelerationSettings->timeVaryingGravitationalParameter_);
 
+        std::function< double( ) >  timeVaryingGravitationalParameterFunction;
+        timeVaryingGravitationalParameterFunction =
+                std::bind( &PPNParameterSet::getTimeVaryingGravitationalParameter, ppnParameterSet );
+
+
+
+        //        timeVaryingGravitationalParameterFunction = [=]() {return
+        //                timeVaryingGravitationalParameterAccelerationtings->timeVaryingGravitationalParameter_;};
 
 //        angularMomentumFunction = [ = ]( ){ return
 //                    relativisticAccelerationSettings->centralBodyAngularMomentum_; };
-
 
         accelerationModel = std::make_shared< TimeVaryingGravitationalParameterAcceleration >
                 ( stateFunctionOfBodyUndergoingAcceleration,

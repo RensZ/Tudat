@@ -727,11 +727,11 @@ public:
 
     //! Function to set the gravity field of the body.
 
-    void setTVGPModel(
-            const std::shared_ptr< gravitation::TVGPModel > tvgpModel )
-    {
-        tvgpModel_ = tvgpModel;
-    }
+//    void setTVGPModel(
+//            const std::shared_ptr< gravitation::TVGPModel > tvgpModel )
+//    {
+//        tvgpModel_ = tvgpModel;
+//    }
 
 
 
@@ -907,10 +907,10 @@ public:
      *  Function to get the gravity field model of the body.
      *  \return Gravity field model of the body.
      */
-    std::shared_ptr< gravitation::TVGPModel > getTVGPModel( )
-    {
-        return tvgpModel_;
-    }
+//    std::shared_ptr< gravitation::TVGPModel > getTVGPModel( )
+//    {
+//        return tvgpModel_;
+//    }
 
 
 
@@ -1373,8 +1373,8 @@ private:
     //! Gravity field model of body.
     std::shared_ptr< gravitation::GravityFieldModel > gravityFieldModel_;
 
-    //! Gravity field model of body.
-    std::shared_ptr< gravitation::TVGPModel > tvgpModel_;
+//    //! Gravity field model of body.
+//    std::shared_ptr< gravitation::TVGPModel > tvgpModel_;
 
     //! Object containing all variations in the gravity field of this body.
     std::shared_ptr< gravitation::GravityFieldVariationsSet > gravityFieldVariationSet_;

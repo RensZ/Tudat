@@ -19,6 +19,7 @@
 #include "Tudat/Astrodynamics/Gravitation/centralGravityModel.h"
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
 
+
 namespace tudat
 {
 namespace gravitation
@@ -113,58 +114,60 @@ private:
 
 
 
-//! TVGPModel class.
-/*!
- * Model for a time varying gravitational parameter
- */
-class TVGPModel
-{
-public:
+////! TVGPModel class.
+///*!
+// * Model for a time varying gravitational parameter
+// */
+//class TVGPModel
+//{
+//public:
 
-    //! Default constructor.
-    TVGPModel( const double timeVaryingGravitationalParameter):
-        timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter )
-    { }
+//    //! Default constructor.
+//    TVGPModel()
+//    {
 
-    //! Default destructor.
-    /*!
-     * Default destructor.
-     */
-    virtual ~TVGPModel( ) { }
+//        timeVaryingGravitationalParameter_ = TimeVaryingGravitationalParameterAcceleration
+//    }
 
-    //! Set the gravitational parameter.
-    /*!
-     * Define the gravitational parameter in meter^3 per second^2.
-     * \param gravitationalParameter New gravitational parameter associated with gravity field.
-     */
-    void resetTimeVaryingGravitationalParameter( const double timeVaryingGravitationalParameter )
-    {
-        timeVaryingGravitationalParameter_ = timeVaryingGravitationalParameter;
-    }
+//    //! Default destructor.
+//    /*!
+//     * Default destructor.
+//     */
+//    virtual ~TVGPModel( ) { }
 
-    //! Get the gravitational parameter.
-    /*!
-     * Return the gravitational parameter in meter^3 per second^2.
-     * \return Gravitational parameter.
-     */
-    double getTimeVaryingGravitationalParameter( )
-    {
-        return timeVaryingGravitationalParameter_;
-    }
+//    //! Set the gravitational parameter.
+//    /*!
+//     * Define the gravitational parameter in meter^3 per second^2.
+//     * \param gravitationalParameter New gravitational parameter associated with gravity field.
+//     */
+//    void resetTimeVaryingGravitationalParameter( const double timeVaryingGravitationalParameter )
+//    {
+//        timeVaryingGravitationalParameter_ = timeVaryingGravitationalParameter;
+//    }
 
-
-protected:
-
-
-    //! Time varying Gravitational parameter.
-    /*!
-     * The gravitational parameter in GM per year
-     */
-    double timeVaryingGravitationalParameter_;
+//    //! Get the gravitational parameter.
+//    /*!
+//     * Return the gravitational parameter in meter^3 per second^2.
+//     * \return Gravitational parameter.
+//     */
+//    double getTimeVaryingGravitationalParameter( )
+//    {
+//        return timeVaryingGravitationalParameter_;
+//    }
 
 
-private:
-};
+//protected:
+
+
+//    //! Time varying Gravitational parameter.
+//    /*!
+//     * The gravitational parameter in GM per year
+//     */
+//    double timeVaryingGravitationalParameter_;
+
+
+//private:
+//};
 
 
 
@@ -185,8 +188,8 @@ typedef std::shared_ptr< GravityFieldModel > GravityFieldModelPointer;
 
 
 
-//! Typedef for shared-pointer to GravityFieldModel object.
-typedef std::shared_ptr< TVGPModel > TVGPModelPointer;
+////! Typedef for shared-pointer to GravityFieldModel object.
+//typedef std::shared_ptr< TVGPModel > TVGPModelPointer;
 
 
 //! Function to create a central gravity field model of one of the planets, moon or sun.
@@ -199,8 +202,8 @@ typedef std::shared_ptr< TVGPModel > TVGPModelPointer;
 std::shared_ptr< GravityFieldModel > getPredefinedCentralGravityField(
     BodiesWithPredefinedCentralGravityFields bodyWithPredefinedCentralGravityField );
 
-std::shared_ptr< TVGPModel > getPredefinedTVGP(
-    BodiesWithPredefinedCentralGravityFields bodyWithPredefinedTVGP );
+//std::shared_ptr< TVGPModel > getPredefinedTVGP(
+//    BodiesWithPredefinedCentralGravityFields bodyWithPredefinedTVGP );
 
 } // namespace gravitation
 } // namespace tudat

@@ -90,19 +90,25 @@ TimeVaryingGravitationalParameterPartial::getParameterPartialFunction(
             partialFunction = std::bind( &TimeVaryingGravitationalParameterPartial::wrtGravitationalParameterOfCentralBody, this, std::placeholders::_1 );
             numberOfRows = 1;
             break;
+        default:
+            break;
+        }
+    }
+    // Create partial function if parameter is PPN parameter beta or gamma
+    else if( parameter->getParameterName( ).second.first == "global_metric"  )
+    {
+        switch( parameter->getParameterName( ).first )
+        {
         case estimatable_parameters::time_varying_gravitational_parameter:
-            partialFunction = std::bind( &TimeVaryingGravitationalParameterPartial::wrtTimeVaryingGravitationalParameter, this, std::placeholders::_1);
+            partialFunction = std::bind( &TimeVaryingGravitationalParameterPartial::wrtTimeVaryingGravitationalParameter, this, std::placeholders::_1 );
             numberOfRows = 1;
             break;
         default:
             break;
         }
     }
-
-
     return std::make_pair( partialFunction, numberOfRows );
 }
-
 
 
 // verplaatst naar update() in .h file

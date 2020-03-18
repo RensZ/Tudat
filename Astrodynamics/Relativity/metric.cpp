@@ -23,6 +23,8 @@ std::shared_ptr< PPNParameterSet > ppnParameterSet = std::make_shared< PPNParame
 
 double equivalencePrincipleLpiViolationParameter = 0.0;
 
+double timeVaryingGravitationalParameter = 0.0;
+
 }
 
 }
