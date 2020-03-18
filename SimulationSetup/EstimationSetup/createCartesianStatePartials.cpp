@@ -151,6 +151,8 @@ std::map< observation_models::LinkEndType, std::shared_ptr< CartesianStatePartia
                     break;
                 case estimatable_parameters::ppn_parameter_beta:
                     break;
+                case estimatable_parameters::ppn_nordtvedt_parameter:
+                    break;
                 case estimatable_parameters::time_varying_gravitational_parameter:
                     break;
                 case estimatable_parameters::equivalence_principle_lpi_violation_parameter:

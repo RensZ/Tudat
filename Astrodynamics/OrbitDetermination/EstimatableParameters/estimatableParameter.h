@@ -64,7 +64,8 @@ enum EstimatebleParametersEnum
     core_factor,
     free_core_nutation_rate,
     desaturation_delta_v_values,
-    time_varying_gravitational_parameter
+    time_varying_gravitational_parameter,
+    ppn_nordtvedt_parameter
 };
 
 std::string getParameterTypeString( const EstimatebleParametersEnum parameterType );

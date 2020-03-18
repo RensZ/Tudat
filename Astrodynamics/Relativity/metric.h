@@ -40,8 +40,12 @@ public:
      * \param parameterGamma Value of PPN parameter gamma.
      * \param parameterBeta Value of PPN parameter beta.
      */
-    PPNParameterSet( const double parameterGamma, const double parameterBeta ):
-        parameterGamma_( parameterGamma ), parameterBeta_( parameterBeta )
+    PPNParameterSet( const double parameterGamma,
+                     const double parameterBeta,
+                     const double timeVaryingGravitationalParameter):
+        parameterGamma_( parameterGamma ),
+        parameterBeta_( parameterBeta ),
+        timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter )
     { }
 
     //! Destructor
@@ -65,6 +69,17 @@ public:
     double getParameterBeta( )
     {
         return parameterBeta_;
+    }
+
+    //! Function to retrieve value of PPN parameter beta.
+    /*!
+     * Function to retrieve value of PPN parameter beta.
+     * \return Value of PPN parameter beta.
+     */
+    double getNordtvedtParameter( )
+    {
+        nordtvedtParameter_ = 4*getParameterBeta() - getParameterGamma() - 3;
+        return nordtvedtParameter_;
     }
 
     //! Function to retrieve value of TVGP.
@@ -93,6 +108,12 @@ public:
         parameterBeta_ = parameterBeta;
     }
 
+    //! Function to reset value of Nordtvedt parameter
+    void setNordtvedtParameter( const double nordtvedtParameter )
+    {
+        nordtvedtParameter_ = nordtvedtParameter;
+    }
+
     //! Function to reset value of TVGP.
     void setTimeVaryingGravitationalParameter( const double timeVaryingGravitationalParameter )
     {
@@ -107,7 +128,10 @@ protected:
     //! Value of PPN parameter beta.
     double parameterBeta_;
 
-    //! Value of PPN parameter beta.
+    //! Value of the Nordtvedt parameter Eta.
+    double nordtvedtParameter_;
+
+    //! Value of TimeVaryingGravitationalParameter
     double timeVaryingGravitationalParameter_;
 
 };
@@ -118,8 +142,8 @@ extern std::shared_ptr< PPNParameterSet > ppnParameterSet;
 //! Global parameter denoting EP violation in proper time rate, initialized to GR value of 0 upon compilation.
 extern double equivalencePrincipleLpiViolationParameter;
 
-//! Global parameter denoting time varying gravitational parameter, initialized as zero.
-extern double timeVaryingGravitationalParameter;
+////! Global parameter denoting time varying gravitational parameter, initialized as zero.
+//extern double timeVaryingGravitationalParameter;
 
 }
 

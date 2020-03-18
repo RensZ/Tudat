@@ -93,6 +93,9 @@ std::string getParameterTypeString( const EstimatebleParametersEnum parameterTyp
     case ppn_parameter_beta:
         parameterDescription = "PPN parameter beta ";
         break;
+    case ppn_nordtvedt_parameter:
+        parameterDescription = "NordtvedtParameter ";
+        break;
     case direct_dissipation_tidal_time_lag:
         parameterDescription = " direct tidal time-lag ";
         break;
@@ -196,6 +199,9 @@ bool isDoubleParameter( const EstimatebleParametersEnum parameterType )
         isDoubleParameter = true;
         break;
     case ppn_parameter_beta:
+        isDoubleParameter = true;
+        break;
+    case ppn_nordtvedt_parameter:
         isDoubleParameter = true;
         break;
     case ground_station_position:
