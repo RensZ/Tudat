@@ -166,7 +166,7 @@ public:
         if( !( currentTime_ == currentTime ) )
         {
             currentRelativeState_ = ( acceleratedBodyState_( ) - centralBodyState_( ) );
-    //        currentAcceleration_ = currentAccelerationFunction_( );
+    //        currentAcceleration_ = currentAccelerationFunction_( ); //niet nodig?
 
             currentTime_ = currentTime;
 

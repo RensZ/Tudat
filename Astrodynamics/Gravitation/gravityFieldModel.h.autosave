@@ -18,6 +18,7 @@
 
 #include "Tudat/Astrodynamics/Gravitation/centralGravityModel.h"
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
+#include "
 
 namespace tudat
 {
@@ -122,9 +123,10 @@ class TVGPModel
 public:
 
     //! Default constructor.
-    TVGPModel( const double timeVaryingGravitationalParameter):
-        timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter )
-    { }
+    TVGPModel()
+    { 
+        timeVaryingGravitationalParameter_ = TimeVaryingGravitationalParameterAcceleration
+    }
 
     //! Default destructor.
     /*!

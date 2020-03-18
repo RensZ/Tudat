@@ -43,7 +43,7 @@
 #include "Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h"
 #include "Tudat/SimulationSetup/EnvironmentSetup/body.h"
 
-#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameter.h"
+#include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/timeVaryingGravitationalParameter.h"
 
 namespace tudat
 {
@@ -615,14 +615,21 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
             doubleParameterToEstimate = std::make_shared< PPNParameterBeta >( relativity::ppnParameterSet );
             break;
         }
-//        case time_varying_gravitational_parameter:
+        case time_varying_gravitational_parameter:
+        {
+            std::shared_ptr< gravitation::TVGPModel > tvgpModel;
+            tvgpModel = currentBody->getTVGPModel( );
 
-//        {
-//            doubleParameterToEstimate = std::make_shared< TimeVaryingGravitationalParameter >
-//                    ();
-//            break;
+            doubleParameterToEstimate =
+                    std::make_shared< TimeVaryingGravitationalParameter > ( tvgpModel, currentBodyName );
+            break;
 
-//        }
+//            std::shared_ptr< GravityFieldModel > gravityFieldModel = currentBody->getGravityFieldModel( );
+//            doubleParameterToEstimate = std::make_shared< GravitationalParameter >
+//                    ( gravityFieldModel, currentBodyName );
+
+
+        }
         case equivalence_principle_lpi_violation_parameter:
         {
             doubleParameterToEstimate = std::make_shared< EquivalencePrincipleLpiViolationParameter >( );

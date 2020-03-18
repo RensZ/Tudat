@@ -134,5 +134,37 @@ std::shared_ptr< GravityFieldModel > getPredefinedCentralGravityField(
     return std::make_shared< GravityFieldModel >( gravitationalParameter );
 }
 
+
+
+//! Set predefined central gravity field settings.
+std::shared_ptr< TVGPModel > getPredefinedTVGP(
+    BodiesWithPredefinedCentralGravityFields bodyWithPredefinedTVGP )
+{
+    double timeVaryingGravitationalParameter = 0.0;
+
+    // Select body with prefined central gravity field.
+    switch( bodyWithPredefinedTVGP )
+    {
+    case sun: break;
+    case mercury: break;
+    case venus: break;
+    case earth: break;
+    case moon: break;
+    case mars: break;
+    case jupiter: break;
+    case saturn: break;
+    case uranus: break;
+    case neptune: break;
+    default:
+        break;
+//        std::string errorMessage = "Desired predefined central gravity field " +
+//                std::to_string( bodyWithPredefinedCentralGravityField ) +
+//                " does not exist";
+//        throw std::runtime_error( errorMessage );
+    }
+    return std::make_shared< TVGPModel >( timeVaryingGravitationalParameter );
+}
+
+
 } // namespace gravitation
 } // namespace tudat

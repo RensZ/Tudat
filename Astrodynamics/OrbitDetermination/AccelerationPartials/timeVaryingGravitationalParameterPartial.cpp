@@ -9,6 +9,7 @@ namespace acceleration_partials
 {
 
 
+
 //! Function to compute partial of TVGP w.r.t. position of body undergoing acceleration
 void computePartialOfTVGPWrtPosition(
         const Eigen::Vector6d& currentRelativeState,
@@ -19,13 +20,15 @@ void computePartialOfTVGPWrtPosition(
 {
     Eigen::Vector3d position = currentRelativeState.segment( 0, 3 );
     double distance = position.norm( );
+    double distanceSquared = distance*distance;
+    double distanceCubed = distance*distance*distance;
 
     partialMatrix = gravitationalParameter
             * timeVaryingGravitationalParameter
-            * currentTime
-            * -2.0
-            * position * position.transpose()
-            / (distance*distance*distance*distance);
+            * (currentTime/tudat::physical_constants::JULIAN_YEAR)
+            * ( Eigen::Matrix3d::Identity( ) / (distanceCubed)
+                + 3.0 * (1/distanceSquared) * (1/distanceCubed) * position * position.transpose()
+               );
 
 }
 
@@ -37,12 +40,15 @@ void computePartialOfTVGPWrtGravitationalParameter(
         const double timeVaryingGravitationalParameter,
         const double currentTime )
 {
-    Eigen::Array3d position = currentRelativeState.segment( 0, 3 );
-    Eigen::Array3d positionCubed = position*position*position;
+
+    Eigen::Vector3d position = currentRelativeState.segment( 0, 3 );
+    double distance = position.norm( );
+    double distanceCubed = distance*distance*distance;
+
     partialMatrix = timeVaryingGravitationalParameter
-            * currentTime
+            * (currentTime/tudat::physical_constants::JULIAN_YEAR)
             * position
-            * positionCubed;
+            / distanceCubed;
 }
 
 
@@ -53,12 +59,15 @@ void computePartialOfTVGPWrtTimeVaryingGravitationalParameter(
         const double gravitationalParameter,
         const double currentTime )
 {
-    Eigen::Array3d position = currentRelativeState.segment( 0, 3 );
-    Eigen::Array3d positionCubed = position*position*position;
+
+    Eigen::Vector3d position = currentRelativeState.segment( 0, 3 );
+    double distance = position.norm( );
+    double distanceCubed = distance*distance*distance;
+
     partialMatrix = gravitationalParameter
-            * currentTime
+            * (currentTime/tudat::physical_constants::JULIAN_YEAR)
             * position
-            * positionCubed;
+            / distanceCubed;
 }
 
 

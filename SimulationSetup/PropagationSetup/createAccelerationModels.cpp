@@ -28,9 +28,9 @@
 #include "Tudat/SimulationSetup/EnvironmentSetup/createFlightConditions.h"
 
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
-#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameter.h"
+//#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameter.h"
 //#include "tudatApplications/thesis/MyApplications/TVGPInterface.h"
-
+#include "Tudat/Astrodynamics/Gravitation/gravityFieldModel.h"
 
 namespace tudat
 {
@@ -886,12 +886,15 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
                 accelerationSettings );
     if( timeVaryingGravitationalParameterAccelerationSettings == nullptr )
     {
-        throw std::runtime_error( "Error, expected relativistic acceleration settings when making acceleration model on " +
+        throw std::runtime_error( "Error, expected TVGP acceleration settings when making acceleration model on " +
                                   nameOfBodyUndergoingAcceleration + " due to " + nameOfBodyExertingAcceleration );
     }
     else
     {
 
+
+//        std::shared_ptr< TVGPInterface > timeVarying =
+//                bodyUndergoingAcceleration->getAerodynamicCoefficientInterface( );
 
         // Retrieve function pointers for properties of bodies exerting/undergoing acceleration.
         std::function< Eigen::Vector6d( ) > stateFunctionOfBodyExertingAcceleration =
@@ -903,11 +906,20 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
         centralBodyGravitationalParameterFunction =
                 std::bind( &GravityFieldModel::getGravitationalParameter, bodyExertingAcceleration->getGravityFieldModel( ) );
 
+        std::function< double( ) >  timeVaryingGravitationalParameterFunction;
+        timeVaryingGravitationalParameterFunction = [=]() {return
+                timeVaryingGravitationalParameterAccelerationSettings->timeVaryingGravitationalParameter_;};
+
+
+//        angularMomentumFunction = [ = ]( ){ return
+//                    relativisticAccelerationSettings->centralBodyAngularMomentum_; };
+
+
         accelerationModel = std::make_shared< TimeVaryingGravitationalParameterAcceleration >
                 ( stateFunctionOfBodyUndergoingAcceleration,
                   stateFunctionOfBodyExertingAcceleration,
                   centralBodyGravitationalParameterFunction,
-                  timeVaryingGravitationalParameterAccelerationSettings->timeVaryingGravitationalParameter_
+                  timeVaryingGravitationalParameterFunction
                   );
 
     }
