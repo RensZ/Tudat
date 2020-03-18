@@ -64,7 +64,8 @@ enum AvailableAcceleration
     panelled_radiation_pressure_acceleration,
     momentum_wheel_desaturation_acceleration,
     solar_sail_acceleration,
-    time_varying_gravitational_parameter_acceleration // custom made by me
+    time_varying_gravitational_parameter_acceleration, // custom made by me
+    sep_violation_acceleration // custom made by me
 };
 
 //! Function to get a string representing a 'named identification' of an acceleration type

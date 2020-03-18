@@ -28,9 +28,11 @@
 #include "Tudat/SimulationSetup/EnvironmentSetup/createFlightConditions.h"
 
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
+#include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
+
 //#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameter.h"
 //#include "tudatApplications/thesis/MyApplications/TVGPInterface.h"
-#include "Tudat/Astrodynamics/Gravitation/gravityFieldModel.h"
+//#include "Tudat/Astrodynamics/Gravitation/gravityFieldModel.h"
 
 namespace tudat
 {
@@ -935,6 +937,215 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
 }
 
 
+
+
+//! get the gravitational self energy of a body, which is needed in the function below
+//! values and equation come from Genova et al. 2018, nature communications
+//! radii from //https://nssdc.gsfc.nasa.gov/planetary/factsheet/<INSERTPLANET>fact.html
+double getGravitationalSelfEnergy(
+        const std::string bodyName,
+        const double gravitationalParameter)
+{
+    double gravitationalSelfEnergy;
+    double bodyRadius;
+
+    // bodies for which gravitational self energy value is quite well known
+    if (bodyName == "Sun"){
+        gravitationalSelfEnergy = -3.52E-6;
+    }
+    else if (bodyName == "Earth"){
+        gravitationalSelfEnergy = -4.64E-10;
+    }
+    else if (bodyName == "Moon"){
+        gravitationalSelfEnergy = -1.88E-11;
+    }
+
+    // for the other planets, approximate by assuming a sphere with uniform density
+    else{
+        if (bodyName == "Mercury"){ bodyRadius = 2439.7E3;
+        } else if (bodyName == "Venus"){ bodyRadius = 6051.8E3;
+        } else if (bodyName == "Mars"){ bodyRadius = 3389.5E3;
+        } else if (bodyName == "Jupiter"){ bodyRadius = 69911.0E3;
+        } else if (bodyName == "Saturn"){ bodyRadius = 58232.0E3;
+        } else if (bodyName == "Uranus"){ bodyRadius = 25362.0E3;
+        } else if (bodyName == "Neptune"){ bodyRadius = 24622.0E3;
+        } else{
+            throw std::runtime_error( "Error, gravitational self energy for body "
+                                      + bodyName + " not yet implemented");
+            bodyRadius = TUDAT_NAN;
+        }
+
+        gravitationalSelfEnergy =
+                (3.0/5.0) *
+                (gravitationalParameter*gravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT)
+                /bodyRadius;
+    }
+
+    return gravitationalSelfEnergy;
+}
+
+
+//! Function to get the new position of the Sun due to SEP effects
+//! This function is called when creating the acceleration due to the SEP in the function below
+//! The equation is given in Genova et al. 2018, nature communication, equation (9)
+Eigen::Vector3d getSEPCorrectedPosition(
+        const std::shared_ptr< Body > bodyExertingAcceleration,
+        const std::string& nameOfBodyExertingAcceleration,
+        const NamedBodyMap& bodyMap,
+        std::vector< std::string > bodyNames)
+{
+    using namespace relativity;
+
+    // get first term (dependent on properties of the Sun)
+    std::function< double( ) > centralBodyGravitationalParameterFunction;
+        std::shared_ptr< GravityFieldModel > gravityFieldCentralBody = bodyExertingAcceleration->getGravityFieldModel( );
+
+    const double gravitationalParameterBodyExertingAcceleration =
+            gravityFieldCentralBody->getGravitationalParameter();
+
+    const double gravitationalSelfEnergyBodyExertingAcceleration =
+            getGravitationalSelfEnergy(nameOfBodyExertingAcceleration,
+                                       gravitationalParameterBodyExertingAcceleration);
+
+    double nordtvedtParameter = ppnParameterSet->getNordtvedtParameter();
+
+    double firstTerm =
+            1/(
+                gravitationalParameterBodyExertingAcceleration *
+                (1 - nordtvedtParameter*
+                     gravitationalSelfEnergyBodyExertingAcceleration /
+                     ( ( gravitationalParameterBodyExertingAcceleration/physical_constants::GRAVITATIONAL_CONSTANT)
+                       * physical_constants::SPEED_OF_LIGHT
+                     )
+                )
+            );
+
+    // get second term (dependent on properties of the other bodies)
+    Eigen::Vector3d summationTerm = Eigen::Vector3d::Zero();
+
+    const int numberOfBodies = bodyNames.size();
+
+    for( int i = 0; i < numberOfBodies; i++ ){
+
+       std::string currentBodyName = bodyNames.at(i);
+       Eigen::Vector3d currentBodyTerm;
+
+       if (currentBodyName == nameOfBodyExertingAcceleration){
+           currentBodyTerm = Eigen::Vector3d::Zero();
+       }
+       else{
+
+           const std::shared_ptr<Body> currentBody = bodyMap.at(currentBodyName);
+
+           Eigen::Vector3d currentBodyPosition = currentBody->getPosition();
+
+           std::shared_ptr< gravitation::GravityFieldModel> currentBodyGravityField =
+                   currentBody->getGravityFieldModel();
+           double currentBodyGravitationalParameter =
+                   currentBodyGravityField->getGravitationalParameter();
+
+           double currentBodyGravitationalSelfEnergy =
+                   getGravitationalSelfEnergy(currentBodyName, currentBodyGravitationalParameter);
+
+           currentBodyTerm =
+                   (1 - nordtvedtParameter*
+                        currentBodyGravitationalSelfEnergy/
+                        ( ( currentBodyGravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT)
+                          * physical_constants::SPEED_OF_LIGHT
+                        )
+                   )
+                   * currentBodyGravitationalParameter
+                   * currentBodyPosition;
+       }
+
+       // multiply first and second term and return the result
+       summationTerm += currentBodyTerm;
+    }
+
+    return firstTerm * summationTerm;
+}
+
+
+
+//! Function to create an acceleration correction because of a SEP violation (nonzero nordtvedt parameter)
+std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAcceleration(
+        const std::shared_ptr< Body > bodyUndergoingAcceleration,
+        const std::shared_ptr< Body > bodyExertingAcceleration,
+        const std::string& nameOfBodyUndergoingAcceleration,
+        const std::string& nameOfBodyExertingAcceleration,
+        const std::shared_ptr< AccelerationSettings > accelerationSettings,
+        const NamedBodyMap& bodyMap )
+{
+    using namespace relativity;
+
+    // Declare pointer to return object
+    std::shared_ptr< SEPViolationAcceleration > accelerationModel;
+
+    // Dynamic cast acceleration settings to required type and check consistency.
+    std::shared_ptr< SEPViolationAccelerationSettings > sepViolationAccelerationSettings =
+            std::dynamic_pointer_cast< SEPViolationAccelerationSettings >(
+                accelerationSettings );
+    if( sepViolationAccelerationSettings == nullptr )
+    {
+        throw std::runtime_error( "Error, no SEP acceleration model settings given when making acceleration model on " +
+                                  nameOfBodyUndergoingAcceleration + " due to " + nameOfBodyExertingAcceleration );
+    }
+    else
+    {
+
+
+        // Retrieve function pointers for properties of bodies exerting/undergoing acceleration.
+        std::function< Eigen::Vector3d( ) > positionFunctionOfBodyExertingAcceleration =
+                std::bind( &Body::getPosition, bodyExertingAcceleration );
+        std::function< Eigen::Vector3d( ) > positionFunctionOfBodyUndergoingAcceleration =
+                std::bind( &Body::getPosition, bodyUndergoingAcceleration );
+
+
+        // Set Nordtvedt parameter
+
+//        ppnParameterSet->setNordtvedtParameter(
+//                    sepViolationAccelerationSettings->nordtvedtParameter_);
+
+        std::function< double( ) >  nordtvedtParameterFunction;
+        nordtvedtParameterFunction =
+                std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
+
+
+        // Gravitational parameter central body
+        std::function< double( ) > centralBodyGravitationalParameterFunction;
+        std::shared_ptr< GravityFieldModel > gravityFieldCentralBody = bodyExertingAcceleration->getGravityFieldModel( );
+        if( gravityFieldCentralBody == nullptr )
+        {
+            throw std::runtime_error( "Error " + nameOfBodyExertingAcceleration + " does not have a gravity field " +
+                                      "when making relativistic acceleration on" + nameOfBodyUndergoingAcceleration );
+        }
+        else
+        {
+            centralBodyGravitationalParameterFunction =
+                    std::bind( &GravityFieldModel::getGravitationalParameter, bodyExertingAcceleration->getGravityFieldModel( ) );
+        }
+
+        // get SEP corrected position of central body (see functions above)
+        std::function< Eigen::Vector3d( ) > sepCorrectedPositionFunctionOfBodyExertingAcceleration =
+                std::bind( getSEPCorrectedPosition,
+                                bodyExertingAcceleration,
+                                nameOfBodyExertingAcceleration,
+                                bodyMap,
+                                sepViolationAccelerationSettings->bodyNames_);
+
+        accelerationModel = std::make_shared< SEPViolationAcceleration >
+                ( positionFunctionOfBodyUndergoingAcceleration,
+                  positionFunctionOfBodyExertingAcceleration,
+                  sepCorrectedPositionFunctionOfBodyExertingAcceleration,
+                  centralBodyGravitationalParameterFunction,
+                  nordtvedtParameterFunction
+                  );
+
+
+    }
+    return accelerationModel;
+}
+
 //! Function to create an orbiter relativistic correction acceleration model
 std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativisticCorrectionAcceleration(
         const std::shared_ptr< Body > bodyUndergoingAcceleration,
@@ -1434,6 +1645,15 @@ std::shared_ptr< AccelerationModel< Eigen::Vector3d > > createAccelerationModel(
                     nameOfBodyUndergoingAcceleration,
                     nameOfBodyExertingAcceleration,
                     accelerationSettings);
+        break;
+    case sep_violation_acceleration:
+        accelerationModelPointer = createSEPViolationAcceleration(
+                    bodyUndergoingAcceleration,
+                    bodyExertingAcceleration,
+                    nameOfBodyUndergoingAcceleration,
+                    nameOfBodyExertingAcceleration,
+                    accelerationSettings,
+                    bodyMap);
         break;
     case empirical_acceleration:
         accelerationModelPointer = createEmpiricalAcceleration(

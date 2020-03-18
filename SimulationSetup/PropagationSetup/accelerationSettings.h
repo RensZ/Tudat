@@ -209,7 +209,7 @@ public:
      * \param timeVaryingGravitationalParameter is the derivative of GM w.r.t. time, divided by GM
      */
     TimeVaryingGravitationalParameterAccelerationSettings(
-            const double timeVaryingGravitationalParameter = 0 ):
+            const double timeVaryingGravitationalParameter ):
         AccelerationSettings( basic_astrodynamics::time_varying_gravitational_parameter_acceleration ),
         timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter ){ }
 
@@ -217,6 +217,35 @@ public:
     double timeVaryingGravitationalParameter_;
 
 };
+
+
+//! Class to proivide settings for acceleration caused by a time-varying gravitational parameter
+class SEPViolationAccelerationSettings: public AccelerationSettings
+{
+public:
+
+    //! Constructor
+    /*!
+     * Constructor
+     * \param nordtvedtParameter is the relativity parameter eta indicating a SEP violation
+     */
+    SEPViolationAccelerationSettings(
+            std::vector< std::string > bodyNames
+//            const double nordtvedtParameter
+            ):
+        AccelerationSettings( basic_astrodynamics::sep_violation_acceleration ),
+        bodyNames_( bodyNames )
+//        nordtvedtParameter_( nordtvedtParameter )
+    { }
+
+    //! std vector with strings to pass on body names
+    std::vector< std::string > bodyNames_;
+
+//    //! Double value of changing GM over time
+//    double nordtvedtParameter_;
+
+};
+
 
 
 //! Class to define settings for empirical accelerations
