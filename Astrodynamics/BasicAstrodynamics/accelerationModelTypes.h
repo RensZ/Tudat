@@ -28,8 +28,9 @@
 #include "Tudat/Astrodynamics/BasicAstrodynamics/empiricalAcceleration.h"
 #include "Tudat/Astrodynamics/Propulsion/massRateFromThrust.h"
 #include "Tudat/Astrodynamics/ElectroMagnetism/solarSailAcceleration.h"
-#include <tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h>
 
+#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
+#include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
 
 namespace tudat
 {

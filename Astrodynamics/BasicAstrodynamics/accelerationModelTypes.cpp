@@ -155,6 +155,11 @@ AvailableAcceleration getAccelerationModelType(
     {
         accelerationType = time_varying_gravitational_parameter_acceleration;
     }
+    else if( std::dynamic_pointer_cast< relativity::SEPViolationAcceleration >(
+                 accelerationModel ) != nullptr )
+    {
+        accelerationType = sep_violation_acceleration;
+    }
     else if( std::dynamic_pointer_cast< basic_astrodynamics::EmpiricalAcceleration >( accelerationModel ) != nullptr )
     {
         accelerationType = empirical_acceleration;

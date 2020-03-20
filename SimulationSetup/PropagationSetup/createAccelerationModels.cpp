@@ -1137,8 +1137,7 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
                 ( positionFunctionOfBodyUndergoingAcceleration,
                   positionFunctionOfBodyExertingAcceleration,
                   sepCorrectedPositionFunctionOfBodyExertingAcceleration,
-                  centralBodyGravitationalParameterFunction,
-                  nordtvedtParameterFunction
+                  centralBodyGravitationalParameterFunction
                   );
 
 

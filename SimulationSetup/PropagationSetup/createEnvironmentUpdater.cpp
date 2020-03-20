@@ -460,6 +460,8 @@ createTranslationalEquationsOfMotionEnvironmentUpdaterSettings(
 
                 case time_varying_gravitational_parameter_acceleration:
                     break;
+                case sep_violation_acceleration:
+                    break;
 
                 case direct_tidal_dissipation_in_central_body_acceleration:
                     singleAccelerationUpdateNeeds[ body_rotational_state_update ].push_back(
