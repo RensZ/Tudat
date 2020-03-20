@@ -3,12 +3,10 @@
 
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
 
-
 #include "Tudat/Astrodynamics/OrbitDetermination/AccelerationPartials/accelerationPartial.h"
 
 namespace tudat
 {
-
 namespace acceleration_partials
 {
 

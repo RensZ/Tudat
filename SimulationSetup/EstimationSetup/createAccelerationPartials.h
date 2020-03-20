@@ -34,6 +34,10 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/AccelerationPartials/tidalLoveNumberPartialInterface.h"
 
 #include "Tudat/Astrodynamics/OrbitDetermination/AccelerationPartials/timeVaryingGravitationalParameterPartial.h"
+#include "Tudat/Astrodynamics/OrbitDetermination/AccelerationPartials/sepViolationAccelerationPartial.h"
+
+
+
 
 namespace tudat
 {
@@ -117,6 +121,7 @@ std::shared_ptr< acceleration_partials::AccelerationPartial > createAnalyticalAc
                       acceleratedBody.first, acceleratingBody.first );
         }
         break;
+
     case time_varying_gravitational_parameter_acceleration:
 
         // Check if identifier is consistent with type.
@@ -133,6 +138,24 @@ std::shared_ptr< acceleration_partials::AccelerationPartial > createAnalyticalAc
                       acceleratedBody.first, acceleratingBody.first );
         }
         break;
+
+    case sep_violation_acceleration:
+
+        // Check if identifier is consistent with type.
+        if( std::dynamic_pointer_cast< relativity::SEPViolationAcceleration >( accelerationModel ) == nullptr )
+        {
+            throw std::runtime_error( "Acceleration class type does not match acceleration type "
+                                      "(time_varying_gravitational_parameter_acceleration) when making acceleration partial." );
+        }
+        else
+        {
+            // Create partial-calculating object.
+            accelerationPartial = std::make_shared< SEPViolationAccelerationPartial  >
+                    ( std::dynamic_pointer_cast< relativity::SEPViolationAcceleration >( accelerationModel ),
+                      acceleratedBody.first, acceleratingBody.first );
+        }
+        break;
+
     case direct_tidal_dissipation_in_central_body_acceleration:
     {
         // Check if identifier is consistent with type.

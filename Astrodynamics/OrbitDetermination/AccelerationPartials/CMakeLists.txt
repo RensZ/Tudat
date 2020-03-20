@@ -23,6 +23,7 @@ set(ACCELERATION_PARTIALS_SOURCES
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/panelledRadiationPressureAccelerationPartial.cpp"
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/thrustAccelerationPartial.cpp"
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/timeVaryingGravitationalParameterPartial.cpp"
+  "${SRCROOT}${ACCELERATIONPARTIALSDIR}/sepViolationAccelerationPartial.cpp"
 )
 
 # Set the header files.
@@ -43,6 +44,7 @@ set(ACCELERATION_PARTIALS_HEADERS
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/panelledRadiationPressureAccelerationPartial.h"
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/thrustAccelerationPartial.h"
   "${SRCROOT}${ACCELERATIONPARTIALSDIR}/timeVaryingGravitationalParameterPartial.h"
+  "${SRCROOT}${ACCELERATIONPARTIALSDIR}/sepViolationAccelerationPartial.h"
 )
 
 # Add static libraries.

@@ -56,6 +56,9 @@ std::string getAccelerationModelName( const AvailableAcceleration accelerationTy
     case time_varying_gravitational_parameter_acceleration:
         accelerationName = "time varying graviational parameter";
         break;
+    case sep_violation_acceleration:
+        accelerationName = "SEP violation acceleration";
+        break;
     case empirical_acceleration:
         accelerationName  = "empirical correction ";
         break;
