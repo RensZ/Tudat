@@ -972,11 +972,10 @@ double getGravitationalSelfEnergy(
         } else{
             throw std::runtime_error( "Error, gravitational self energy for body "
                                       + bodyName + " not yet implemented");
-            bodyRadius = TUDAT_NAN;
         }
 
         gravitationalSelfEnergy =
-                (3.0/5.0) *
+                (-3.0/5.0) *
                 (gravitationalParameter*gravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT)
                 /bodyRadius;
     }
