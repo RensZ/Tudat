@@ -37,6 +37,13 @@ void computePartialOfTVGPWrtTimeVaryingGravitationalParameter(
         const double currentTime );
 
 
+// function below will currently never be called
+//! Function to compute partial of TVGP w.r.t. the current time (time since J200)
+void computePartialOfTVGPWrtCurrentTime(
+        const Eigen::Vector6d& currentRelativeState,
+        Eigen::MatrixXd& partialMatrix,
+        const double gravitationalParameter,
+        const double timeVaryingGravitationalParameter );
 
 
 

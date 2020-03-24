@@ -71,6 +71,27 @@ void computePartialOfTVGPWrtTimeVaryingGravitationalParameter(
 }
 
 
+// function below will currently never be called
+//! Function to compute partial of TVGP w.r.t. the current time (time since J200)
+void computePartialOfTVGPWrtCurrentTime(
+        const Eigen::Vector6d& currentRelativeState,
+        Eigen::MatrixXd& partialMatrix,
+        const double gravitationalParameter,
+        const double timeVaryingGravitationalParameter )
+{
+
+    Eigen::Vector3d position = currentRelativeState.segment( 0, 3 );
+    double distance = position.norm( );
+    double distanceCubed = distance*distance*distance;
+
+    partialMatrix = gravitationalParameter
+            * timeVaryingGravitationalParameter
+            * position
+            / distanceCubed;
+}
+
+
+
 
 
 //! Function for setting up and retrieving a function returning a partial w.r.t. a double parameter.

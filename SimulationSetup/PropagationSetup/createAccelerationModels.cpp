@@ -881,6 +881,11 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
 {
     using namespace relativity;
 
+    if (nameOfBodyExertingAcceleration != "Sun"){
+        throw std::runtime_error( "Warning, time varying gravitational parameter is not tested for other bodies than the Sun, current body exerting acceleration: "
+                                  + nameOfBodyExertingAcceleration );
+    }
+
     // Declare pointer to return object
     std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > accelerationModel;
 
@@ -947,7 +952,6 @@ double getGravitationalSelfEnergy(
         const double gravitationalParameter)
 {
     double gravitationalSelfEnergy;
-    double bodyRadius;
 
     // bodies for which gravitational self energy value is quite well known
     if (bodyName == "Sun"){
@@ -962,16 +966,18 @@ double getGravitationalSelfEnergy(
 
     // for the other planets, approximate by assuming a sphere with uniform density
     else{
-        if (bodyName == "Mercury"){ bodyRadius = 2439.7E3;
-        } else if (bodyName == "Venus"){ bodyRadius = 6051.8E3;
-        } else if (bodyName == "Mars"){ bodyRadius = 3389.5E3;
-        } else if (bodyName == "Jupiter"){ bodyRadius = 69911.0E3;
-        } else if (bodyName == "Saturn"){ bodyRadius = 58232.0E3;
-        } else if (bodyName == "Uranus"){ bodyRadius = 25362.0E3;
-        } else if (bodyName == "Neptune"){ bodyRadius = 24622.0E3;
-        } else{
+
+        double bodyRadius;
+        if (bodyName == "Mercury"){ bodyRadius = 2439.7E3; }
+        else if (bodyName == "Venus"){ bodyRadius = 6051.8E3; }
+        else if (bodyName == "Mars"){ bodyRadius = 3389.5E3; }
+        else if (bodyName == "Jupiter"){ bodyRadius = 69911.0E3; }
+        else if (bodyName == "Saturn"){ bodyRadius = 58232.0E3; }
+        else if (bodyName == "Uranus"){ bodyRadius = 25362.0E3; }
+        else if (bodyName == "Neptune"){ bodyRadius = 24622.0E3; }
+        else {
             throw std::runtime_error( "Error, gravitational self energy for body "
-                                      + bodyName + " not yet implemented");
+                                      + bodyName + " can not be implemented, body radius unknown");
         }
 
         gravitationalSelfEnergy =
@@ -1009,12 +1015,13 @@ Eigen::Vector3d getSEPCorrectedPosition(
             getGravitationalSelfEnergy(nameOfBodyExertingAcceleration,
                                        gravitationalParameterBodyExertingAcceleration);
 
-    double nordtvedtParameter = ppnParameterSet->getNordtvedtParameter();
+//    double nordtvedtParameter = ppnParameterSet->getNordtvedtParameter();
+    double nordtvedtParameter = 0.0;
 
     double centralBodyTerm =
-            1/(
+            -1.0/(
                 gravitationalParameterBodyExertingAcceleration *
-                (1 - nordtvedtParameter*
+                (1 - nordtvedtParameter *
                      gravitationalSelfEnergyBodyExertingAcceleration /
                      ( ( gravitationalParameterBodyExertingAcceleration/physical_constants::GRAVITATIONAL_CONSTANT)
                        * physical_constants::SPEED_OF_LIGHT*physical_constants::SPEED_OF_LIGHT
@@ -1050,6 +1057,7 @@ Eigen::Vector3d getSEPCorrectedPosition(
                    getGravitationalSelfEnergy(currentBodyName, currentBodyGravitationalParameter);
 
            currentBodyTerm =
+                   centralBodyTerm *
                    (1 - nordtvedtParameter*
                         currentBodyGravitationalSelfEnergy/
                         ( ( currentBodyGravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT)
@@ -1060,11 +1068,17 @@ Eigen::Vector3d getSEPCorrectedPosition(
                    * currentBodyPosition;
        }
 
-        summationTerm += currentBodyTerm;
+
+       summationTerm += currentBodyTerm;
+       std::cout<<currentBodyName<<" // "<<currentBodyTerm.transpose()<<" // "<<summationTerm.transpose()<<std::endl;
     }
 
     // multiply first and second term to get the SEP corrected position
-    SEPCorrectedPosition = centralBodyTerm * summationTerm;
+    SEPCorrectedPosition = summationTerm;
+
+    Eigen::Vector3d uncorrectedPosition = bodyExertingAcceleration->getPosition( );
+
+    std::cout<<uncorrectedPosition.transpose()<<" // "<<SEPCorrectedPosition.transpose()<<" // "<<(SEPCorrectedPosition-uncorrectedPosition).transpose()<<std::endl;
 
     return SEPCorrectedPosition;
 }
