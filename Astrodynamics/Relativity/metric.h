@@ -42,9 +42,11 @@ public:
      */
     PPNParameterSet( const double parameterGamma,
                      const double parameterBeta,
+                     const double nordtvedtParameter,
                      const double timeVaryingGravitationalParameter):
         parameterGamma_( parameterGamma ),
         parameterBeta_( parameterBeta ),
+        nordtvedtParameter_( nordtvedtParameter ),
         timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter )
     { }
 
@@ -78,7 +80,7 @@ public:
      */
     double getNordtvedtParameter( )
     {
-        nordtvedtParameter_ = 4*getParameterBeta() - getParameterGamma() - 3;
+//        nordtvedtParameter_ = 4*getParameterBeta() - getParameterGamma() - 3;
         return nordtvedtParameter_;
     }
 

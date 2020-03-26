@@ -16,6 +16,7 @@ namespace acceleration_partials
 //! Function to compute partial of TVGP w.r.t. position of body undergoing acceleration
 void computePartialOfSEPViolationAccelerationWrtPosition(
         const Eigen::Vector3d& relativePosition,
+        const Eigen::Vector3d& sepPositionCorrection,
         Eigen::Matrix3d& partialMatrix,
         const double gravitationalParameter);
 
@@ -34,6 +35,16 @@ void computePartialOfSEPViolationAccelerationWrtNordtvedtParameter(
         Eigen::MatrixXd& partialMatrix);
 
 
+//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+void computePartialOfSEPViolationAccelerationWrtPpnParameterGamma(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix);
+
+
+//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+void computePartialOfSEPViolationAccelerationWrtPpnParameterBeta(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix);
 
 
 
@@ -53,7 +64,8 @@ public:
         centralBodyPosition_ = accelerationModel->getPositionFunctionOfCentralBody( );
         acceleratedBodyPosition_ = accelerationModel->getPositionFunctionOfAcceleratedBody( );
 
-        sepCorrectedCentralBodyPosition_ = accelerationModel->getSEPCorrectedPositionFunctionOfCentralBody( );
+        sepPositionCorrection_ = accelerationModel->getSEPPositionCorrectionFunction( );
+
         nordtvedtPartial_ = accelerationModel->getNordtvedtPartialFunction( );
 
         centralBodyGravitationalParameterFunction_ = accelerationModel->getGravitationalParameterFunctionOfCentralBody( );
@@ -143,6 +155,20 @@ public:
                     partialMatrix);
     }
 
+    void wrtPpnParameterGamma( Eigen::MatrixXd& partialMatrix )
+    {
+        computePartialOfSEPViolationAccelerationWrtPpnParameterGamma(
+                    currentNordtvedtPartial_,
+                    partialMatrix);
+    }
+
+    void wrtPpnParameterBeta( Eigen::MatrixXd& partialMatrix )
+    {
+        computePartialOfSEPViolationAccelerationWrtPpnParameterBeta(
+                    currentNordtvedtPartial_,
+                    partialMatrix);
+    }
+
 
     //! Function for updating partial w.r.t. the bodies' states
     void update( const double currentTime = TUDAT_NAN )
@@ -150,15 +176,19 @@ public:
         if( !( currentTime_ == currentTime ) )
         {
 
+            sepCorrectedCentralBodyPosition_ =
+                    centralBodyPosition_( ) + sepPositionCorrection_( ) ;
+
             currentRelativePosition_ =
                     ( acceleratedBodyPosition_( ) - centralBodyPosition_( ) );
             currentSEPCorrectedRelativePosition_ =
-                    ( acceleratedBodyPosition_( ) - sepCorrectedCentralBodyPosition_( ) );
+                    ( acceleratedBodyPosition_( ) - sepCorrectedCentralBodyPosition_ );
 
             currentNordtvedtPartial_ = nordtvedtPartial_( );
 
             computePartialOfSEPViolationAccelerationWrtPosition(
                         currentRelativePosition_,
+                        sepPositionCorrection_( ),
                         currentPartialWrtPosition_,
                         centralBodyGravitationalParameterFunction_( )
                         );
@@ -179,7 +209,7 @@ private:
     std::function< Eigen::Vector3d( ) > acceleratedBodyPosition_;
 
     //! Function to retrieve current state of body exerting acceleration.
-    std::function< Eigen::Vector3d( ) > sepCorrectedCentralBodyPosition_;
+    std::function< Eigen::Vector3d( ) > sepPositionCorrection_;
 
     //! Function to retrieve current state of body undergoing acceleration.
     std::function< Eigen::Vector3d( ) > nordtvedtPartial_;
@@ -198,6 +228,8 @@ private:
     Eigen::Vector3d currentSEPCorrectedRelativePosition_;
 
 
+    //! Function to retrieve current state of body exerting acceleration.
+    Eigen::Vector3d sepCorrectedCentralBodyPosition_;
 
     //! Relative position of body undergoing acceleration.
     Eigen::Vector3d currentNordtvedtPartial_;
