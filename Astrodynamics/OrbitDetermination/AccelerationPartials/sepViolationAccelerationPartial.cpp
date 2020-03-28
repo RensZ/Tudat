@@ -16,9 +16,8 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
         const double gravitationalParameter)
 {
 
-
     // if Nordtvedt parameter = 0, there will be no correction, and the corrected position will be equal to the original position
-    // as a result the partial matrix will be the zero matrix (terms 1-2 cancel terms 4-5, and term 3 contains a cross product of an identical vector = 0)
+    // as a result the partial matrix will be the zero matrix (the terms with and without correction are then equal, but with opposite signs)
     if (sepPositionCorrection.norm( ) != 0.0){
         std::runtime_error( "ERROR: if nordtvedt parameter = 0 exactly, no partial w.r.t. the state can be calculated" );
     }
@@ -26,7 +25,7 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 //    std::cout<<relativePosition<<std::endl;
 //    std::cout<<sepPositionCorrection<<std::endl;
 
-    Eigen::Vector3d relativeCorrectedPosition = relativePosition + sepPositionCorrection;
+    Eigen::Vector3d relativeCorrectedPosition = relativePosition - sepPositionCorrection;
     double relativeNorm = relativePosition.norm( );
     double invSquareRelativeNorm = 1.0 / (relativeNorm * relativeNorm);
     double invCubedRelativeNorm = invSquareRelativeNorm / relativeNorm;
@@ -40,10 +39,10 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 
     partialMatrix += -Eigen::Matrix3d::Identity( ) * invCubedRelativeCorrectedNorm;
     partialMatrix += 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-            * relativeCorrectedPosition * relativePosition.transpose( );
+            * relativeCorrectedPosition * relativeCorrectedPosition.transpose( );
 
-    partialMatrix += 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-            * relativeCorrectedPosition * sepPositionCorrection.transpose( );
+//    partialMatrix += -3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
+//            * sepPositionCorrection * relativeCorrectedPosition.transpose( );
 
     partialMatrix += Eigen::Matrix3d::Identity( ) * invCubedRelativeNorm;
     partialMatrix += -3.0 * invSquareRelativeNorm * invCubedRelativeNorm
@@ -78,7 +77,7 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
                                                          *positionNormSEPCorrected);
 
     //second term, from conventional acceleration
-    partialMatrix += -relativePosition / ( positionNorm * positionNorm * positionNorm );
+    partialMatrix -= relativePosition / ( positionNorm * positionNorm * positionNorm );
 
 
 }
@@ -139,14 +138,14 @@ SEPViolationAccelerationPartial::getParameterPartialFunction(
     {
         switch( parameter->getParameterName( ).first )
         {
-//        case estimatable_parameters::ppn_parameter_gamma:
-//            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterGamma, this, std::placeholders::_1 );
-//            numberOfRows = 1;
-//            break;
-//        case estimatable_parameters::ppn_parameter_beta:
-//            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterBeta, this, std::placeholders::_1 );
-//            numberOfRows = 1;
-//            break;
+        case estimatable_parameters::ppn_parameter_gamma:
+            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterGamma, this, std::placeholders::_1 );
+            numberOfRows = 1;
+            break;
+        case estimatable_parameters::ppn_parameter_beta:
+            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterBeta, this, std::placeholders::_1 );
+            numberOfRows = 1;
+            break;
         case estimatable_parameters::ppn_nordtvedt_parameter:
             partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtNordtvedtParameter, this, std::placeholders::_1 );
             numberOfRows = 1;
