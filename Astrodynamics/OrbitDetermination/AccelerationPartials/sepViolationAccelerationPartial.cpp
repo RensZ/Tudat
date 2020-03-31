@@ -64,21 +64,50 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 
 //! Function to compute partial of TVGP w.r.t. gravitational parameter of central body
 void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
-        const Eigen::Vector3d& relativePosition,
+        const Eigen::Vector3d& centralBodyPosition,
         Eigen::MatrixXd& partialMatrix,
-        const Eigen::Vector3d& sepCorrectedRelativePosition)
+        const Eigen::Vector3d& acceleratedBodyPosition,
+        const Eigen::Vector3d& sepCorrection,
+        const double gravitationalParameterOfCentralBody)
 {
-    double positionNorm = relativePosition.norm( );
+
+    std::cout<<centralBodyPosition.transpose()<<" / "
+             <<sepCorrection.transpose()<<std::endl;
+
+    Eigen::Vector3d correctedCentralBodyPosition =
+            centralBodyPosition + sepCorrection;
+
+    Eigen::Vector3d currentAcceleration = gravitation::computeGravitationalAcceleration(
+                acceleratedBodyPosition,
+                gravitationalParameterOfCentralBody,
+                centralBodyPosition);
+    Eigen::Vector3d currentCorrectedAcceleration = gravitation::computeGravitationalAcceleration(
+                acceleratedBodyPosition,
+                gravitationalParameterOfCentralBody,
+                correctedCentralBodyPosition);
+
+    Eigen::Vector3d sepCorrectedRelativePosition =
+            acceleratedBodyPosition - correctedCentralBodyPosition;
+
     double positionNormSEPCorrected = sepCorrectedRelativePosition.norm( );
+    double invSquareRelativeCorrectedNorm = 1.0 / (positionNormSEPCorrected * positionNormSEPCorrected);
+    double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / positionNormSEPCorrected;
 
-    //first term, from acceleration due to SEP violation
-    partialMatrix = sepCorrectedRelativePosition / (positionNormSEPCorrected
-                                                         *positionNormSEPCorrected
-                                                         *positionNormSEPCorrected);
+    //first term, simply the point mass acceleration divided by gravitational parameter
+    partialMatrix =
+            (currentCorrectedAcceleration - currentAcceleration)
+            / gravitationalParameterOfCentralBody;
 
-    //second term, from conventional acceleration
-    partialMatrix -= relativePosition / ( positionNorm * positionNorm * positionNorm );
+    std::cout<<partialMatrix.transpose()<< " // ";
 
+    //second term, result of the chain rule because gravitational parameter is present in delta r
+    partialMatrix -=
+            (Eigen::Matrix3d::Identity( ) * invCubedRelativeCorrectedNorm
+            - 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
+            * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( )
+            ) * sepCorrection;
+
+    std::cout<<partialMatrix.transpose()<<std::endl;
 
 }
 
@@ -133,7 +162,7 @@ SEPViolationAccelerationPartial::getParameterPartialFunction(
             break;
         }
     }
-    // Create partial function if parameter is the Nordtvedt parameter
+    // Create partial function if parameter is PPN parameter beta or gamma
     else if( parameter->getParameterName( ).second.first == "global_metric"  )
     {
         switch( parameter->getParameterName( ).first )

@@ -2,8 +2,10 @@
 #define SEPVIOLATIONACCELERATIONPARTIAL_H
 
 
-#include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
+#include <memory>
+#include "Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h"
 
+#include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/AccelerationPartials/accelerationPartial.h"
 
 namespace tudat
@@ -24,9 +26,11 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 
 //! Function to compute partial of TVGP w.r.t. gravitational parameter of central body
 void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
-        const Eigen::Vector3d& relativePosition,
+        const Eigen::Vector3d& centralBodyPosition,
         Eigen::MatrixXd& partialMatrix,
-        const Eigen::Vector3d& sepCorrectedRelativePosition);
+        const Eigen::Vector3d& acceleratedBodyPosition,
+        const Eigen::Vector3d& sepCorrection,
+        const double gravitationalParameterOfCentralBody);
 
 
 //! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
@@ -135,16 +139,24 @@ public:
     std::pair< std::function< void( Eigen::MatrixXd& ) >, int >
     getParameterPartialFunction( std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > parameter );
 
-
+    //! Function for setting up and retrieving a function returning a partial w.r.t. a vector parameter.
+    std::pair< std::function< void( Eigen::MatrixXd& ) >, int >
+    getParameterPartialFunction( std::shared_ptr< estimatable_parameters::EstimatableParameter< Eigen::VectorXd > > parameter )
+    {
+        std::function< void( Eigen::MatrixXd& ) > partialFunction;
+        return std::make_pair( partialFunction, 0 );
+    }
 
 
     //! Function to compute partial derivative w.r.t. central body gravitational parameter.
     void wrtGravitationalParameterOfCentralBody( Eigen::MatrixXd& partialMatrix )
     {
         computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
-                    currentRelativePosition_,
+                    centralBodyPosition_( ),
                     partialMatrix,
-                    currentSEPCorrectedRelativePosition_);
+                    acceleratedBodyPosition_( ),
+                    sepCorrection_,
+                    centralBodyGravitationalParameter_);
     }
 
     //! Function to compute partial derivative w.r.t. nordtvedtparameter.
@@ -175,9 +187,13 @@ public:
     {
         if( !( currentTime_ == currentTime ) )
         {
+            sepCorrection_ = sepPositionCorrection_( ) ;
 
             sepCorrectedCentralBodyPosition_ =
-                    centralBodyPosition_( ) + sepPositionCorrection_( ) ;
+                    centralBodyPosition_( ) + sepCorrection_ ;
+
+            centralBodyGravitationalParameter_ =
+                    centralBodyGravitationalParameterFunction_( );
 
             currentRelativePosition_ =
                     ( acceleratedBodyPosition_( ) - centralBodyPosition_( ) );
@@ -188,9 +204,9 @@ public:
 
             computePartialOfSEPViolationAccelerationWrtPosition(
                         currentRelativePosition_,
-                        sepPositionCorrection_( ),
+                        sepCorrection_,
                         currentPartialWrtPosition_,
-                        centralBodyGravitationalParameterFunction_( )
+                        centralBodyGravitationalParameter_
                         );
 
         }
@@ -227,12 +243,16 @@ private:
     //! Relative position of body undergoing acceleration.
     Eigen::Vector3d currentSEPCorrectedRelativePosition_;
 
+    double centralBodyGravitationalParameter_;
+
+    Eigen::Vector3d sepCorrection_;
 
     //! Function to retrieve current state of body exerting acceleration.
     Eigen::Vector3d sepCorrectedCentralBodyPosition_;
 
     //! Relative position of body undergoing acceleration.
     Eigen::Vector3d currentNordtvedtPartial_;
+
 
 
 };
