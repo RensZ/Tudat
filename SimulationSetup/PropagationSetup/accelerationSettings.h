@@ -230,19 +230,19 @@ public:
      * \param nordtvedtParameter is the relativity parameter eta indicating a SEP violation
      */
     SEPViolationAccelerationSettings(
-            std::vector< std::string > bodyNames
-//            const double nordtvedtParameter
+            std::vector< std::string > bodyNames,
+            const double nordtvedtParameter
             ):
         AccelerationSettings( basic_astrodynamics::sep_violation_acceleration ),
-        bodyNames_( bodyNames )
-//        nordtvedtParameter_( nordtvedtParameter )
+        bodyNames_( bodyNames ),
+        nordtvedtParameter_( nordtvedtParameter )
     { }
 
     //! std vector with strings to pass on body names
     std::vector< std::string > bodyNames_;
 
-//    //! Double value of changing GM over time
-//    double nordtvedtParameter_;
+    //! Nordtvedt parameter
+    double nordtvedtParameter_;
 
 };
 

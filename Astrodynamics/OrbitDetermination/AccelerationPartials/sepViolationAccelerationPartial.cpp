@@ -71,8 +71,8 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
         const double gravitationalParameterOfCentralBody)
 {
 
-    std::cout<<centralBodyPosition.transpose()<<" / "
-             <<sepCorrection.transpose()<<std::endl;
+//    std::cout<<centralBodyPosition.transpose()<<" / "
+//             <<sepCorrection.transpose()<<std::endl;
 
     Eigen::Vector3d correctedCentralBodyPosition =
             centralBodyPosition + sepCorrection;
@@ -98,7 +98,7 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
             (currentCorrectedAcceleration - currentAcceleration)
             / gravitationalParameterOfCentralBody;
 
-    std::cout<<partialMatrix.transpose()<< " // ";
+//    std::cout<<partialMatrix.transpose()<< " // ";
 
     //second term, result of the chain rule because gravitational parameter is present in delta r
     partialMatrix -=
@@ -107,7 +107,7 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
             * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( )
             ) * sepCorrection;
 
-    std::cout<<partialMatrix.transpose()<<std::endl;
+//    std::cout<<partialMatrix.transpose()<<std::endl;
 
 }
 

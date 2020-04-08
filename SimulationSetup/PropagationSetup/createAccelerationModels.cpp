@@ -1309,8 +1309,8 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
 
         // Set Nordtvedt parameter
 
-//        ppnParameterSet->setNordtvedtParameter(
-//                    sepViolationAccelerationSettings->nordtvedtParameter_);
+        ppnParameterSet->setNordtvedtParameter(
+                    sepViolationAccelerationSettings->nordtvedtParameter_);
 
         std::function< double( ) >  nordtvedtParameterFunction;
         nordtvedtParameterFunction =
@@ -1323,7 +1323,7 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
         if( gravityFieldCentralBody == nullptr )
         {
             throw std::runtime_error( "Error " + nameOfBodyExertingAcceleration + " does not have a gravity field " +
-                                      "when making relativistic acceleration on" + nameOfBodyUndergoingAcceleration );
+                                      "when making SEP violation acceleration on" + nameOfBodyUndergoingAcceleration );
         }
         else
         {
