@@ -231,18 +231,18 @@ public:
      */
     SEPViolationAccelerationSettings(
             std::vector< std::string > bodyNames,
-            const double nordtvedtParameter
+            const bool useNordtvedtConstraint
             ):
         AccelerationSettings( basic_astrodynamics::sep_violation_acceleration ),
         bodyNames_( bodyNames ),
-        nordtvedtParameter_( nordtvedtParameter )
+        useNordtvedtConstraint_( useNordtvedtConstraint )
     { }
 
     //! std vector with strings to pass on body names
     std::vector< std::string > bodyNames_;
 
     //! Nordtvedt parameter
-    double nordtvedtParameter_;
+    bool useNordtvedtConstraint_;
 
 };
 

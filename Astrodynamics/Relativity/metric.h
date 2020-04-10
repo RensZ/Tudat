@@ -80,8 +80,12 @@ public:
      */
     double getNordtvedtParameter( )
     {
-//        nordtvedtParameter_ = 4*getParameterBeta() - getParameterGamma() - 3;
         return nordtvedtParameter_;
+    }
+
+    double getNordtvedtParameterFromPpnParameters( )
+    {
+        return 4.0*getParameterBeta() - getParameterGamma() - 3.0;
     }
 
     //! Function to retrieve value of TVGP.
@@ -135,6 +139,8 @@ protected:
 
     //! Value of TimeVaryingGravitationalParameter
     double timeVaryingGravitationalParameter_;
+
+    bool useNordtvedtConstraint_;
 
 };
 

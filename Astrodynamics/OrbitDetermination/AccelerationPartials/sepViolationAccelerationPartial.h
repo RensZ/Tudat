@@ -71,6 +71,7 @@ public:
         sepPositionCorrection_ = accelerationModel->getSEPPositionCorrectionFunction( );
 
         nordtvedtPartial_ = accelerationModel->getNordtvedtPartialFunction( );
+        useNordtvedtConstraint_ = accelerationModel->getUseNordtvedtConstraintFunction( );
 
         centralBodyGravitationalParameterFunction_ = accelerationModel->getGravitationalParameterFunctionOfCentralBody( );
 
@@ -230,6 +231,8 @@ private:
     //! Function to retrieve current state of body undergoing acceleration.
     std::function< Eigen::Vector3d( ) > nordtvedtPartial_;
 
+    std::function< bool( ) > useNordtvedtConstraint_;
+
 
     //! Function to retrieve current gravitational parameter of central body.
     std::function< double( ) > centralBodyGravitationalParameterFunction_;
@@ -252,6 +255,7 @@ private:
 
     //! Relative position of body undergoing acceleration.
     Eigen::Vector3d currentNordtvedtPartial_;
+
 
 
 

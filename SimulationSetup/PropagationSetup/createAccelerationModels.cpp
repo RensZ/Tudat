@@ -1009,7 +1009,9 @@ Eigen::Vector3d getSEPCorrectedPosition(
     Eigen::Vector3d SEPPositionCorrectionSimplified;
 
     double nordtvedtParameter = ppnParameterSet->getNordtvedtParameter();
+
 //    double nordtvedtParameter = 0.0; //for testing purposes
+//    std::cout<<"eta: "<<nordtvedtParameter;
 
     if (nordtvedtParameter == 0.0){ // to prevent dividing by 0 in the calculations below
         SEPPositionCorrectionSimplified << 0.0, 0.0, 0.0;
@@ -1117,7 +1119,7 @@ Eigen::Vector3d getSEPCorrectedPosition(
 //        std::cout<<SEPPositionCorrectionError<< " "<<SEPPositionCorrectionError/SEPPositionCorrection.norm()<<std::endl;
 
     }
-
+//    std::cout<<" dr_SEP: "<<SEPPositionCorrectionSimplified.transpose()<<std::endl;
     return SEPPositionCorrectionSimplified;
 }
 
@@ -1309,12 +1311,23 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
 
         // Set Nordtvedt parameter
 
-        ppnParameterSet->setNordtvedtParameter(
-                    sepViolationAccelerationSettings->nordtvedtParameter_);
+//        ppnParameterSet->setNordtvedtParameter(
+//                    sepViolationAccelerationSettings->nordtvedtParameter_);
 
-        std::function< double( ) >  nordtvedtParameterFunction;
-        nordtvedtParameterFunction =
-                std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
+        if (sepViolationAccelerationSettings->useNordtvedtConstraint_ == true){
+            std::function< double( ) >  nordtvedtParameterFunction;
+            nordtvedtParameterFunction =
+                    std::bind( &PPNParameterSet::getNordtvedtParameterFromPpnParameters, ppnParameterSet );
+        }
+        else{
+            std::function< double( ) >  nordtvedtParameterFunction;
+            nordtvedtParameterFunction =
+                    std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
+        }
+
+        std::function< bool( ) > useNordtvedtConstraintFunction;
+        useNordtvedtConstraintFunction = [ = ]( ){ return
+                    sepViolationAccelerationSettings->useNordtvedtConstraint_; };
 
 
         // Gravitational parameter central body
@@ -1354,7 +1367,8 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
                   positionFunctionOfBodyExertingAcceleration,
                   sepPositionCorrectionFunction,
                   centralBodyGravitationalParameterFunction,
-                  nordtvedtPartialFunction
+                  nordtvedtPartialFunction,
+                  useNordtvedtConstraintFunction
                   );
 
 

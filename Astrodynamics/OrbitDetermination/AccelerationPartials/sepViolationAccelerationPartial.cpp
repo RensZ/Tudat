@@ -168,12 +168,16 @@ SEPViolationAccelerationPartial::getParameterPartialFunction(
         switch( parameter->getParameterName( ).first )
         {
         case estimatable_parameters::ppn_parameter_gamma:
-            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterGamma, this, std::placeholders::_1 );
-            numberOfRows = 1;
+            if (useNordtvedtConstraint_( ) == true){
+                partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterGamma, this, std::placeholders::_1 );
+                numberOfRows = 1;
+            }
             break;
         case estimatable_parameters::ppn_parameter_beta:
-            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterBeta, this, std::placeholders::_1 );
-            numberOfRows = 1;
+            if (useNordtvedtConstraint_( ) == true){
+                partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterBeta, this, std::placeholders::_1 );
+                numberOfRows = 1;
+            }
             break;
         case estimatable_parameters::ppn_nordtvedt_parameter:
             partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtNordtvedtParameter, this, std::placeholders::_1 );
