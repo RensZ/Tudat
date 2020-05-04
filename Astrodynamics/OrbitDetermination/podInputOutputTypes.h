@@ -189,6 +189,23 @@ public:
         }
     }
 
+    //! to manually set observation weights per observation
+    //! \param observationWeightsAndTimes is a map of type PodInpuytDataType,
+    //! identical to PodInput, except that observations are replaced with weights
+    void manuallySetObservationWeightMatrix(
+            const PodInputDataType& observationWeightsAndTimes)
+    {
+        for( typename PodInputDataType::const_iterator observablesIterator = observationWeightsAndTimes.begin( );
+             observablesIterator != observationWeightsAndTimes.end( ); observablesIterator++ ){
+
+            for( typename SingleObservablePodInputType::const_iterator dataIterator =
+                 observablesIterator->second.begin( ); dataIterator != observablesIterator->second.end( ); dataIterator++  ){
+                weightsMatrixDiagonals_[ observablesIterator->first ][ dataIterator->first ] = dataIterator->second.first;
+            }
+        }
+    }
+
+
     //! Function to define specific settings for estimation process
     /*!
      *  Function to define specific settings for estimation process
