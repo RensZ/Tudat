@@ -458,6 +458,26 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
         }
         break;
     }
+
+    case schwarzschild_acceleration_correction:
+    {
+        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getSchwarzschildAcceleration,
+                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
+        break;
+    }
+    case lense_thirring_acceleration_correction:
+    {
+        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
+                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
+        break;
+    }
+    case de_sitter_acceleration_correction:
+    {
+        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getDeSitterAcceleration,
+                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
+        break;
+    }
+
     case spherical_harmonic_acceleration_norm_terms_dependent_variable:
     {
         // Check input consistency.

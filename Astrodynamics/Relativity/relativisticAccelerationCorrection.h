@@ -271,6 +271,19 @@ public:
         return  currentAcceleration_;
     }
 
+    Eigen::Vector3d getSchwarzschildAcceleration( )
+    {
+        return  currentSchwarzschildAcceleration_;
+    }
+    Eigen::Vector3d getLenseThirringAcceleration( )
+    {
+        return  currentLenseThirringAcceleration_;
+    }
+    Eigen::Vector3d getDeSitterAcceleration( )
+    {
+        return  currentDeSitterAcceleration_;
+    }
+
     //! Update member variables used by the relativistic correction acceleration model.
     /*!
      * Updates member variables used by the relativistic correction acceleration model.
@@ -297,29 +310,34 @@ public:
                         stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ).norm( ) );
 
             currentAcceleration_.setZero( );
+            currentSchwarzschildAcceleration_.setZero( );
+            currentLenseThirringAcceleration_.setZero( );
+            currentDeSitterAcceleration_.setZero( );
 
             double relativeDistance = stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ).norm( );
 
             // Compute Schwarzschild term (if requested)
             if( calculateSchwarzschildCorrection_ )
             {
-                currentAcceleration_ = calculateScharzschildGravitationalAccelerationCorrection(
+                currentSchwarzschildAcceleration_ = calculateScharzschildGravitationalAccelerationCorrection(
                             gravitationalParameterOfCentralBody_,
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance, commonCorrectionTerm_, ppnParameterGamma_,
                             ppnParameterBeta_ );
+                currentAcceleration_ += currentSchwarzschildAcceleration_;
             }
 
             // Compute Lense-Thirring term (if requested)
             if( calculateLenseThirringCorrection_ )
             {
                 centalBodyAngularMomentum_ = centalBodyAngularMomentumFunction_( );
-                currentAcceleration_ +=  calculateLenseThirringCorrectionAcceleration(
+                currentLenseThirringAcceleration_ +=  calculateLenseThirringCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance, commonCorrectionTerm_, centalBodyAngularMomentum_,
                             ppnParameterGamma_ );
+                currentAcceleration_ += currentLenseThirringAcceleration_;
 
             }
 
@@ -338,12 +356,14 @@ public:
                         primaryDistance * primaryDistance * primaryDistance *
                             physical_constants::SPEED_OF_LIGHT * physical_constants::SPEED_OF_LIGHT );
 
-                currentAcceleration_ += calculateDeSitterCorrectionAcceleration(
+                currentDeSitterAcceleration_ += calculateDeSitterCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             stateOfCentralBodyWrtPrimaryBody_.segment( 0, 3 ),
                             stateOfCentralBodyWrtPrimaryBody_.segment( 3, 3 ),
                             largerBodyCommonCorrectionTerm,
                             ppnParameterGamma_ );
+
+                currentAcceleration_ += currentDeSitterAcceleration_;
 
             }
 
@@ -391,6 +411,14 @@ public:
      */
     std::function< double( ) > getPpnParameterBetaFunction_( )
     { return ppnParameterBetaFunction_; }
+
+    //! Function to return the current angular momentum of the central body
+    /*!
+     * Function to return the current angular momentum of the central body
+     * \return Current angular momentum of the central body
+     */
+    std::function< Eigen::Vector3d( ) > getCentralBodyAngularMomentum_( )
+    { return centalBodyAngularMomentumFunction_; }
 
     //! Function to return the boolean denoting wheter the Schwarzschild term is used.
     /*!
@@ -494,6 +522,9 @@ private:
 
     //! Relativistic acceleration correction, as computed by last call to updateMembers function
     Eigen::Vector3d currentAcceleration_;
+    Eigen::Vector3d currentSchwarzschildAcceleration_;
+    Eigen::Vector3d currentLenseThirringAcceleration_;
+    Eigen::Vector3d currentDeSitterAcceleration_;
 
 };
 

@@ -35,8 +35,12 @@ namespace acceleration_partials
  * \param ppnParameterBeta PPN parameter beta
  */
 void computePartialOfSchwarzschildAccelerationCorrectionWrtPosition(
-        const Eigen::Vector6d& relativeState, Eigen::Vector3d& currentAcceleration, Eigen::Matrix3d& partialMatrix,
-        const double gravitationalParameter, const double ppnParameterGamma = 1.0, const double ppnParameterBeta = 1.0 );
+        const Eigen::Vector6d& relativeState,
+        Eigen::Vector3d& currentAcceleration,
+        Eigen::Matrix3d& partialMatrix,
+        const double gravitationalParameter,
+        const double ppnParameterGamma = 1.0,
+        const double ppnParameterBeta = 1.0);
 
 //! Function to compute partial of Schwarzschild acceleration correction w.r.t. velocity of body undergoing acceleration
 /*!
@@ -47,8 +51,10 @@ void computePartialOfSchwarzschildAccelerationCorrectionWrtPosition(
  * \param ppnParameterGamma PPN parameter gamma
  */
 void computePartialOfSchwarzschildAccelerationCorrectionWrtVelocity(
-        const Eigen::Vector6d& relativeState, Eigen::Matrix3d& partialMatrix,
-        const double gravitationalParameter, const double ppnParameterGamma = 1.0 );
+        const Eigen::Vector6d& relativeState,
+        Eigen::Matrix3d& partialMatrix,
+        const double gravitationalParameter,
+        const double ppnParameterGamma = 1.0);
 
 //! Function to compute partial derivative of Schwarzschild acceleration correction w.r.t. central body gravitational patameter.
 /*!
@@ -62,7 +68,9 @@ void computePartialOfSchwarzschildAccelerationCorrectionWrtVelocity(
 void computePartialOfSchwarzschildAccelerationCorrectionWrtGravitationalParameter(
         const Eigen::Vector6d& relativeState,
         const double gravitationalParameter,
-        Eigen::MatrixXd& partialMatrix, const double ppnParameterGamma = 1.0, const double ppnParameterBeta = 1.0 );
+        Eigen::MatrixXd& partialMatrix,
+        const double ppnParameterGamma = 1.0,
+        const double ppnParameterBeta = 1.0 );
 
 //! Function to compute the partial derivative of Schwarzschild acceleration correction w.r.t. PPN parameter gamma
 /*!
@@ -88,6 +96,75 @@ void computePartialOfSchwarzschildAccelerationCorrectionWrtPpnParameterBeta(
         const double gravitationalParameter,
         Eigen::MatrixXd& partialMatrix );
 
+
+
+
+//! Function to compute partial of LenseThirring acceleration correction w.r.t. position of body undergoing acceleration
+/*!
+ * Function to compute partial of LenseThirring acceleration correction w.r.t. position of body undergoing acceleration
+ * \param relativeState Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
+ * \param currentAcceleration Current Schwarzschild acceleration correction
+ * \param partialMatrix Requested (returnd by reference)
+ * \param gravitationalParameter Gravitational parameter of body exerting acceleration.
+ * \param ppnParameterGamma PPN parameter gamma
+ * \param ppnParameterBeta PPN parameter beta
+ */
+void computePartialOfLenseThirringAccelerationCorrectionWrtPosition(
+        const Eigen::Vector6d& relativeState,
+        Eigen::Vector3d& currentAcceleration,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::Matrix3d& partialMatrix,
+        const double gravitationalParameter,
+        const double ppnParameterGamma = 1.0);
+
+//! Function to compute partial of LenseThirring acceleration correction w.r.t. velocity of body undergoing acceleration
+/*!
+ * Function to compute partial of LenseThirring acceleration correction w.r.t. velocity of body undergoing acceleration
+ * \param relativeState Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
+ * \param partialMatrix Requested (returnd by reference)
+ * \param gravitationalParameter Gravitational parameter of body exerting acceleration.
+ * \param ppnParameterGamma PPN parameter gamma
+ */
+void computePartialOfLenseThirringAccelerationCorrectionWrtVelocity(
+        const Eigen::Vector6d& relativeState,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::Matrix3d& partialMatrix,
+        const double gravitationalParameter,
+        const double ppnParameterGamma = 1.0 );
+
+//! Function to compute partial derivative of LenseThirring acceleration correction w.r.t. central body gravitational patameter.
+/*!
+ * Function to compute partial derivative of LenseThirring acceleration correction w.r.t. central body gravitational patameter.
+ * \param relativeState Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
+ * \param gravitationalParameter Gravitational parameter of body exerting acceleration.
+ * \param partialMatrix Requested (returnd by reference)
+ * \param ppnParameterGamma PPN parameter gamma
+ * \param ppnParameterBeta PPN parameter bet
+ */
+void computePartialOfLenseThirringAccelerationCorrectionWrtGravitationalParameter(
+        const Eigen::Vector6d& relativeState,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::MatrixXd& partialMatrix,
+        const double ppnParameterGamma = 1.0);
+
+//! Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. PPN parameter gamma
+/*!
+ * Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. PPN parameter gamma
+ * \param relativeState Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
+ * \param gravitationalParameter Gravitational parameter of body exerting acceleration.
+ * \param partialMatrix Requested (returnd by reference)
+ */
+void computePartialOfLenseThirringAccelerationCorrectionWrtPpnParameterGamma(
+        const Eigen::Vector6d& relativeState,
+        const double gravitationalParameter,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::MatrixXd& partialMatrix );
+
+
+// Beta does not appear in the lense-thirring correction
+
+
+
 //! Class to calculate the partials of the relativistic acceleration correction w.r.t. parameters and states.
 class RelativisticAccelerationPartial: public AccelerationPartial
 {
@@ -107,9 +184,9 @@ public:
         AccelerationPartial( acceleratedBody, acceleratingBody, basic_astrodynamics::relativistic_correction_acceleration )
     {
         // Only Schwarzschild correction is implemented so far.
-        if( accelerationModel->getCalculateDeSitterCorrection( ) || accelerationModel->getCalculateLenseThirringCorrection( ) )
+        if( accelerationModel->getCalculateDeSitterCorrection( ) )
         {
-            throw std::runtime_error( "Error when creating relativistic acceleration correction partial, only Schwarzschild term implemented" );
+            throw std::runtime_error( "Error when creating relativistic acceleration correction partial, de Sitter not yet implemented" );
         }
         centralBodyState_  = accelerationModel->getStateFunctionOfCentralBody( );
         acceleratedBodyState_ = accelerationModel->getStateFunctionOfAcceleratedBody( );
@@ -117,8 +194,14 @@ public:
         ppnGammaParameterFunction_ = accelerationModel->getPpnParameterGammaFunction_( );
         ppnBetaParameterFunction_ = accelerationModel->getPpnParameterBetaFunction_( );
         centralBodyGravitationalParameterFunction_ = accelerationModel->getGravitationalParameterFunctionOfCentralBody( );
-        currentAccelerationFunction_ = std::bind( &relativity::RelativisticAccelerationCorrection::getAcceleration,
+
+        currentSchwarzschildAccelerationFunction_ = std::bind( &relativity::RelativisticAccelerationCorrection::getSchwarzschildAcceleration,
                                                     accelerationModel );
+        currentLenseThirringAccelerationFunction_ = std::bind( &relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
+                                                    accelerationModel );
+
+        calculateLenseThirringCorrection_ = accelerationModel->getCalculateLenseThirringCorrection( );
+        centralBodyAngularMomentumFunction_ = accelerationModel->getCentralBodyAngularMomentum_( );
     }
 
     //! Function for calculating the partial of the acceleration w.r.t. the position of body undergoing acceleration.
@@ -273,9 +356,19 @@ public:
      */
     void wrtGravitationalParameterOfCentralBody( Eigen::MatrixXd& partialMatrix )
     {
+        Eigen::MatrixXd partialMatrixSchwarzschild;
+        Eigen::MatrixXd partialMatrixLenseThirring;
         computePartialOfSchwarzschildAccelerationCorrectionWrtGravitationalParameter(
-                    currentRelativeState_, centralBodyGravitationalParameterFunction_( ), partialMatrix,
+                    currentRelativeState_, centralBodyGravitationalParameterFunction_( ), partialMatrixSchwarzschild,
                     ppnGammaParameterFunction_( ), ppnBetaParameterFunction_( ) );
+        if (calculateLenseThirringCorrection_){
+            computePartialOfLenseThirringAccelerationCorrectionWrtGravitationalParameter(
+                        currentRelativeState_, centralBodyAngularMomentumFunction_( ),
+                        partialMatrixLenseThirring, ppnGammaParameterFunction_( ) );
+        } else{
+            partialMatrixLenseThirring = Eigen::Vector3d::Zero();
+        }
+        partialMatrix = partialMatrixSchwarzschild + partialMatrixLenseThirring;
     }
 
     //! Function to compute partial derivative of relativistic acceleration correction w.r.t. PPN parameter gamma
@@ -285,8 +378,25 @@ public:
      */
     void wrtPpnParameterGamma( Eigen::MatrixXd& partialMatrix )
     {
-        return computePartialOfSchwarzschildAccelerationCorrectionWrtPpnParameterGamma(
-                    currentRelativeState_, centralBodyGravitationalParameterFunction_( ), partialMatrix );
+        Eigen::MatrixXd partialMatrixSchwarzschild;
+        Eigen::MatrixXd partialMatrixLenseThirring;
+
+        computePartialOfSchwarzschildAccelerationCorrectionWrtPpnParameterGamma(
+               currentRelativeState_,
+               centralBodyGravitationalParameterFunction_( ),
+               partialMatrixSchwarzschild );
+
+        if (calculateLenseThirringCorrection_){
+            computePartialOfLenseThirringAccelerationCorrectionWrtPpnParameterGamma(
+                   currentRelativeState_,
+                   centralBodyGravitationalParameterFunction_( ),
+                   centralBodyAngularMomentumFunction_( ),
+                   partialMatrixLenseThirring );
+        } else{
+            partialMatrixLenseThirring = Eigen::Vector3d::Zero();
+        }
+
+        partialMatrix = partialMatrixSchwarzschild + partialMatrixLenseThirring;
     }
 
     //! Function to compute partial derivative of relativistic acceleration correction w.r.t. PPN parameter beta
@@ -298,6 +408,7 @@ public:
     {
         return computePartialOfSchwarzschildAccelerationCorrectionWrtPpnParameterBeta(
                     currentRelativeState_, centralBodyGravitationalParameterFunction_( ), partialMatrix );
+        // Parameter beta does not occur in the LenseThirring acceleration correction
     }
 
 
@@ -323,11 +434,15 @@ private:
     //! Function to retrieve PPN parameter beta
     std::function< double( ) > ppnBetaParameterFunction_;
 
+    //! Function to retrieve the angular momentum of the central body
+    std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumFunction_;
+
     //! Function to retrieve current gravitational parameter of central body.
     std::function< double( ) > centralBodyGravitationalParameterFunction_;
 
     //! Function to retrieve current relativistic acceleration correction.
-    std::function< Eigen::Vector3d( ) > currentAccelerationFunction_;
+    std::function< Eigen::Vector3d( ) > currentSchwarzschildAccelerationFunction_;
+    std::function< Eigen::Vector3d( ) > currentLenseThirringAccelerationFunction_;
 
     //! Current partial of relativistic acceleration correction w.r.t. position of body undergoing acceleration
     /*!
@@ -335,6 +450,8 @@ private:
      * ( = -partial of central gravity acceleration w.r.t. position of body exerting acceleration),
      *  calculated and set by update( ) function.
      */
+    Eigen::Matrix3d currentSchwarzschildPartialWrtPosition_;
+    Eigen::Matrix3d currentLenseThirringPartialWrtPosition_;
     Eigen::Matrix3d currentPartialWrtPosition_;
 
     //! Current partial of relativistic acceleration correction w.r.t. velocity of body undergoing acceleration
@@ -343,13 +460,20 @@ private:
      * ( = -partial of central gravity acceleration w.r.t. velocity of body exerting acceleration),
      *  calculated and set by update( ) function.
      */
+    Eigen::Matrix3d currentSchwarzschildPartialWrtVelocity_;
+    Eigen::Matrix3d currentLenseThirringPartialWrtVelocity_;
     Eigen::Matrix3d currentPartialWrtVelocity_;
 
     //! Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
     Eigen::Vector6d currentRelativeState_;
 
     //! Current relativistic acceleration correction
-    Eigen::Vector3d currentAcceleration_;
+    Eigen::Vector3d currentSchwarzschildAcceleration_;
+    Eigen::Vector3d currentLenseThirringAcceleration_;
+
+
+    //! Boolean which indicates if Lense Thirring correction is to be included
+    bool calculateLenseThirringCorrection_;
 
 };
 
