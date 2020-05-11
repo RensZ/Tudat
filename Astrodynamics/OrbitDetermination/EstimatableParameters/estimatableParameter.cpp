@@ -93,6 +93,12 @@ std::string getParameterTypeString( const EstimatebleParametersEnum parameterTyp
     case ppn_parameter_beta:
         parameterDescription = "PPN parameter beta ";
         break;
+    case ppn_parameter_alpha1:
+        parameterDescription = "PPN parameter alpha1 ";
+        break;
+    case ppn_parameter_alpha2:
+        parameterDescription = "PPN parameter alpha2 ";
+        break;
     case ppn_nordtvedt_parameter:
         parameterDescription = "NordtvedtParameter ";
         break;
@@ -199,6 +205,12 @@ bool isDoubleParameter( const EstimatebleParametersEnum parameterType )
         isDoubleParameter = true;
         break;
     case ppn_parameter_beta:
+        isDoubleParameter = true;
+        break;
+    case ppn_parameter_alpha1:
+        isDoubleParameter = true;
+        break;
+    case ppn_parameter_alpha2:
         isDoubleParameter = true;
         break;
     case ppn_nordtvedt_parameter:

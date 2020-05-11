@@ -620,6 +620,16 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
             doubleParameterToEstimate = std::make_shared< PPNNordtvedtParameter >( relativity::ppnParameterSet );
             break;
         }
+        case ppn_parameter_alpha1:
+        {
+            doubleParameterToEstimate = std::make_shared< PPNParameterAlpha1 >( relativity::ppnParameterSet );
+            break;
+        }
+        case ppn_parameter_alpha2:
+        {
+            doubleParameterToEstimate = std::make_shared< PPNParameterAlpha2 >( relativity::ppnParameterSet );
+            break;
+        }
         case time_varying_gravitational_parameter:
         {
             doubleParameterToEstimate = std::make_shared< TimeVaryingGravitationalParameter >( relativity::ppnParameterSet );

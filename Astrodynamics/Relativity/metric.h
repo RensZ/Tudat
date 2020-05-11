@@ -42,10 +42,14 @@ public:
      */
     PPNParameterSet( const double parameterGamma,
                      const double parameterBeta,
+                     const double parameterAlpha1,
+                     const double parameterAlpha2,
                      const double nordtvedtParameter,
                      const double timeVaryingGravitationalParameter):
         parameterGamma_( parameterGamma ),
         parameterBeta_( parameterBeta ),
+        parameterAlpha1_( parameterAlpha1 ),
+        parameterAlpha2_( parameterAlpha2 ),
         nordtvedtParameter_( nordtvedtParameter ),
         timeVaryingGravitationalParameter_( timeVaryingGravitationalParameter )
     { }
@@ -73,19 +77,28 @@ public:
         return parameterBeta_;
     }
 
-    //! Function to retrieve value of PPN parameter beta.
-    /*!
-     * Function to retrieve value of PPN parameter beta.
-     * \return Value of PPN parameter beta.
-     */
+    //! Function to retrieve value of the Nordtvedt parameter.
     double getNordtvedtParameter( )
     {
         return nordtvedtParameter_;
     }
 
+    //! Function to retrieve value of PPN parameter alpha1.
+    double getParameterAlpha1( )
+    {
+        return parameterAlpha1_;
+    }
+
+    //! Function to retrieve value of PPN parameter alpha1.
+    double getParameterAlpha2( )
+    {
+        return parameterAlpha2_;
+    }
+
     double getNordtvedtParameterFromPpnParameters( )
     {
-        return 4.0*getParameterBeta() - getParameterGamma() - 3.0;
+        return 4.0*getParameterBeta() - getParameterGamma() - 3.0
+                - getParameterAlpha1() - (2.0/3.0)*getParameterAlpha2();
     }
 
     //! Function to retrieve value of TVGP.
@@ -114,6 +127,18 @@ public:
         parameterBeta_ = parameterBeta;
     }
 
+    //! Function to reset value of PPN parameter alpha1.
+    void setParameterAlpha1( const double parameterAlpha1 )
+    {
+        parameterAlpha1_ = parameterAlpha1;
+    }
+
+    //! Function to reset value of PPN parameter alpha2.
+    void setParameterAlpha2( const double parameterAlpha2 )
+    {
+        parameterAlpha2_ = parameterAlpha2;
+    }
+
     //! Function to reset value of Nordtvedt parameter
     void setNordtvedtParameter( const double nordtvedtParameter )
     {
@@ -133,6 +158,12 @@ protected:
 
     //! Value of PPN parameter beta.
     double parameterBeta_;
+
+    //! Value of PPN parameter alpha1.
+    double parameterAlpha1_;
+
+    //! Value of PPN parameter alpha2.
+    double parameterAlpha2_;
 
     //! Value of the Nordtvedt parameter Eta.
     double nordtvedtParameter_;

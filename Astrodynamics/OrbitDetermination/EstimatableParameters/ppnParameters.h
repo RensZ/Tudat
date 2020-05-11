@@ -137,6 +137,126 @@ private:
 };
 
 
+//! Class used to estimate PPN parameter alpha 1
+class PPNParameterAlpha1: public EstimatableParameter< double >
+{
+
+public:
+
+    //! Constuctor
+    /*!
+     * Constuctor
+     * \param ppnParameterSet Object used to store PPN parameters
+     */
+    PPNParameterAlpha1( const std::shared_ptr< relativity::PPNParameterSet > ppnParameterSet
+                      = relativity::ppnParameterSet  ):
+        EstimatableParameter< double >( ppn_parameter_alpha1, "global_metric" ),
+      ppnParameterSet_( ppnParameterSet ){ }
+
+    //! Destructor
+    ~PPNParameterAlpha1( ) { }
+
+    //! Function to get the current value of the PPN parameter beta.
+    /*!
+     * Function to get the current value of the PPN parameter beta.
+     * \return Current value of the PPN parameter beta.
+     */
+    double getParameterValue( )
+    {
+        return ppnParameterSet_->getParameterAlpha1( );
+    }
+
+    //! Function to reset the value of the PPN parameter beta.
+    /*!
+     * Function to reset the value of the PPN parameter beta.
+     * \param parameterValue New value of the PPN parameter beta.
+     */
+    void setParameterValue( double parameterValue )
+    {
+        ppnParameterSet_->setParameterAlpha1( parameterValue );
+    }
+
+    //! Function to retrieve the size of the parameter (always 1).
+    /*!
+     *  Function to retrieve the size of the parameter (always 1).
+     *  \return Size of parameter value (always 1).
+     */
+    int getParameterSize( )
+    {
+        return 1;
+    }
+
+protected:
+
+private:
+
+    //! Object used to store PPN parameters
+    std::shared_ptr< relativity::PPNParameterSet > ppnParameterSet_;
+
+};
+
+
+//! Class used to estimate PPN parameter alpha 1
+class PPNParameterAlpha2: public EstimatableParameter< double >
+{
+
+public:
+
+    //! Constuctor
+    /*!
+     * Constuctor
+     * \param ppnParameterSet Object used to store PPN parameters
+     */
+    PPNParameterAlpha2( const std::shared_ptr< relativity::PPNParameterSet > ppnParameterSet
+                      = relativity::ppnParameterSet  ):
+        EstimatableParameter< double >( ppn_parameter_alpha2, "global_metric" ),
+      ppnParameterSet_( ppnParameterSet ){ }
+
+    //! Destructor
+    ~PPNParameterAlpha2( ) { }
+
+    //! Function to get the current value of the PPN parameter beta.
+    /*!
+     * Function to get the current value of the PPN parameter beta.
+     * \return Current value of the PPN parameter beta.
+     */
+    double getParameterValue( )
+    {
+        return ppnParameterSet_->getParameterAlpha2( );
+    }
+
+    //! Function to reset the value of the PPN parameter beta.
+    /*!
+     * Function to reset the value of the PPN parameter beta.
+     * \param parameterValue New value of the PPN parameter beta.
+     */
+    void setParameterValue( double parameterValue )
+    {
+        ppnParameterSet_->setParameterAlpha2( parameterValue );
+    }
+
+    //! Function to retrieve the size of the parameter (always 1).
+    /*!
+     *  Function to retrieve the size of the parameter (always 1).
+     *  \return Size of parameter value (always 1).
+     */
+    int getParameterSize( )
+    {
+        return 1;
+    }
+
+protected:
+
+private:
+
+    //! Object used to store PPN parameters
+    std::shared_ptr< relativity::PPNParameterSet > ppnParameterSet_;
+
+};
+
+
+
+
 //! Class used to estimate PPN parameter beta
 class PPNNordtvedtParameter: public EstimatableParameter< double >
 {

@@ -114,7 +114,7 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
 
 
 
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. the Nordtvedt parameter
 void computePartialOfSEPViolationAccelerationWrtNordtvedtParameter(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix)
@@ -122,7 +122,7 @@ void computePartialOfSEPViolationAccelerationWrtNordtvedtParameter(
     partialMatrix = nordtvedtPartial;
 };
 
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter gamma
 void computePartialOfSEPViolationAccelerationWrtPpnParameterGamma(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix)
@@ -130,7 +130,7 @@ void computePartialOfSEPViolationAccelerationWrtPpnParameterGamma(
     partialMatrix = -1.0*nordtvedtPartial;
 };
 
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter beta
 void computePartialOfSEPViolationAccelerationWrtPpnParameterBeta(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix)
@@ -138,6 +138,21 @@ void computePartialOfSEPViolationAccelerationWrtPpnParameterBeta(
     partialMatrix = 4.0*nordtvedtPartial;
 };
 
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter alpha1
+void computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha1(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix)
+{
+    partialMatrix = -1.0*nordtvedtPartial;
+};
+
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter alpha2
+void computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha2(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix)
+{
+    partialMatrix = (-2.0/3.0)*nordtvedtPartial;
+};
 
 
 
@@ -176,6 +191,18 @@ SEPViolationAccelerationPartial::getParameterPartialFunction(
         case estimatable_parameters::ppn_parameter_beta:
             if (useNordtvedtConstraint_( ) == true){
                 partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterBeta, this, std::placeholders::_1 );
+                numberOfRows = 1;
+            }
+            break;
+        case estimatable_parameters::ppn_parameter_alpha1:
+            if (useNordtvedtConstraint_( ) == true){
+                partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterAlpha1, this, std::placeholders::_1 );
+                numberOfRows = 1;
+            }
+            break;
+        case estimatable_parameters::ppn_parameter_alpha2:
+            if (useNordtvedtConstraint_( ) == true){
+                partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtPpnParameterAlpha2, this, std::placeholders::_1 );
                 numberOfRows = 1;
             }
             break;

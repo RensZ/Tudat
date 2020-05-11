@@ -232,17 +232,22 @@ public:
     SEPViolationAccelerationSettings(
             std::vector< std::string > bodyNames,
             const bool useNordtvedtConstraint
+//            const bool includePPNalphas
             ):
         AccelerationSettings( basic_astrodynamics::sep_violation_acceleration ),
         bodyNames_( bodyNames ),
         useNordtvedtConstraint_( useNordtvedtConstraint )
+//        includePPNalphas_( includePPNalphas )
     { }
 
     //! std vector with strings to pass on body names
     std::vector< std::string > bodyNames_;
 
-    //! Nordtvedt parameter
+    //! use nordtvedt constraint or not
     bool useNordtvedtConstraint_;
+
+//    //! include alphas or not
+//    bool includePPNalphas_;
 
 };
 

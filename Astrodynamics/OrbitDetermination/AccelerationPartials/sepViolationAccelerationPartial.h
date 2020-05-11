@@ -33,22 +33,31 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
         const double gravitationalParameterOfCentralBody);
 
 
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. the Nordtvedt parameter
 void computePartialOfSEPViolationAccelerationWrtNordtvedtParameter(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix);
 
-
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter gamma
 void computePartialOfSEPViolationAccelerationWrtPpnParameterGamma(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix);
 
-
-//! Function to compute partial of TVGP w.r.t. the Nordtvedt parameter
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter beta
 void computePartialOfSEPViolationAccelerationWrtPpnParameterBeta(
         const Eigen::Vector3d& nordtvedtPartial,
         Eigen::MatrixXd& partialMatrix);
+
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter alpha1
+void computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha1(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix);
+
+//! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter alpha2
+void computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha2(
+        const Eigen::Vector3d& nordtvedtPartial,
+        Eigen::MatrixXd& partialMatrix);
+
 
 
 
@@ -181,6 +190,21 @@ public:
                     currentNordtvedtPartial_,
                     partialMatrix);
     }
+
+    void wrtPpnParameterAlpha1( Eigen::MatrixXd& partialMatrix )
+    {
+        computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha1(
+                    currentNordtvedtPartial_,
+                    partialMatrix);
+    }
+
+    void wrtPpnParameterAlpha2( Eigen::MatrixXd& partialMatrix )
+    {
+        computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha2(
+                    currentNordtvedtPartial_,
+                    partialMatrix);
+    }
+
 
 
     //! Function for updating partial w.r.t. the bodies' states
