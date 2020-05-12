@@ -783,6 +783,56 @@ std::vector< std::shared_ptr< basic_astrodynamics::AccelerationModel3d > > getAc
     return listOfSuitableAccelerationModels;
 }
 
+//template< typename TimeType = double, typename StateScalarType = double >
+//std::vector< std::shared_ptr< relativity::RelativisticAccelerationCorrection > > getRelativisticAccelerationModel(
+//        const std::string bodyUndergoingAcceleration,
+//        const std::string bodyExertingAcceleration,
+//        const std::unordered_map< IntegratedStateType,
+//        std::vector< std::shared_ptr< SingleStateTypeDerivative< StateScalarType, TimeType > > > >& stateDerivativeModels)
+//{
+//    std::vector< std::shared_ptr< relativity::RelativisticAccelerationCorrection > >
+//            listOfSuitableAccelerationModels;
+
+//    // Retrieve acceleration models
+//    if( stateDerivativeModels.count( propagators::translational_state ) == 1 )
+//    {
+//        basic_astrodynamics::AccelerationMap accelerationModelList =
+//                std::dynamic_pointer_cast< NBodyStateDerivative< StateScalarType, TimeType > >(
+//                    stateDerivativeModels.at( propagators::translational_state ).at( 0 ) )->getAccelerationsMap( );
+
+//        if( accelerationModelList.count( bodyUndergoingAcceleration ) == 0 )
+//        {
+
+//            std::string errorMessage = "Error when getting acceleration between bodies, no translational dynamics models acting on " +
+//                    bodyUndergoingAcceleration + " are found";
+//            throw std::runtime_error( errorMessage );
+//        }
+//        else
+//        {
+//            // Retrieve accelerations acting on bodyUndergoingAcceleration
+//            if( accelerationModelList.at( bodyUndergoingAcceleration ).count( bodyExertingAcceleration ) == 0 )
+//            {
+//                std::string errorMessage = "Error when getting acceleration between bodies, no translational dynamics models by " +
+//                        bodyExertingAcceleration + " acting on " + bodyUndergoingAcceleration + " are found";
+//                throw std::runtime_error( errorMessage );
+//            }
+//            else
+//            {
+//                // Retrieve required acceleration.
+//                listOfSuitableAccelerationModels = basic_astrodynamics::getAccelerationModelsOfType(
+//                            accelerationModelList.at( bodyUndergoingAcceleration ).at( bodyExertingAcceleration ),
+//                            basic_astrodynamics::relativistic_correction_acceleration );
+//            }
+//        }
+//    }
+//    else
+//    {
+//        std::string errorMessage = "Error when getting acceleration between bodies, no translational dynamics models found";
+//        throw std::runtime_error( errorMessage );
+//    }
+//    return listOfSuitableAccelerationModels;
+//}
+
 //! Function to retrieve a single given torque model from a list of models
 /*!
  *  Function to retrieve a single given torque model, determined by

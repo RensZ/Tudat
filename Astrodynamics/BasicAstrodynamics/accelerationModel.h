@@ -61,6 +61,7 @@ public:
      */
     virtual AccelerationDataType getAcceleration( ) = 0;
 
+
     //! Update member variables used by the acceleration model.
     /*!
      * Updates member variables used by the acceleration model. In the case of acceleration models

@@ -392,15 +392,15 @@ int getDependentVariableSize(
     case radiation_pressure_coefficient_dependent_variable:
         variableSize = 1;
         break;
-    case schwarzschild_acceleration_correction:
-        variableSize = 3;
-        break;
-    case lense_thirring_acceleration_correction:
-        variableSize = 3;
-        break;
-    case de_sitter_acceleration_correction:
-        variableSize = 3;
-        break;
+//    case schwarzschild_acceleration_correction:
+//        variableSize = 3;
+//        break;
+//    case lense_thirring_acceleration_correction:
+//        variableSize = 3;
+//        break;
+//    case de_sitter_acceleration_correction:
+//        variableSize = 3;
+//        break;
     default:
         std::string errorMessage = "Error, did not recognize dependent variable size of type: " +
                 std::to_string( dependentVariableSettings->dependentVariableType_ );

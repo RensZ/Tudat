@@ -114,10 +114,10 @@ enum PropagationDependentVariables
     local_aerodynamic_heat_rate_dependent_variable = 43,
     euler_angles_to_body_fixed_313 = 44,
     current_body_mass_dependent_variable = 45,
-    radiation_pressure_coefficient_dependent_variable = 46,
-    schwarzschild_acceleration_correction = 47,
-    lense_thirring_acceleration_correction = 48,
-    de_sitter_acceleration_correction = 49
+    radiation_pressure_coefficient_dependent_variable = 46//,
+//    schwarzschild_acceleration_correction = 47,
+//    lense_thirring_acceleration_correction = 48,
+//    de_sitter_acceleration_correction = 49
 };
 
 //! Functional base class for defining settings for dependent variables that are to be saved during propagation

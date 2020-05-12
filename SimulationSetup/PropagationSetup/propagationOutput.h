@@ -425,7 +425,8 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
                     listOfSuitableAccelerationModels = getAccelerationBetweenBodies(
                         accelerationDependentVariableSettings->associatedBody_,
                         accelerationDependentVariableSettings->secondaryBody_,
-                        stateDerivativeModels, accelerationDependentVariableSettings->accelerationModelType_ );
+                        stateDerivativeModels,
+                        accelerationDependentVariableSettings->accelerationModelType_);
 
             // Check if third-body counterpart of acceleration is found
             if( listOfSuitableAccelerationModels.size( ) == 0 && basic_astrodynamics::isAccelerationDirectGravitational(
@@ -459,24 +460,65 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
         break;
     }
 
-    case schwarzschild_acceleration_correction:
-    {
-        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getSchwarzschildAcceleration,
-                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
-        break;
-    }
-    case lense_thirring_acceleration_correction:
-    {
-        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
-                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
-        break;
-    }
-    case de_sitter_acceleration_correction:
-    {
-        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getDeSitterAcceleration,
-                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
-        break;
-    }
+//    case schwarzschild_acceleration_correction:
+//    {
+//        // Check input consistency.
+//        std::shared_ptr< SingleAccelerationDependentVariableSaveSettings > accelerationDependentVariableSettings =
+//                std::dynamic_pointer_cast< SingleAccelerationDependentVariableSaveSettings >( dependentVariableSettings );
+//        if( accelerationDependentVariableSettings == nullptr )
+//        {
+//            std::string errorMessage= "Error, inconsistent inout when creating dependent variable function of type single_acceleration_dependent_variable";
+//            throw std::runtime_error( errorMessage );
+//        }
+//        else
+//        {
+//            // Retrieve list of suitable acceleration models (size should be one to avoid ambiguities)
+//            std::vector< std::shared_ptr< basic_astrodynamics::AccelerationModel< Eigen::Vector3d > > >
+//                    listOfSuitableAccelerationModels = getAccelerationBetweenBodies(
+//                        accelerationDependentVariableSettings->associatedBody_,
+//                        accelerationDependentVariableSettings->secondaryBody_,
+//                        stateDerivativeModels,
+//                        basic_astrodynamics::relativistic_correction_acceleration);
+
+//            if( listOfSuitableAccelerationModels.size( ) != 1 )
+//            {
+//                std::string errorMessage = "Error when getting acceleration between bodies " +
+//                        accelerationDependentVariableSettings->associatedBody_ + " and " +
+//                        accelerationDependentVariableSettings->secondaryBody_ + " of type " +
+//                        std::to_string(
+//                            accelerationDependentVariableSettings->accelerationModelType_ ) +
+//                        ", no such acceleration found";
+//                throw std::runtime_error( errorMessage );
+//            }
+//            else
+//            {
+//                std::shared_ptr< basic_astrodynamics::AccelerationModel< Eigen::Vector3d > > accelerationModel =
+//                        listOfSuitableAccelerationModels.at( 0 );
+//                variableFunction = std::bind( &basic_astrodynamics::AccelerationModel3d::getAcceleration,
+//                                              listOfSuitableAccelerationModels.at( 0 ) );
+
+//        relativityClass =
+
+//        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getSchwarzschildAcceleration,
+//                                     listOfSuitableAccelerationModels.at( 0 ) );
+//        parameterSize = 3;
+
+//        break;
+//    }
+//    case lense_thirring_acceleration_correction:
+//    {
+//        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
+//                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
+//        parameterSize = 3;
+//        break;
+//    }
+//    case de_sitter_acceleration_correction:
+//    {
+//        variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getDeSitterAcceleration,
+//                                     std::shared_ptr< relativity::RelativisticAccelerationCorrection > ( ) );
+//        parameterSize = 3;
+//        break;
+//    }
 
     case spherical_harmonic_acceleration_norm_terms_dependent_variable:
     {

@@ -12,6 +12,7 @@
 #define TUDAT_RELATIVISTICACCELERATIONCORRECTION_H
 
 #include <functional>
+#include <iostream>
 #include <boost/lambda/lambda.hpp>
 
 #include "Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h"
@@ -325,7 +326,6 @@ public:
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance, commonCorrectionTerm_, ppnParameterGamma_,
                             ppnParameterBeta_ );
-                currentAcceleration_ += currentSchwarzschildAcceleration_;
             }
 
             // Compute Lense-Thirring term (if requested)
@@ -337,8 +337,6 @@ public:
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance, commonCorrectionTerm_, centalBodyAngularMomentum_,
                             ppnParameterGamma_ );
-                currentAcceleration_ += currentLenseThirringAcceleration_;
-
             }
 
             // Compute de Sitter term (if requested)
@@ -362,12 +360,16 @@ public:
                             stateOfCentralBodyWrtPrimaryBody_.segment( 3, 3 ),
                             largerBodyCommonCorrectionTerm,
                             ppnParameterGamma_ );
-
-                currentAcceleration_ += currentDeSitterAcceleration_;
-
             }
 
+            currentAcceleration_ = currentSchwarzschildAcceleration_
+                    + currentLenseThirringAcceleration_
+                    + currentDeSitterAcceleration_;
 
+            std::cout<<"SS: "<<currentSchwarzschildAcceleration_.transpose()<<std::endl;
+            std::cout<<"LT: "<<currentLenseThirringAcceleration_.transpose()<<std::endl;
+//            std::cout<<"DS: "<<currentDeSitterAcceleration_.transpose()<<std::endl;
+            std::cout<<"Sum: "<<currentAcceleration_.transpose()<<std::endl;
         }
     }
 

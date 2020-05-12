@@ -9,6 +9,7 @@
  */
 
 #include <Eigen/Geometry>
+#include <iostream>
 
 #include "Tudat/Astrodynamics/Relativity/relativisticAccelerationCorrection.h"
 
@@ -74,6 +75,7 @@ Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
             relativePosition.cross( relativeVelocity ) *
             ( relativePosition.dot( centralBodyAngularMomentum ) ) +
             relativeVelocity.cross( centralBodyAngularMomentum );
+
     return acceleration * ( 1.0 + ppnParameterGamma ) * commonCorrectionTerm;
 }
 
