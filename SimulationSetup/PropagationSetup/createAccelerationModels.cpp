@@ -1236,9 +1236,16 @@ Eigen::Vector3d getNordtvedtPartial(
                        * 1.0/(gravitationalParameterBodyExertingAcceleration/physical_constants::GRAVITATIONAL_CONSTANT)
                        * 1.0/(physical_constants::SPEED_OF_LIGHT*physical_constants::SPEED_OF_LIGHT)
                        )
-                    * 2.0/(distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration
-                           * distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration
-                           * distanceBodyExertingAccelerationWrtCurrentBody)
+                    * (1.0 / (distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration
+                              * distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration
+                              * distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration)
+                       )
+                    * (positionBodyUndergoingAccelerationWrtBodyExertingAcceleration
+                       * positionBodyUndergoingAccelerationWrtBodyExertingAcceleration.transpose()
+                       / (distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration
+                          * distanceBodyUndergoingAccelerationWrtBodyExertingAcceleration)
+                       - Eigen::Matrix3d::Identity()
+                       )
                     * positionCurrentBody;
 
         }
@@ -1421,19 +1428,36 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
                     std::bind( &GravityFieldModel::getGravitationalParameter, bodyExertingAcceleration->getGravityFieldModel( ) );
         }
 
+        std::function< double( ) > acceleratedBodyGravitationalParameterFunction;
+        std::shared_ptr< GravityFieldModel > gravityField2 = bodyUndergoingAcceleration->getGravityFieldModel( );
+        if( gravityField2 == nullptr )
+        {
+            throw std::runtime_error( "Error " + nameOfBodyUndergoingAcceleration + " does not have a gravity field " +
+                                      "when making relativistic acceleration caused by" + nameOfBodyExertingAcceleration );
+        }
+        else
+        {
+            acceleratedBodyGravitationalParameterFunction =
+                    std::bind( &GravityFieldModel::getGravitationalParameter, bodyUndergoingAcceleration->getGravityFieldModel( ) );
+        }
+
+        std::function< double( ) > ppnGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
+        std::function< double( ) > ppnBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
+        std::function< double( ) > ppnAlpha1Function = std::bind( &PPNParameterSet::getParameterAlpha1, ppnParameterSet );
+        std::function< double( ) > ppnAlpha2Function = std::bind( &PPNParameterSet::getParameterAlpha2, ppnParameterSet );
+
         // Create acceleration model if only schwarzschild term is to be used.
         if( relativisticAccelerationSettings->calculateLenseThirringCorrection_ == false &&
                 relativisticAccelerationSettings->calculateDeSitterCorrection_ == false )
         {
-            std::function< double( ) > ppnGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
-            std::function< double( ) > ppnBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
-
             // Create acceleration model.
             accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
                     ( stateFunctionOfBodyUndergoingAcceleration,
                       stateFunctionOfBodyExertingAcceleration,
                       centralBodyGravitationalParameterFunction,
-                      ppnGammaFunction, ppnBetaFunction );
+                      acceleratedBodyGravitationalParameterFunction,
+                      ppnGammaFunction, ppnBetaFunction,
+                      ppnAlpha1Function, ppnAlpha2Function);
 
         }
         else
@@ -1482,23 +1506,26 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
                           stateFunctionOfBodyExertingAcceleration,
                           stateFunctionOfPrimaryBody,
                           centralBodyGravitationalParameterFunction,
+                          acceleratedBodyGravitationalParameterFunction,
                           primaryBodyGravitationalParameterFunction,
                           relativisticAccelerationSettings->primaryBody_,
                           angularMomentumFunction,
-                          std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet ),
-                          std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet ),
+                          ppnGammaFunction, ppnBetaFunction,
+                          ppnAlpha1Function, ppnAlpha2Function,
                           relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
             }
             else
             {
+
                 // Create acceleration model with Lense-Thirring and term.
                 accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
                         ( stateFunctionOfBodyUndergoingAcceleration,
                           stateFunctionOfBodyExertingAcceleration,
                           centralBodyGravitationalParameterFunction,
+                          acceleratedBodyGravitationalParameterFunction,
                           angularMomentumFunction,
-                          std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet ),
-                          std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet ),
+                          ppnGammaFunction, ppnBetaFunction,
+                          ppnAlpha1Function, ppnAlpha2Function,
                           relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
             }
         }

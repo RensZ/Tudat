@@ -61,38 +61,79 @@ Eigen::Vector3d calculateScharzschildGravitationalAccelerationCorrection(
                 ppnParameterGamma, ppnParameterBeta );
 }
 
+
+Eigen::Vector3d calculateScharzschildAlphaTermsAccelerationCorrection(
+        const double centralBodyGravitationalParameter,
+        const double acceleratedBodyGravitationalParameter,
+        const Eigen::Vector3d& relativePosition,
+        const Eigen::Vector3d& relativeVelocity,
+        const double relativeDistance,
+        const double commonCorrectionTerm,
+        const double ppnParameterAlpha1,
+        const double ppnParameterAlpha2)
+{
+    Eigen::Vector3d acceleration =
+            (
+                (2.0 + ppnParameterAlpha1) * acceleratedBodyGravitationalParameter / relativeDistance
+                - 0.5 * (6.0 + ppnParameterAlpha1 + ppnParameterAlpha2)
+                    * (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
+                    * (relativeVelocity.dot(relativeVelocity))
+                + 1.5 * (1.0 + ppnParameterAlpha1)
+                    * (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
+                    * (relativeVelocity.dot(relativePosition)/relativeDistance)
+                    * (relativeVelocity.dot(relativePosition)/relativeDistance)
+            ) * relativePosition
+            + (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
+            * (2.0 - ppnParameterAlpha1 + ppnParameterAlpha2)
+            * (relativePosition.dot(relativeVelocity))
+            * relativeVelocity;
+    return commonCorrectionTerm * acceleration;
+}
+
+
+
 //! Function to compute the Lense-Thirring term of the relativistic acceleration correction.
 Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
         const Eigen::Vector3d& relativePosition,
         const Eigen::Vector3d& relativeVelocity,
         const double relativeDistance,
-        const double commonCorrectionTerm,
-        const Eigen::Vector3d& centralBodyAngularMomentum,
-        const double ppnParameterGamma )
-{
-    Eigen::Vector3d acceleration = 3.0 / (
-                relativeDistance * relativeDistance ) *
-            relativePosition.cross( relativeVelocity ) *
-            ( relativePosition.dot( centralBodyAngularMomentum ) ) +
-            relativeVelocity.cross( centralBodyAngularMomentum );
-
-    return acceleration * ( 1.0 + ppnParameterGamma ) * commonCorrectionTerm;
-}
-
-//! Function to compute the Lense-Thirring term of the relativistic acceleration correction.
-Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
         const double centralBodyGravitationalParameter,
-        const Eigen::Vector6d& relativeState,
         const Eigen::Vector3d& centralBodyAngularMomentum,
         const double ppnParameterGamma )
 {
-    return calculateLenseThirringCorrectionAcceleration(
-                relativeState.segment( 0, 3 ), relativeState.segment( 3, 3 ), relativeState.segment( 0, 3 ).norm( ),
-                calculateRelativisticAccelerationCorrectionsCommonterm(
-                    centralBodyGravitationalParameter, relativeState.segment( 0, 3 ).norm( ) ),
-                centralBodyAngularMomentum, ppnParameterGamma );
+    Eigen::Vector3d termsInBrackets = 3.0
+            * relativePosition.cross( relativeVelocity )
+            * relativePosition.dot( centralBodyAngularMomentum )
+            / (relativeDistance * relativeDistance);
 
+    termsInBrackets += relativeVelocity.cross( centralBodyAngularMomentum );
+
+    double commonCorrectionTerm = centralBodyGravitationalParameter
+            / (physical_constants::SPEED_OF_LIGHT * physical_constants::SPEED_OF_LIGHT
+               * relativeDistance * relativeDistance * relativeDistance);
+
+    Eigen::Vector3d acceleration = ( 1.0 + ppnParameterGamma ) * commonCorrectionTerm * termsInBrackets;
+
+    return acceleration;
+//    return Eigen::Vector3d::Zero();
 }
+
+////! Function to compute the Lense-Thirring term of the relativistic acceleration correction.
+//Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
+//        const double centralBodyGravitationalParameter,
+//        const Eigen::Vector6d& relativeState,
+//        const Eigen::Vector3d& centralBodyAngularMomentum,
+//        const double ppnParameterGamma )
+//{
+//    return calculateLenseThirringCorrectionAcceleration(
+//                relativeState.segment( 0, 3 ),
+//                relativeState.segment( 3, 3 ),
+//                relativeState.segment( 0, 3 ).norm( ),
+//                calculateRelativisticAccelerationCorrectionsCommonterm(
+//                    centralBodyGravitationalParameter, relativeState.segment( 0, 3 ).norm( ) ),
+//                centralBodyAngularMomentum, ppnParameterGamma );
+
+//}
 
 //! Function to compute the de Sitter term of the relativistic acceleration correction.
 Eigen::Vector3d calculateDeSitterCorrectionAcceleration(

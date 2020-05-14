@@ -74,6 +74,33 @@ Eigen::Vector3d calculateScharzschildGravitationalAccelerationCorrection(
         const double ppnParameterGamma = 1.0,
         const double ppnParameterBeta = 1.0 );
 
+
+//! Function to compute the alpha terms of the Schwarzschild term of the relativistic acceleration correction.
+/*!
+ *  Function to compute the alpha terms of the Schwarzschild term of the relativistic acceleration correction.
+ * \param centralBodyGravitationalParameter Gravitational parameter of body exerting acceleration.
+ * \param relativePosition Position of body undergoing, w.r.t. body exerting, acceleration.
+ * \param relativeVelocity Velocity of body undergoing, w.r.t. body exerting, acceleration.
+ * \param relativeDistance Distance between bodies undergoing and exerting acceleration (norm of relativePosition)
+ * \param commonCorrectionTerm Common term in relativistic accelerations, as computed by
+ * calculateRelativisticAccelerationCorrectionsCommonterm function
+ * \param ppnParameterGamma PPN parameter gamma
+ * \param ppnParameterBeta PPN parameter beta
+ * \param ppnParameterAlpha1 PPN parameter alpha1
+ * \param ppnParameterAlpha2 PPN parameter alpha2
+ * \return Schwarzschild term of the relativistic acceleration correction.
+ */
+Eigen::Vector3d calculateScharzschildAlphaTermsAccelerationCorrection(
+        const double centralBodyGravitationalParameter,
+        const double acceleratedBodyGravitationalParameter,
+        const Eigen::Vector3d& relativePosition,
+        const Eigen::Vector3d& relativeVelocity,
+        const double relativeDistance,
+        const double commonCorrectionTerm,
+        const double ppnParameterAlpha1 = 0.0,
+        const double ppnParameterAlpha2 = 0.0);
+
+
 //! Function to compute the Lense-Thirring term of the relativistic acceleration correction.
 /*!
  *  Function to compute the Lense-Thirring term of the relativistic acceleration correction.
@@ -90,7 +117,7 @@ Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
         const Eigen::Vector3d& relativePosition,
         const Eigen::Vector3d& relativeVelocity,
         const double relativeDistance,
-        const double commonCorrectionTerm,
+        const double centralBodyGravitationalParameter,
         const Eigen::Vector3d& centralBodyAngularMomentum,
         const double ppnParameterGamma = 1.0 );
 
@@ -103,11 +130,11 @@ Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
  * \param ppnParameterGamma PPN parameter gamma
  * \return Schwarzschild term of the relativistic acceleration correction.
  */
-Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
-        const double centralBodyGravitationalParameter,
-        const Eigen::Vector6d& relativeState,
-        const Eigen::Vector3d& centralBodyAngularMomentum,
-        const double ppnParameterGamma = 1.0 );
+//Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
+//        const double centralBodyGravitationalParameter,
+//        const Eigen::Vector6d& relativeState,
+//        const Eigen::Vector3d& centralBodyAngularMomentum,
+//        const double ppnParameterGamma = 1.0 );
 
 //! Function to compute the de Sitter term of the relativistic acceleration correction.
 /*!
@@ -178,22 +205,28 @@ public:
             std::function< Eigen::Vector6d( ) > stateFunctionOfCentralBody,
             std::function< Eigen::Vector6d( ) > stateFunctionOfPrimaryBody,
             std::function< double( ) > gravitationalParameterFunctionOfCentralBody,
+            std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
             std::function< double( ) > gravitationalParameterFunctionOfPrimaryBody,
             std::string primaryBodyName,
             std::function< Eigen::Vector3d( ) > centalBodyAngularMomentumFunction = std::function< Eigen::Vector3d( ) >( ),
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
+            std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
+            std::function< double( ) > ppnParameterAlpha2Function = [ ]( ){ return 0.0; },
             const bool calculateSchwarzschildCorrection = true ):
         AccelerationModel< Eigen::Vector3d >( ),
         stateFunctionOfAcceleratedBody_( stateFunctionOfAcceleratedBody ),
         stateFunctionOfCentralBody_( stateFunctionOfCentralBody ),
         stateFunctionOfPrimaryBody_( stateFunctionOfPrimaryBody ),
         gravitationalParameterFunctionOfCentralBody_( gravitationalParameterFunctionOfCentralBody ),
+        gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
         gravitationalParameterFunctionOfPrimaryBody_( gravitationalParameterFunctionOfPrimaryBody ),
         primaryBodyName_( primaryBodyName ),
         centalBodyAngularMomentumFunction_( centalBodyAngularMomentumFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
+        ppnParameterAlpha1Function_( ppnParameterAlpha1Function ),
+        ppnParameterAlpha2Function_( ppnParameterAlpha2Function ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateDeSitterCorrection_( true ),
         calculateLenseThirringCorrection_( !( centalBodyAngularMomentumFunction == nullptr ) )
@@ -216,17 +249,23 @@ public:
             std::function< Eigen::Vector6d( ) > stateFunctionOfAcceleratedBody,
             std::function< Eigen::Vector6d( ) > stateFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfCentralBody,
+            std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
             std::function< Eigen::Vector3d( ) > centalBodyAngularMomentumFunction,
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
+            std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
+            std::function< double( ) > ppnParameterAlpha2Function = [ ]( ){ return 0.0; },
             const bool calculateSchwarzschildCorrection = true ):
         AccelerationModel< Eigen::Vector3d >( ),
         stateFunctionOfAcceleratedBody_( stateFunctionOfAcceleratedBody ),
         stateFunctionOfCentralBody_( stateFunctionOfCentralBody ),
         gravitationalParameterFunctionOfCentralBody_( gravitationalParameterFunctionOfCentralBody ),
+        gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
         centalBodyAngularMomentumFunction_( centalBodyAngularMomentumFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
+        ppnParameterAlpha1Function_( ppnParameterAlpha1Function ),
+        ppnParameterAlpha2Function_( ppnParameterAlpha2Function ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateDeSitterCorrection_( false ),
         calculateLenseThirringCorrection_( true )
@@ -246,14 +285,20 @@ public:
             std::function< Eigen::Vector6d( ) > stateFunctionOfAcceleratedBody,
             std::function< Eigen::Vector6d( ) > stateFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfCentralBody,
+            std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
-            std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; } ):
+            std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
+            std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
+            std::function< double( ) > ppnParameterAlpha2Function = [ ]( ){ return 0.0; }):
         AccelerationModel< Eigen::Vector3d >( ),
         stateFunctionOfAcceleratedBody_( stateFunctionOfAcceleratedBody ),
         stateFunctionOfCentralBody_( stateFunctionOfCentralBody ),
         gravitationalParameterFunctionOfCentralBody_( gravitationalParameterFunctionOfCentralBody ),
+        gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
+        ppnParameterAlpha1Function_( ppnParameterAlpha1Function ),
+        ppnParameterAlpha2Function_( ppnParameterAlpha2Function ),
         calculateSchwarzschildCorrection_( true ),
         calculateDeSitterCorrection_( false ),
         calculateLenseThirringCorrection_( false )
@@ -276,6 +321,10 @@ public:
     {
         return  currentSchwarzschildAcceleration_;
     }
+    Eigen::Vector3d getSchwarzschildAlphaTermsAcceleration( )
+    {
+        return  currentSchwarzschildAlphaTermsAcceleration_;
+    }
     Eigen::Vector3d getLenseThirringAcceleration( )
     {
         return  currentLenseThirringAcceleration_;
@@ -297,25 +346,26 @@ public:
     {
         if( !( this->currentTime_ == currentTime ) )
         {
+
+//            std::cout<<"calculating relativistic corrections..."<<std::endl;
+
             this->currentTime_ = currentTime;
 
             // Update common variables
             stateOfAcceleratedBodyWrtCentralBody_ = stateFunctionOfAcceleratedBody_( ) - stateFunctionOfCentralBody_( );
+            double relativeDistance = stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ).norm( );
+
             gravitationalParameterOfCentralBody_ = gravitationalParameterFunctionOfCentralBody_( );
+            gravitationalParameterOfAcceleratedBody_ = gravitationalParameterFunctionOfAcceleratedBody_( );
 
             ppnParameterGamma_ = ppnParameterGammaFunction_( );
             ppnParameterBeta_ = ppnParameterBetaFunction_( );
+            ppnParameterAlpha1_ = ppnParameterAlpha1Function_( );
+            ppnParameterAlpha2_ = ppnParameterAlpha2Function_( );
 
             commonCorrectionTerm_ = calculateRelativisticAccelerationCorrectionsCommonterm(
                         gravitationalParameterOfCentralBody_,
-                        stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ).norm( ) );
-
-            currentAcceleration_.setZero( );
-            currentSchwarzschildAcceleration_.setZero( );
-            currentLenseThirringAcceleration_.setZero( );
-            currentDeSitterAcceleration_.setZero( );
-
-            double relativeDistance = stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ).norm( );
+                        relativeDistance );
 
             // Compute Schwarzschild term (if requested)
             if( calculateSchwarzschildCorrection_ )
@@ -326,18 +376,43 @@ public:
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance, commonCorrectionTerm_, ppnParameterGamma_,
                             ppnParameterBeta_ );
+            } else{
+                currentSchwarzschildAcceleration_ = Eigen::Vector3d::Zero();
             }
+
+
+
+            // Compute of Schwarzschild correction (if requested) the alpha terms (if nonzero alpha1 or alpha2)
+            if (calculateSchwarzschildCorrection_){
+                currentSchwarzschildAlphaTermsAcceleration_ = calculateScharzschildAlphaTermsAccelerationCorrection(
+                            gravitationalParameterOfCentralBody_,
+                            gravitationalParameterOfAcceleratedBody_,
+                            stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
+                            stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
+                            relativeDistance, commonCorrectionTerm_,
+                            ppnParameterAlpha1_, ppnParameterAlpha2_);
+            } else{
+                currentSchwarzschildAlphaTermsAcceleration_ = Eigen::Vector3d::Zero();
+            }
+
+
 
             // Compute Lense-Thirring term (if requested)
             if( calculateLenseThirringCorrection_ )
             {
                 centalBodyAngularMomentum_ = centalBodyAngularMomentumFunction_( );
-                currentLenseThirringAcceleration_ +=  calculateLenseThirringCorrectionAcceleration(
+                currentLenseThirringAcceleration_ =  calculateLenseThirringCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
-                            relativeDistance, commonCorrectionTerm_, centalBodyAngularMomentum_,
+                            relativeDistance,
+                            gravitationalParameterOfCentralBody_,
+                            centalBodyAngularMomentum_,
                             ppnParameterGamma_ );
+            } else{
+                currentLenseThirringAcceleration_ = Eigen::Vector3d::Zero();
             }
+
+
 
             // Compute de Sitter term (if requested)
             if( calculateDeSitterCorrection_ )
@@ -360,16 +435,27 @@ public:
                             stateOfCentralBodyWrtPrimaryBody_.segment( 3, 3 ),
                             largerBodyCommonCorrectionTerm,
                             ppnParameterGamma_ );
+            } else{
+                currentDeSitterAcceleration_ = Eigen::Vector3d::Zero();
             }
 
             currentAcceleration_ = currentSchwarzschildAcceleration_
+                    + currentSchwarzschildAlphaTermsAcceleration_
                     + currentLenseThirringAcceleration_
                     + currentDeSitterAcceleration_;
 
-            std::cout<<"SS: "<<currentSchwarzschildAcceleration_.transpose()<<std::endl;
-            std::cout<<"LT: "<<currentLenseThirringAcceleration_.transpose()<<std::endl;
-//            std::cout<<"DS: "<<currentDeSitterAcceleration_.transpose()<<std::endl;
-            std::cout<<"Sum: "<<currentAcceleration_.transpose()<<std::endl;
+//            std::cout<<"acceleration: "<<
+//                       currentSchwarzschildAlphaTermsAcceleration_.norm()/currentAcceleration_.norm()<<std::endl;
+
+
+//            if (currentSchwarzschildAlphaTermsAcceleration_.norm() > 0.0) {
+//                    std::cout<<"SS: "<<currentSchwarzschildAcceleration_.transpose()<<std::endl;
+//                    std::cout<<"SSa: "<<currentSchwarzschildAlphaTermsAcceleration_.transpose()<<std::endl;
+//                    std::cout<<"LT: "<<currentLenseThirringAcceleration_.transpose()<<std::endl;
+//        //            std::cout<<"DS: "<<currentDeSitterAcceleration_.transpose()<<std::endl;
+//                    std::cout<<"Sum: "<<currentAcceleration_.transpose()<<std::endl;
+//            }
+
         }
     }
 
@@ -398,6 +484,14 @@ public:
     std::function< double( ) > getGravitationalParameterFunctionOfCentralBody( )
     { return gravitationalParameterFunctionOfCentralBody_; }
 
+    //! Function to return the current gravitational parameter of accelerated body
+    /*!
+     * Function to return the current gravitational parameter of accelerated body
+     * \return Current gravitational parameter of central body
+     */
+    std::function< double( ) > getGravitationalParameterFunctionOfAcceleratedBody( )
+    { return gravitationalParameterFunctionOfAcceleratedBody_; }
+
     //! Function to return the current PPN parameter gamma
     /*!
      * Function to return the current PPN parameter gamma
@@ -413,6 +507,23 @@ public:
      */
     std::function< double( ) > getPpnParameterBetaFunction_( )
     { return ppnParameterBetaFunction_; }
+
+
+    //! Function to return the current PPN parameter alpha1
+    /*!
+     * Function to return the current PPN parameter alpha1
+     * \return Current PPN parameter alpha1
+     */
+    std::function< double( ) > getPpnParameterAlpha1Function_( )
+    { return ppnParameterAlpha1Function_; }
+
+    //! Function to return the current PPN parameter alpha2
+    /*!
+     * Function to return the current PPN parameter alpha2
+     * \return Current PPN parameter alpha2
+     */
+    std::function< double( ) > getPpnParameterAlpha2Function_( )
+    { return ppnParameterAlpha2Function_; }
 
     //! Function to return the current angular momentum of the central body
     /*!
@@ -465,6 +576,9 @@ private:
     //! Function returning the gravitational parameter of the central body
     std::function< double( ) > gravitationalParameterFunctionOfCentralBody_;
 
+    //! Function returning the gravitational parameter of the accelerated body
+    std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody_;
+
     //! Function returning the gravitational parameter of the primary body
     std::function< double( ) > gravitationalParameterFunctionOfPrimaryBody_;
 
@@ -480,6 +594,12 @@ private:
     //! Function returning the PPN parameter beta
     std::function< double( ) > ppnParameterBetaFunction_;
 
+    //! Function returning the PPN parameter alpha1
+    std::function< double( ) > ppnParameterAlpha1Function_;
+
+    //! Function returning the PPN parameter alpha2
+    std::function< double( ) > ppnParameterAlpha2Function_;
+
 
 
     //! Current state of the body undergoing acceleration, as computed by last call to updateMembers function.
@@ -494,6 +614,9 @@ private:
     //! Current gravitational parameter of central body
     double gravitationalParameterOfCentralBody_;
 
+    //! Current gravitational parameter of accelerated body
+    double gravitationalParameterOfAcceleratedBody_;
+
     //! Current gravitational parameter of primary body
     double gravitationalParameterOfPrimaryBody_;
 
@@ -505,6 +628,12 @@ private:
 
     //! Current PPN parameter beta
     double ppnParameterBeta_;
+
+    //! Current PPN parameter alpha1
+    double ppnParameterAlpha1_;
+
+    //! Current PPN parameter alpha2
+    double ppnParameterAlpha2_;
 
     //! Pre-computed common term for corrections (computed by calculateRelativisticAccelerationCorrectionsCommonterm)
     double commonCorrectionTerm_;
@@ -525,6 +654,7 @@ private:
     //! Relativistic acceleration correction, as computed by last call to updateMembers function
     Eigen::Vector3d currentAcceleration_;
     Eigen::Vector3d currentSchwarzschildAcceleration_;
+    Eigen::Vector3d currentSchwarzschildAlphaTermsAcceleration_;
     Eigen::Vector3d currentLenseThirringAcceleration_;
     Eigen::Vector3d currentDeSitterAcceleration_;
 
