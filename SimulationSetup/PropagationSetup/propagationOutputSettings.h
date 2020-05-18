@@ -114,10 +114,11 @@ enum PropagationDependentVariables
     local_aerodynamic_heat_rate_dependent_variable = 43,
     euler_angles_to_body_fixed_313 = 44,
     current_body_mass_dependent_variable = 45,
-    radiation_pressure_coefficient_dependent_variable = 46//,
-//    schwarzschild_acceleration_correction = 47,
-//    lense_thirring_acceleration_correction = 48,
-//    de_sitter_acceleration_correction = 49
+    radiation_pressure_coefficient_dependent_variable = 46,
+    schwarzschild_acceleration_correction = 47,
+    schwarzschild_alphaterms_acceleration_correction = 48,
+    lense_thirring_acceleration_correction = 49,
+    de_sitter_acceleration_correction = 50
 };
 
 //! Functional base class for defining settings for dependent variables that are to be saved during propagation
@@ -192,15 +193,25 @@ public:
             const std::string& bodyUndergoingAcceleration,
             const std::string& bodyExertingAcceleration,
             const bool useNorm = 0,
-            const int componentIndex = -1 ):
+            const int componentIndex = -1,
+            const int relativisticAccelerationTerm = 0):
         SingleDependentVariableSaveSettings(
             ( useNorm == 1 ) ? ( single_acceleration_norm_dependent_variable ) : ( single_acceleration_dependent_variable ),
             bodyUndergoingAcceleration, bodyExertingAcceleration, componentIndex ),
-        accelerationModelType_( accelerationModelType )
+        accelerationModelType_( accelerationModelType ),
+        relativisticAccelerationTerm_ (relativisticAccelerationTerm)
     { }
 
     //! Type of acceleration that is to be saved.
     basic_astrodynamics::AvailableAcceleration accelerationModelType_;
+
+    //! In case of saving relativistic correction terms, this int tells which one
+    //! 0 = sum of all terms below (default)
+    //! 1 = conventional schwarzschild correction with PPN parameters gamma and beta
+    //! 2 = higher-order terms of schwarzschild correction with alpha1 and alpha2
+    //! 3 = lense-thirring correction
+    //! 4 = de-sitter correction
+    int relativisticAccelerationTerm_;
 
 };
 

@@ -203,15 +203,18 @@ std::string getDependentVariableName( const PropagationDependentVariables propag
     case radiation_pressure_coefficient_dependent_variable:
         variableName = "Radiation pressure coefficient ";
         break;
-//    case schwarzschild_acceleration_correction:
-//        variableName = "Schwarzschild acceleration correction ";
-//        break;
-//    case lense_thirring_acceleration_correction:
-//        variableName = "Lense-Thirring acceleration correction ";
-//        break;
-//    case de_sitter_acceleration_correction:
-//        variableName = "de Sitter acceleration correction ";
-//        break;
+    case schwarzschild_acceleration_correction:
+        variableName = "Schwarzschild acceleration correction ";
+        break;
+    case schwarzschild_alphaterms_acceleration_correction:
+        variableName = "Schwarzschild alpha1 and alpha2 terms acceleration correction ";
+        break;
+    case lense_thirring_acceleration_correction:
+        variableName = "Lense-Thirring acceleration correction ";
+        break;
+    case de_sitter_acceleration_correction:
+        variableName = "de Sitter acceleration correction ";
+        break;
     default:
         std::string errorMessage = "Error, dependent variable " +
                 std::to_string( propagationDependentVariables ) +

@@ -19,6 +19,8 @@
 #include "Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h"
 #include "Tudat/Basics/basicTypedefs.h"
 
+
+
 namespace tudat
 {
 
@@ -208,7 +210,8 @@ public:
             std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
             std::function< double( ) > gravitationalParameterFunctionOfPrimaryBody,
             std::string primaryBodyName,
-            std::function< Eigen::Vector3d( ) > centalBodyAngularMomentumFunction = std::function< Eigen::Vector3d( ) >( ),
+            std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction = std::function< Eigen::Vector3d( ) >( ),
+            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction = std::function< std::string() >( ),
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
@@ -222,14 +225,15 @@ public:
         gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
         gravitationalParameterFunctionOfPrimaryBody_( gravitationalParameterFunctionOfPrimaryBody ),
         primaryBodyName_( primaryBodyName ),
-        centalBodyAngularMomentumFunction_( centalBodyAngularMomentumFunction ),
+        centralBodyAngularMomentumInLocalFrameFunction_( centralBodyAngularMomentumInLocalFrameFunction ),
+        nameOfBodyExertingAccelerationFunction_( nameOfBodyExertingAccelerationFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
         ppnParameterAlpha1Function_( ppnParameterAlpha1Function ),
         ppnParameterAlpha2Function_( ppnParameterAlpha2Function ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateDeSitterCorrection_( true ),
-        calculateLenseThirringCorrection_( !( centalBodyAngularMomentumFunction == nullptr ) )
+        calculateLenseThirringCorrection_( !( centralBodyAngularMomentumInLocalFrameFunction == nullptr ) )
     { }
 
     //! Constructor, used when including Lense-Thirring, but not de Sitter, acceleration
@@ -250,7 +254,8 @@ public:
             std::function< Eigen::Vector6d( ) > stateFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
-            std::function< Eigen::Vector3d( ) > centalBodyAngularMomentumFunction,
+            std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction,
+            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction,
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
@@ -261,7 +266,8 @@ public:
         stateFunctionOfCentralBody_( stateFunctionOfCentralBody ),
         gravitationalParameterFunctionOfCentralBody_( gravitationalParameterFunctionOfCentralBody ),
         gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
-        centalBodyAngularMomentumFunction_( centalBodyAngularMomentumFunction ),
+        centralBodyAngularMomentumInLocalFrameFunction_( centralBodyAngularMomentumInLocalFrameFunction ),
+        nameOfBodyExertingAccelerationFunction_( nameOfBodyExertingAccelerationFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
         ppnParameterAlpha1Function_( ppnParameterAlpha1Function ),
@@ -333,6 +339,11 @@ public:
     {
         return  currentDeSitterAcceleration_;
     }
+    Eigen::Vector3d getCentralBodyAngularMomentum( )
+    {
+        return  centralBodyAngularMomentum_;
+    }
+
 
     //! Update member variables used by the relativistic correction acceleration model.
     /*!
@@ -384,6 +395,7 @@ public:
 
             // Compute of Schwarzschild correction (if requested) the alpha terms (if nonzero alpha1 or alpha2)
             if (calculateSchwarzschildCorrection_){
+
                 currentSchwarzschildAlphaTermsAcceleration_ = calculateScharzschildAlphaTermsAccelerationCorrection(
                             gravitationalParameterOfCentralBody_,
                             gravitationalParameterOfAcceleratedBody_,
@@ -400,13 +412,14 @@ public:
             // Compute Lense-Thirring term (if requested)
             if( calculateLenseThirringCorrection_ )
             {
-                centalBodyAngularMomentum_ = centalBodyAngularMomentumFunction_( );
+                centralBodyAngularMomentum_ = centralBodyAngularMomentumInLocalFrameFunction_( );
+
                 currentLenseThirringAcceleration_ =  calculateLenseThirringCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance,
                             gravitationalParameterOfCentralBody_,
-                            centalBodyAngularMomentum_,
+                            centralBodyAngularMomentum_,
                             ppnParameterGamma_ );
             } else{
                 currentLenseThirringAcceleration_ = Eigen::Vector3d::Zero();
@@ -525,13 +538,6 @@ public:
     std::function< double( ) > getPpnParameterAlpha2Function_( )
     { return ppnParameterAlpha2Function_; }
 
-    //! Function to return the current angular momentum of the central body
-    /*!
-     * Function to return the current angular momentum of the central body
-     * \return Current angular momentum of the central body
-     */
-    std::function< Eigen::Vector3d( ) > getCentralBodyAngularMomentum_( )
-    { return centalBodyAngularMomentumFunction_; }
 
     //! Function to return the boolean denoting wheter the Schwarzschild term is used.
     /*!
@@ -586,7 +592,8 @@ private:
     std::string primaryBodyName_;
 
     //! Function returning the angular momenum of the central body (expressed in the propagation frame)
-    std::function< Eigen::Vector3d( ) > centalBodyAngularMomentumFunction_;
+    std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction_;
+    std::function< std::string( ) > nameOfBodyExertingAccelerationFunction_;
 
     //! Function returning the PPN parameter gamma
     std::function< double( ) > ppnParameterGammaFunction_;
@@ -621,7 +628,7 @@ private:
     double gravitationalParameterOfPrimaryBody_;
 
     //! Current angulat momentum vector of central body
-    Eigen::Vector3d centalBodyAngularMomentum_;
+    Eigen::Vector3d centralBodyAngularMomentum_;
 
     //! Current PPN parameter gamma
     double ppnParameterGamma_;

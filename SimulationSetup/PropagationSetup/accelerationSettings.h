@@ -166,13 +166,13 @@ public:
             const bool calculateLenseThirringCorrection = false,
             const bool calculateDeSitterCorrection = false,
             const std::string primaryBody = "",
-            const Eigen::Vector3d centralBodyAngularMomentum = Eigen::Vector3d::Zero( ) ):
+            const Eigen::Vector3d centralBodyAngularMomentumInLocalFrame = Eigen::Vector3d::Zero( ) ):
         AccelerationSettings(  basic_astrodynamics::relativistic_correction_acceleration ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateLenseThirringCorrection_( calculateLenseThirringCorrection ),
         calculateDeSitterCorrection_( calculateDeSitterCorrection ),
         primaryBody_( primaryBody ),
-        centralBodyAngularMomentum_( centralBodyAngularMomentum )
+        centralBodyAngularMomentumInLocalFrame_( centralBodyAngularMomentumInLocalFrame )
     {
         if( calculateDeSitterCorrection_ && primaryBody_ == "" )
         {
@@ -194,7 +194,7 @@ public:
     std::string primaryBody_;
 
     //! Constant angular momentum of central body
-    Eigen::Vector3d centralBodyAngularMomentum_;
+    Eigen::Vector3d centralBodyAngularMomentumInLocalFrame_;
 
 };
 

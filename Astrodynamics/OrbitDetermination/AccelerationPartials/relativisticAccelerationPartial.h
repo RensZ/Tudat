@@ -296,9 +296,12 @@ public:
         currentLenseThirringAccelerationFunction_ =
                 std::bind( &relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
                            accelerationModel );
+        centralBodyAngularMomentumFunction_ =
+                std::bind( &relativity::RelativisticAccelerationCorrection::getCentralBodyAngularMomentum,
+                           accelerationModel );
 
         calculateLenseThirringCorrection_ = accelerationModel->getCalculateLenseThirringCorrection( );
-        centralBodyAngularMomentumFunction_ = accelerationModel->getCentralBodyAngularMomentum_( );
+//        centralBodyAngularMomentumFunction_ = accelerationModel->getCentralBodyAngularMomentum_( );
     }
 
     //! Function for calculating the partial of the acceleration w.r.t. the position of body undergoing acceleration.
@@ -640,6 +643,8 @@ private:
     Eigen::Vector3d currentSchwarzschildAcceleration_;
     Eigen::Vector3d currentSchwarzschildAlphaTermsAcceleration_;
     Eigen::Vector3d currentLenseThirringAcceleration_;
+
+    Eigen::Vector3d centralBodyAngularMomentum_;
 
 
     //! Boolean which indicates if Lense Thirring correction is to be included

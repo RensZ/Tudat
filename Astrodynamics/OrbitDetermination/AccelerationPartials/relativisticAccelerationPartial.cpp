@@ -428,7 +428,6 @@ void RelativisticAccelerationPartial::update( const double currentTime )
         currentRelativeState_ = ( acceleratedBodyState_( ) - centralBodyState_( ) );
         currentSchwarzschildAcceleration_ = currentSchwarzschildAccelerationFunction_( );
         currentSchwarzschildAlphaTermsAcceleration_ = currentSchwarzschildAlphaTermsAccelerationFunction_( );
-        currentLenseThirringAcceleration_ = currentLenseThirringAccelerationFunction_( );
 
         computePartialOfSchwarzschildAccelerationCorrectionWrtPosition(
                     currentRelativeState_, currentSchwarzschildAcceleration_, currentSchwarzschildPartialWrtPosition_,
@@ -453,12 +452,17 @@ void RelativisticAccelerationPartial::update( const double currentTime )
 
 
         if (calculateLenseThirringCorrection_){
+
+            currentLenseThirringAcceleration_ = currentLenseThirringAccelerationFunction_( );
+            centralBodyAngularMomentum_ = centralBodyAngularMomentumFunction_( );
+            std::cout<<centralBodyAngularMomentum_<<std::endl;
+
             computePartialOfLenseThirringAccelerationCorrectionWrtPosition(
-                        currentRelativeState_, currentLenseThirringAcceleration_, centralBodyAngularMomentumFunction_( ),
+                        currentRelativeState_, currentLenseThirringAcceleration_, centralBodyAngularMomentum_,
                         currentLenseThirringPartialWrtPosition_, centralBodyGravitationalParameterFunction_( ),
                         ppnGammaParameterFunction_( ) );
             computePartialOfLenseThirringAccelerationCorrectionWrtVelocity(
-                        currentRelativeState_, centralBodyAngularMomentumFunction_( ),
+                        currentRelativeState_, centralBodyAngularMomentum_,
                         currentLenseThirringPartialWrtVelocity_, centralBodyGravitationalParameterFunction_( ),
                         ppnGammaParameterFunction_( ) );
         } else{

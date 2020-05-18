@@ -30,6 +30,8 @@
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
 #include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
 
+#include "/home/rens/tudatBundle/tudatApplications/thesis/MyApplications/customFunctions.h"
+
 //#include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameter.h"
 //#include "tudatApplications/thesis/MyApplications/TVGPInterface.h"
 //#include "Tudat/Astrodynamics/Gravitation/gravityFieldModel.h"
@@ -922,14 +924,6 @@ std::shared_ptr< TimeVaryingGravitationalParameterAcceleration > createTimeVaryi
         timeVaryingGravitationalParameterFunction =
                 std::bind( &PPNParameterSet::getTimeVaryingGravitationalParameter, ppnParameterSet );
 
-
-
-        //        timeVaryingGravitationalParameterFunction = [=]() {return
-        //                timeVaryingGravitationalParameterAccelerationtings->timeVaryingGravitationalParameter_;};
-
-//        angularMomentumFunction = [ = ]( ){ return
-//                    relativisticAccelerationSettings->centralBodyAngularMomentum_; };
-
         accelerationModel = std::make_shared< TimeVaryingGravitationalParameterAcceleration >
                 ( stateFunctionOfBodyUndergoingAcceleration,
                   stateFunctionOfBodyExertingAcceleration,
@@ -1441,6 +1435,8 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
                     std::bind( &GravityFieldModel::getGravitationalParameter, bodyUndergoingAcceleration->getGravityFieldModel( ) );
         }
 
+
+
         std::function< double( ) > ppnGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
         std::function< double( ) > ppnBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
         std::function< double( ) > ppnAlpha1Function = std::bind( &PPNParameterSet::getParameterAlpha1, ppnParameterSet );
@@ -1490,11 +1486,17 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
             }
 
             // Retrieve angular momentum vector if Lense-Thirring
-            std::function< Eigen::Vector3d( ) > angularMomentumFunction;
+            std::function< Eigen::Vector3d( ) > angularMomentumInLocalFrameFunction;
+            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
+            std::function< Eigen::Vector3d( ) >  angularMomentumTransformationFunction;
             if( relativisticAccelerationSettings->calculateLenseThirringCorrection_ == true  ){
 
-                angularMomentumFunction = [ = ]( ){ return
-                            relativisticAccelerationSettings->centralBodyAngularMomentum_; };
+                angularMomentumInLocalFrameFunction = [ = ]( ){ return
+                            relativisticAccelerationSettings->centralBodyAngularMomentumInLocalFrame_; };
+                nameOfBodyExertingAccelerationFunction = [ = ]( ){ return
+                            nameOfBodyExertingAcceleration; };
+                }
+
 
             }
 
@@ -1509,7 +1511,8 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
                           acceleratedBodyGravitationalParameterFunction,
                           primaryBodyGravitationalParameterFunction,
                           relativisticAccelerationSettings->primaryBody_,
-                          angularMomentumFunction,
+                          angularMomentumInLocalFrameFunction,
+                          nameOfBodyExertingAccelerationFunction,
                           ppnGammaFunction, ppnBetaFunction,
                           ppnAlpha1Function, ppnAlpha2Function,
                           relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
@@ -1523,7 +1526,8 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
                           stateFunctionOfBodyExertingAcceleration,
                           centralBodyGravitationalParameterFunction,
                           acceleratedBodyGravitationalParameterFunction,
-                          angularMomentumFunction,
+                          angularMomentumInLocalFrameFunction,
+                          nameOfBodyExertingAccelerationFunction,
                           ppnGammaFunction, ppnBetaFunction,
                           ppnAlpha1Function, ppnAlpha2Function,
                           relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
