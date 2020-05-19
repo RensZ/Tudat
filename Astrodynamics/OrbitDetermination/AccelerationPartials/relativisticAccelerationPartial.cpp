@@ -123,6 +123,9 @@ void computePartialOfSchwarzschildAlphaTermsWrtPosition(
     double gravitationalParameterRatio =
             (gravitationalParameterBodyUndergoingAcceleration / gravitationalParameterBodyExertingAcceleration);
 
+//    partialMatrix = 2.0 * ( ppnParameterGamma + ppnParameterBeta ) * gravitationalParameter / distance * (
+//                Eigen::Matrix3d::Identity( ) - position * position.transpose( ) / ( distance * distance ) );
+
     partialMatrix = (2.0 + ppnParameterAlpha1)
             * (gravitationalParameterBodyUndergoingAcceleration / distance)
             * (Eigen::Matrix3d::Identity( ) - position * position.transpose() / (distance * distance));
@@ -130,14 +133,24 @@ void computePartialOfSchwarzschildAlphaTermsWrtPosition(
             * gravitationalParameterRatio
             * (velocity.dot(velocity))
             * Eigen::Matrix3d::Identity( );
+
+//    partialMatrix += 1.5 * (1.0 + ppnParameterAlpha2)
+//            * gravitationalParameterRatio
+//            / (distance * distance)
+//            * velocity.dot(position) * velocity.dot(position)
+//            * ( (3.0 * Eigen::Matrix3d::Identity( ) - 2.0 * position * position.transpose() / (distance * distance)));
     partialMatrix += 1.5 * (1.0 + ppnParameterAlpha2)
             * gravitationalParameterRatio
-            / (distance * distance)
-            * velocity.dot(position) * velocity.dot(position)
-            * ( (3.0 * Eigen::Matrix3d::Identity( ) - 2.0 * position * position.transpose() / (distance * distance)));
+            * velocity.dot(position)
+            / (distance * distance )
+            * ( 2.0 * position * velocity.transpose()
+                - 2.0 * velocity.dot(position) * position * position.transpose() / (distance * distance)
+                + velocity.dot(position) * Eigen::Matrix3d::Identity()
+                );
+
     partialMatrix -= gravitationalParameterRatio
             * (2.0 - ppnParameterAlpha1 + ppnParameterAlpha2)
-            * (velocity * velocity.transpose());
+            * velocity * velocity.transpose();
     partialMatrix *= gravitationalParameterBodyExertingAcceleration
             * physical_constants::INVERSE_SQUARE_SPEED_OF_LIGHT
             / ( distance * distance * distance );
@@ -160,15 +173,15 @@ void computePartialOfSchwarzschildAlphaTermsWrtVelocity(
     Eigen::Vector3d velocity = relativeState.segment( 3, 3 );
     double distance = position.norm( );
 
-    partialMatrix = -(6.0 + ppnParameterAlpha1 + ppnParameterAlpha2)
+    partialMatrix = -1.0 * (6.0 + ppnParameterAlpha1 + ppnParameterAlpha2)
             * position * velocity.transpose( );
 
     partialMatrix += 3.0 * (1.0 + ppnParameterAlpha2)
-            * position.dot(position) * position.dot(velocity) * Eigen::Matrix3d::Identity( )
+            * velocity.dot(position) * position * position.transpose()
             / (distance * distance);
 
     partialMatrix -= (2.0 - ppnParameterAlpha1 + ppnParameterAlpha2)
-            * ( position.dot(velocity) * Eigen::Matrix3d::Identity( ) - velocity * position.transpose());
+            * ( position.dot(velocity) * Eigen::Matrix3d::Identity( ) + velocity * position.transpose() );
 
     partialMatrix *= gravitationalParameterBodyUndergoingAcceleration
             * physical_constants::INVERSE_SQUARE_SPEED_OF_LIGHT
@@ -251,40 +264,19 @@ void computePartialOfLenseThirringAccelerationCorrectionWrtPosition(
     Eigen::Vector3d position = relativeState.segment( 0, 3 );
     Eigen::Vector3d velocity = relativeState.segment( 3, 3 );
     double distance = position.norm( );
-//    Eigen::Vector3d ones = Eigen::Vector3d::Ones();
 
-//    partialMatrix = -2.0 * (3.0 / (distance * distance * distance))
-//            * (position.cross(velocity)) * (position.dot(centralBodyAngularMomentum))
-//            * position.transpose() / (distance * distance);
-//    partialMatrix += 3.0 / (distance * distance) * (ones.cross(velocity).asDiagonal( ) ) * position.dot(centralBodyAngularMomentum);
-//    partialMatrix += 3.0 / (distance * distance) * position.cross(velocity) * (centralBodyAngularMomentum.asDiagonal( ) );
-//    partialMatrix *= (1.0 + ppnParameterGamma) * gravitationalParameter
-//            *  physical_constants::INVERSE_SQUARE_SPEED_OF_LIGHT / ( distance * distance * distance );
+    Eigen::Matrix3d velocityCrossMatrix;
+    velocityCrossMatrix << 0.0, -velocity(2), velocity(1),
+                           velocity(2), 0.0, -velocity(0),
+                           -velocity(1), velocity(0), 0.0;
 
-//    partialMatrix = 3.0 / (distance * distance)
-//            * ( position.cross(velocity).transpose() * centralBodyAngularMomentum) * Eigen::Matrix3d::Identity()
-//                + ( position.dot(centralBodyAngularMomentum) * ones.cross(velocity).asDiagonal() );
-//    partialMatrix -= 6.0 / (distance * distance)
-//            * position.cross(velocity)
-//            * position.dot(centralBodyAngularMomentum)
-//            * position.transpose() / (distance * distance);
-//    partialMatrix *= (1.0 + ppnParameterGamma) * gravitationalParameter
-//            *  physical_constants::INVERSE_SQUARE_SPEED_OF_LIGHT / ( distance * distance * distance );
-
-    partialMatrix = (
-            -2.0 * position * position.transpose() / (distance * distance * distance)
-            * position.cross(velocity)
+    partialMatrix = position.cross(velocity)
             * position.dot(centralBodyAngularMomentum)
-            ).asDiagonal();
-
-    Eigen::Matrix3d derivativePositionCrossVelocity;
-    derivativePositionCrossVelocity << 0.0, velocity(2), -velocity(1),
-                                       -velocity(2), 0.0, velocity(0),
-                                       velocity(1), -velocity(0), 0.0;
-
-    partialMatrix += derivativePositionCrossVelocity * position.dot(centralBodyAngularMomentum);
-
-    partialMatrix += (position.cross(velocity).transpose() * centralBodyAngularMomentum) * Eigen::Matrix3d::Identity();
+            * -2.0 * position.transpose() / (distance * distance);
+    partialMatrix += position.dot(centralBodyAngularMomentum)
+            * velocityCrossMatrix.transpose();
+    partialMatrix += position.cross(velocity)
+            * centralBodyAngularMomentum.transpose();
 
     partialMatrix *= 3.0 / (distance * distance);
 
@@ -294,6 +286,8 @@ void computePartialOfLenseThirringAccelerationCorrectionWrtPosition(
 
 //    partialMatrix = Eigen::Matrix3d::Zero();
 }
+
+
 
 //! Function to compute partial of LenseThirring acceleration correction w.r.t. velocity of body undergoing acceleration
 void computePartialOfLenseThirringAccelerationCorrectionWrtVelocity(
@@ -305,13 +299,24 @@ void computePartialOfLenseThirringAccelerationCorrectionWrtVelocity(
 {
     Eigen::Vector3d position = relativeState.segment( 0, 3 );
     double distance = position.norm( );
-    Eigen::Vector3d ones = Eigen::Vector3d::Ones();
 
-    Eigen::Vector3d cross1 = position.cross(ones);
-    Eigen::Vector3d cross2 = ones.cross(centralBodyAngularMomentum);
+    Eigen::Matrix3d positionCrossMatrix;
+    positionCrossMatrix << 0.0, -position(2), position(1),
+                           position(2), 0.0, -position(0),
+                           -position(1), position(0), 0.0;
 
-    partialMatrix = 3.0 / (distance * distance) * Eigen::Matrix3d::Identity() * cross1.asDiagonal() * position.dot(centralBodyAngularMomentum)
-                    + Eigen::Matrix3d::Identity() * cross2.asDiagonal();
+    Eigen::Matrix3d angularMomentumCrossMatrix;
+    angularMomentumCrossMatrix << 0.0, -centralBodyAngularMomentum(2), centralBodyAngularMomentum(1),
+                                  centralBodyAngularMomentum(2), 0.0, -centralBodyAngularMomentum(0),
+                                  -centralBodyAngularMomentum(1), centralBodyAngularMomentum(0), 0.0;
+
+    partialMatrix = 3.0
+            * position.dot(centralBodyAngularMomentum)
+            * positionCrossMatrix
+            / (distance * distance);
+
+    partialMatrix += angularMomentumCrossMatrix.transpose();
+
     partialMatrix *= (1.0 + ppnParameterGamma) * gravitationalParameter
             *  physical_constants::INVERSE_SQUARE_SPEED_OF_LIGHT / ( distance * distance * distance );
 
@@ -455,7 +460,7 @@ void RelativisticAccelerationPartial::update( const double currentTime )
 
             currentLenseThirringAcceleration_ = currentLenseThirringAccelerationFunction_( );
             centralBodyAngularMomentum_ = centralBodyAngularMomentumFunction_( );
-            std::cout<<centralBodyAngularMomentum_<<std::endl;
+//            std::cout<<centralBodyAngularMomentum_<<std::endl;
 
             computePartialOfLenseThirringAccelerationCorrectionWrtPosition(
                         currentRelativeState_, currentLenseThirringAcceleration_, centralBodyAngularMomentum_,

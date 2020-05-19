@@ -522,6 +522,86 @@ Eigen::Matrix< double, 3, Eigen::Dynamic > calculateTorqueWrtParameterPartials(
 }
 
 
+// CUSTOM MADE
+
+//! Function to numerical compute the partial derivative of an acceleration w.r.t. a body state.
+Eigen::Matrix3d calculateAccelerationWrtStatePartialsRelativity(
+        std::function< void( Eigen::Vector6d ) > setBodyState,
+        std::shared_ptr< relativity::RelativisticAccelerationCorrection > accelerationModel,
+        Eigen::Vector6d originalState,
+        Eigen::Vector3d statePerturbation,
+        int startIndex,
+        const int term, //1 for Schwarzschild, 2 for Schwarzschild alpha terms, 3 for Lense-Thirring, 4 for de-sitter
+        std::function< void( ) > updateFunction,
+        const double evaluationTime)
+{
+
+    Eigen::Matrix3d upAccelerations = Eigen::Matrix3d::Zero( );
+    Eigen::Matrix3d downAccelerations = Eigen::Matrix3d::Zero( );
+
+    Eigen::Vector6d perturbedState = originalState;
+
+    accelerationModel->resetTime( TUDAT_NAN );
+
+    // Calculate perturbed accelerations for up-perturbed state entries.
+    for( int i = 0; i < 3; i++ )
+    {
+        perturbedState( i + startIndex ) += statePerturbation( i );
+        setBodyState( perturbedState );
+        updateFunction( );
+        accelerationModel->updateMembers( evaluationTime );
+
+        switch (term){
+            case 1: { upAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getSchwarzschildAcceleration(); break;}
+            case 2: { upAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getSchwarzschildAlphaTermsAcceleration(); break;}
+            case 3: { upAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getLenseThirringAcceleration(); break;}
+            case 4: { upAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getDeSitterAcceleration(); break;}
+            default: {std::runtime_error("ERROR: not a viable input"); break;}
+        }
+
+        accelerationModel->resetTime( TUDAT_NAN );
+        perturbedState = originalState;
+    }
+
+    // Calculate perturbed accelerations for down-perturbed state entries.
+    for( int i = 0; i < 3; i++ )
+    {
+        perturbedState( i + startIndex ) -= statePerturbation( i );
+        setBodyState( perturbedState );
+        updateFunction( );
+        accelerationModel->updateMembers( evaluationTime );
+
+        switch (term){
+            case 1: { downAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getSchwarzschildAcceleration(); break;}
+            case 2: { downAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getSchwarzschildAlphaTermsAcceleration(); break;}
+            case 3: { downAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getLenseThirringAcceleration(); break;}
+            case 4: { downAccelerations.block( 0, i, 3, 1 ) = accelerationModel->getDeSitterAcceleration(); break;}
+            default: {std::runtime_error("ERROR: not a viable input"); break;}
+        }
+
+        accelerationModel->resetTime( TUDAT_NAN );
+        perturbedState = originalState;
+    }
+
+    // Reset state/environment to original state.
+    setBodyState( perturbedState );
+    updateFunction( );
+
+    basic_astrodynamics::updateAndGetAcceleration< Eigen::Vector3d >(
+                accelerationModel, evaluationTime );
+
+    // Numerically compute partial derivatives.
+    Eigen::Matrix3d accelerationPartials = upAccelerations - downAccelerations;
+    for( int i = 0; i < 3; i++ )
+    {
+        accelerationPartials.block( 0, i, 3, 1 ) /= ( 2.0 * statePerturbation( i ) );
+    }
+
+    return accelerationPartials;
+}
+
+
+
 }
 
 }

@@ -375,8 +375,7 @@ public:
             ppnParameterAlpha2_ = ppnParameterAlpha2Function_( );
 
             commonCorrectionTerm_ = calculateRelativisticAccelerationCorrectionsCommonterm(
-                        gravitationalParameterOfCentralBody_,
-                        relativeDistance );
+                        gravitationalParameterOfCentralBody_, relativeDistance );
 
             // Compute Schwarzschild term (if requested)
             if( calculateSchwarzschildCorrection_ )
@@ -385,8 +384,8 @@ public:
                             gravitationalParameterOfCentralBody_,
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
-                            relativeDistance, commonCorrectionTerm_, ppnParameterGamma_,
-                            ppnParameterBeta_ );
+                            relativeDistance, commonCorrectionTerm_,
+                            ppnParameterGamma_, ppnParameterBeta_ );
             } else{
                 currentSchwarzschildAcceleration_ = Eigen::Vector3d::Zero();
             }

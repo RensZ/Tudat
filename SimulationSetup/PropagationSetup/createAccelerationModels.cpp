@@ -1488,15 +1488,12 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
             // Retrieve angular momentum vector if Lense-Thirring
             std::function< Eigen::Vector3d( ) > angularMomentumInLocalFrameFunction;
             std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
-            std::function< Eigen::Vector3d( ) >  angularMomentumTransformationFunction;
             if( relativisticAccelerationSettings->calculateLenseThirringCorrection_ == true  ){
 
                 angularMomentumInLocalFrameFunction = [ = ]( ){ return
                             relativisticAccelerationSettings->centralBodyAngularMomentumInLocalFrame_; };
                 nameOfBodyExertingAccelerationFunction = [ = ]( ){ return
                             nameOfBodyExertingAcceleration; };
-                }
-
 
             }
 

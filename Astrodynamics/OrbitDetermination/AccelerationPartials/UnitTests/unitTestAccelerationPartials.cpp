@@ -661,53 +661,74 @@ BOOST_AUTO_TEST_CASE( testAerodynamicAccelerationPartials )
 }
 
 
-BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
+
+BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
 {
     // Create earth and vehicle bodies.
-    std::shared_ptr< Body > earth = std::make_shared< Body >( );
-    std::shared_ptr< Body > vehicle = std::make_shared< Body >( );
+    std::shared_ptr< Body > sun = std::make_shared< Body >( );
+    std::shared_ptr< Body > mercury = std::make_shared< Body >( );
 
     // Create links to set and get state functions of bodies.
-    std::function< void( Eigen::Vector6d ) > earthStateSetFunction =
-            std::bind( &Body::setState, earth, std::placeholders::_1  );
-    std::function< void( Eigen::Vector6d ) > vehicleStateSetFunction =
-            std::bind( &Body::setState, vehicle, std::placeholders::_1  );
-    std::function< Eigen::Vector6d( ) > earthStateGetFunction =
-            std::bind( &Body::getState, earth );
-    std::function< Eigen::Vector6d( ) > vehicleStateGetFunction =
-            std::bind( &Body::getState, vehicle );
+    std::function< void( Eigen::Vector6d ) > sunStateSetFunction =
+            std::bind( &Body::setState, sun, std::placeholders::_1  );
+    std::function< void( Eigen::Vector6d ) > mercuryStateSetFunction =
+            std::bind( &Body::setState, mercury, std::placeholders::_1  );
+    std::function< Eigen::Vector6d( ) > sunStateGetFunction =
+            std::bind( &Body::getState, sun );
+    std::function< Eigen::Vector6d( ) > mercuryStateGetFunction =
+            std::bind( &Body::getState, mercury);
 
     // Load spice kernel.
     spice_interface::loadStandardSpiceKernels( );
 
     // Set vehicle and earth state.
-    earth->setState( getBodyCartesianStateAtEpoch(  "Earth", "SSB", "J2000", "NONE", 1.0E6 ) );
-    Eigen::Vector6d vehicleKeplerElements;
-    vehicleKeplerElements << 6378.0E3 + 249E3, 0.0004318, convertDegreesToRadians( 96.5975 ),
-            convertDegreesToRadians( 217.6968 ), convertDegreesToRadians( 268.2663 ), convertDegreesToRadians( 142.3958 );
-    vehicle->setState( earth->getState( ) + convertKeplerianToCartesianElements( vehicleKeplerElements,
-                                                                                 getBodyGravitationalParameter( "Earth" ) ) );
-
+    sun->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", 1.0E6 ) );
+    mercury->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", 1.0E6 ) );
 
     NamedBodyMap bodyMap;
-    bodyMap[ "Vehicle" ] = vehicle;
-    bodyMap[ "Earth" ] = earth;
+    bodyMap[ "Sun" ] = sun;
+    bodyMap[ "Mercury" ] = mercury;
 
     // Create gravity field.
     std::shared_ptr< GravityFieldSettings > gravityFieldSettings = std::make_shared< GravityFieldSettings >( central_spice );
-    std::shared_ptr< gravitation::GravityFieldModel > earthGravityField =
-            createGravityFieldModel( gravityFieldSettings, "Earth", bodyMap );
-    earth->setGravityFieldModel( earthGravityField );
+    std::shared_ptr< gravitation::GravityFieldModel > sunGravityField =
+            createGravityFieldModel( gravityFieldSettings, "Sun", bodyMap );
+    sun->setGravityFieldModel( sunGravityField );
+    std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
+            createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
+    sun->setGravityFieldModel( mercuryGravityField );
+
+    // Get angular momentum Sun
+    const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, 190.0E39);
+    const Eigen::Vector3d sunAngularMomentumVectorPerUnitMass =
+            sunAngularMomentumVector /
+            ( sunGravityField->getGravitationalParameter() / physical_constants::GRAVITATIONAL_CONSTANT );
+
+    std::function< Eigen::Vector3d( ) > angularMomentumFunction;
+    angularMomentumFunction = [ = ]( ){ return sunAngularMomentumVectorPerUnitMass; };
+
+    std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
+    nameOfBodyExertingAccelerationFunction = [ = ]( ){ return "Sun"; };
 
     // Create acceleration model.
     std::function< double( ) > ppnParameterGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
     std::function< double( ) > ppnParameterBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha1Function = std::bind( &PPNParameterSet::getParameterAlpha1, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha2Function = std::bind( &PPNParameterSet::getParameterAlpha2, ppnParameterSet );
+
     std::shared_ptr< RelativisticAccelerationCorrection > accelerationModel =
             std::make_shared< RelativisticAccelerationCorrection >
-            ( std::bind( &Body::getState, vehicle ),
-              std::bind( &Body::getState, earth ),
-              std::bind( &GravityFieldModel::getGravitationalParameter, earthGravityField ),
-              ppnParameterGammaFunction, ppnParameterBetaFunction );
+            ( std::bind( &Body::getState, mercury ),
+              std::bind( &Body::getState, sun ),
+              std::bind( &GravityFieldModel::getGravitationalParameter, sunGravityField ),
+              std::bind( &GravityFieldModel::getGravitationalParameter, mercuryGravityField ),
+              angularMomentumFunction, nameOfBodyExertingAccelerationFunction,
+              ppnParameterGammaFunction, ppnParameterBetaFunction,
+              ppnParameterAlpha1Function, ppnParameterAlpha2Function);
+
+    std::cout<<"ss:"<<accelerationModel->getCalculateSchwarzschildCorrection()
+             <<" lt:"<<accelerationModel->getCalculateLenseThirringCorrection()
+             <<" ds:"<<accelerationModel->getCalculateDeSitterCorrection()<<std::endl;
 
     // Create acceleration partial object.
     std::shared_ptr< RelativisticAccelerationPartial > accelerationPartial = std::make_shared< RelativisticAccelerationPartial >(
@@ -715,33 +736,258 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
     // Create parameter objects.
     std::shared_ptr< EstimatableParameter< double > > gravitationalParameterParameter = std::make_shared<
-            GravitationalParameter >( earthGravityField, "Earth" );
+            GravitationalParameter >( mercuryGravityField, "Mercury" );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterGamma = std::make_shared<
             PPNParameterGamma >( ppnParameterSet );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterBeta = std::make_shared<
             PPNParameterBeta >( ppnParameterSet );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterAlpha1 = std::make_shared<
+            PPNParameterAlpha1 >( ppnParameterSet );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterAlpha2 = std::make_shared<
+            PPNParameterAlpha2 >( ppnParameterSet );
 
     // Calculate analytical partials.
     accelerationModel->updateMembers( );
     accelerationPartial->update( );
 
-    Eigen::MatrixXd partialWrtEarthPosition = Eigen::Matrix3d::Zero( );
-    accelerationPartial->wrtPositionOfAcceleratingBody( partialWrtEarthPosition.block( 0, 0, 3, 3 ) );
+    std::vector< Eigen::MatrixXd > partialsWrtSunPosition;
+    std::vector< Eigen::MatrixXd > partialsWrtSunVelocity;
+    std::vector< Eigen::MatrixXd > partialsWrtMercuryPosition;
+    std::vector< Eigen::MatrixXd > partialsWrtMercuryVelocity;
 
-    Eigen::MatrixXd partialWrtEarthVelocity = Eigen::Matrix3d::Zero( );
-    accelerationPartial->wrtVelocityOfAcceleratingBody( partialWrtEarthVelocity.block( 0, 0, 3, 3 ) );
+    for (unsigned int i=1; i<4; i++){
+        partialsWrtSunPosition.push_back(
+                    -1.0*accelerationPartial->returnPositionPartialOfOneTerm(i));
+        partialsWrtSunVelocity.push_back(
+                    -1.0*accelerationPartial->returnVelocityPartialOfOneTerm(i));
+        partialsWrtMercuryPosition.push_back(
+                    accelerationPartial->returnPositionPartialOfOneTerm(i));
+        partialsWrtMercuryVelocity.push_back(
+                    accelerationPartial->returnVelocityPartialOfOneTerm(i));
+    }
 
-    Eigen::MatrixXd partialWrtVehiclePosition = Eigen::Matrix3d::Zero( );
-    accelerationPartial->wrtPositionOfAcceleratedBody( partialWrtVehiclePosition.block( 0, 0, 3, 3 ) );
-
-    Eigen::MatrixXd partialWrtVehicleVelocity = Eigen::Matrix3d::Zero( );
-    accelerationPartial->wrtVelocityOfAcceleratedBody( partialWrtVehicleVelocity.block( 0, 0, 3, 3 ) );
-
-    Eigen::Vector3d partialWrtEarthGravitationalParameter = accelerationPartial->wrtParameter(
+    Eigen::Vector3d partialWrtSunGravitationalParameter = accelerationPartial->wrtParameter(
                 gravitationalParameterParameter );
 
     Eigen::Vector3d partialWrtGamma = accelerationPartial->wrtParameter( ppnParameterGamma );
     Eigen::Vector3d partialWrtBeta = accelerationPartial->wrtParameter( ppnParameterBeta );
+    Eigen::Vector3d partialWrtAlpha1 = accelerationPartial->wrtParameter( ppnParameterAlpha1 );
+    Eigen::Vector3d partialWrtAlpha2 = accelerationPartial->wrtParameter( ppnParameterAlpha2 );
+
+    // Declare perturbations in position for numerical partial
+    Eigen::Vector3d positionPerturbation;
+    positionPerturbation << 10.0, 10.0, 10.0;
+    Eigen::Vector3d velocityPerturbation;
+    velocityPerturbation << 1.0, 1.0, 1.0;
+
+
+    // Calculate numerical partials.
+    std::vector< Eigen::MatrixXd > testPartialsWrtSunPosition;
+    std::vector< Eigen::MatrixXd > testPartialsWrtSunVelocity;
+    std::vector< Eigen::MatrixXd > testPartialsWrtMercuryPosition;
+    std::vector< Eigen::MatrixXd > testPartialsWrtMercuryVelocity;
+
+    for (unsigned int i=1; i<4; i++){
+        testPartialsWrtSunPosition.push_back(
+                    calculateAccelerationWrtStatePartialsRelativity(
+                                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0, i ));
+        testPartialsWrtSunVelocity.push_back(
+                    calculateAccelerationWrtStatePartialsRelativity(
+                                    sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3, i ));
+        testPartialsWrtMercuryPosition.push_back(
+                    calculateAccelerationWrtStatePartialsRelativity(
+                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0, i ));
+        testPartialsWrtMercuryVelocity.push_back(
+                    calculateAccelerationWrtStatePartialsRelativity(
+                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 3, i ));
+    }
+
+    Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
+                gravitationalParameterParameter, accelerationModel, 1.0E10 );
+
+    Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
+                ppnParameterGamma, accelerationModel, 100.0 );
+    Eigen::Vector3d testPartialWrtPpnParameterBeta = calculateAccelerationWrtParameterPartials(
+                ppnParameterBeta, accelerationModel, 100.0 );
+
+    Eigen::Vector3d testPartialWrtPpnParameterAlpha1 = calculateAccelerationWrtParameterPartials(
+                ppnParameterAlpha1, accelerationModel, 100.0 );
+    Eigen::Vector3d testPartialWrtPpnParameterAlpha2 = calculateAccelerationWrtParameterPartials(
+                ppnParameterAlpha2, accelerationModel, 100.0 );
+
+
+
+    // Compare numerical and analytical results.
+    for (unsigned int i=1; i<4; i++){
+
+        switch(i){
+            case 1: {std::cout<<"---- Conventional Schwarzschild correction:"<<std::endl; break;}
+            case 2: {std::cout<<"---- Schwarzschild alpha correction:"<<std::endl; break;}
+            case 3: {std::cout<<"---- Lense-thirring correction:"<<std::endl; break;}
+        }
+
+        double stateTolerance = 1.0E-5;
+
+        std::cout<<"wrt sun position:"
+                 <<std::endl<<partialsWrtSunPosition.at(i-1)
+                 <<std::endl<<testPartialsWrtSunPosition.at(i-1)
+                 <<std::endl<<partialsWrtSunPosition.at(i-1)-testPartialsWrtSunPosition.at(i-1)
+                 <<std::endl;
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialsWrtSunPosition.at(i-1),
+                                           partialsWrtSunPosition.at(i-1), stateTolerance );
+
+        std::cout<<"wrt sun velocity:"
+                 <<std::endl<<partialsWrtSunVelocity.at(i-1)
+                 <<std::endl<<testPartialsWrtSunVelocity.at(i-1)
+                 <<std::endl<<partialsWrtSunVelocity.at(i-1)-testPartialsWrtSunVelocity.at(i-1)
+                 <<std::endl;
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialsWrtSunVelocity.at(i-1),
+                                           partialsWrtSunVelocity.at(i-1), stateTolerance );
+
+        std::cout<<"wrt mercury position:"
+                 <<std::endl<<partialsWrtMercuryPosition.at(i-1)
+                 <<std::endl<<testPartialsWrtMercuryPosition.at(i-1)
+                 <<std::endl<<partialsWrtMercuryPosition.at(i-1)-testPartialsWrtMercuryPosition.at(i-1)
+                 <<std::endl;
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialsWrtMercuryPosition.at(i-1),
+                                           partialsWrtMercuryPosition.at(i-1), stateTolerance );
+
+        std::cout<<"wrt mercury velocity:"
+                 <<std::endl<<partialsWrtMercuryVelocity.at(i-1)
+                 <<std::endl<<testPartialsWrtMercuryVelocity.at(i-1)
+                 <<std::endl<<partialsWrtMercuryVelocity.at(i-1)-testPartialsWrtMercuryVelocity.at(i-1)
+                 <<std::endl;
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialsWrtMercuryVelocity.at(i-1),
+                                           partialsWrtMercuryVelocity.at(i-1), stateTolerance );
+
+
+    }
+
+    std::cout<<"moving on to parameters"<<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
+                                       partialWrtSunGravitationalParameter, 1.0e-8 ); // score 0/3
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterGamma, partialWrtGamma, 1.0e-8 ); // pass!
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterBeta, partialWrtBeta, 1.0e-8 ); // pass!
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterAlpha1, partialWrtAlpha1, 1.0e-8 ); // score 0/3
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterAlpha2, partialWrtAlpha2, 1.0e-8 ); // score 0/3
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
+{
+    // Create earth and vehicle bodies.
+    std::shared_ptr< Body > sun = std::make_shared< Body >( );
+    std::shared_ptr< Body > mercury = std::make_shared< Body >( );
+
+    // Create links to set and get state functions of bodies.
+    std::function< void( Eigen::Vector6d ) > sunStateSetFunction =
+            std::bind( &Body::setState, sun, std::placeholders::_1  );
+    std::function< void( Eigen::Vector6d ) > mercuryStateSetFunction =
+            std::bind( &Body::setState, mercury, std::placeholders::_1  );
+    std::function< Eigen::Vector6d( ) > sunStateGetFunction =
+            std::bind( &Body::getState, sun );
+    std::function< Eigen::Vector6d( ) > mercuryStateGetFunction =
+            std::bind( &Body::getState, mercury);
+
+    // Load spice kernel.
+    spice_interface::loadStandardSpiceKernels( );
+
+    // Set vehicle and earth state.
+    sun->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", 1.0E6 ) );
+    mercury->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", 1.0E6 ) );
+
+    NamedBodyMap bodyMap;
+    bodyMap[ "Sun" ] = sun;
+    bodyMap[ "Mercury" ] = mercury;
+
+    // Create gravity field.
+    std::shared_ptr< GravityFieldSettings > gravityFieldSettings = std::make_shared< GravityFieldSettings >( central_spice );
+    std::shared_ptr< gravitation::GravityFieldModel > sunGravityField =
+            createGravityFieldModel( gravityFieldSettings, "Sun", bodyMap );
+    sun->setGravityFieldModel( sunGravityField );
+    std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
+            createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
+    sun->setGravityFieldModel( mercuryGravityField );
+
+    // Get angular momentum Sun
+    const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, 190.0E39);
+    const Eigen::Vector3d sunAngularMomentumVectorPerUnitMass =
+            sunAngularMomentumVector /
+            ( sunGravityField->getGravitationalParameter() / physical_constants::GRAVITATIONAL_CONSTANT );
+
+    std::function< Eigen::Vector3d( ) > angularMomentumFunction;
+    angularMomentumFunction = [ = ]( ){ return sunAngularMomentumVectorPerUnitMass; };
+
+    std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
+    nameOfBodyExertingAccelerationFunction = [ = ]( ){ return "Sun"; };
+
+    // Create acceleration model.
+    std::function< double( ) > ppnParameterGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
+    std::function< double( ) > ppnParameterBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha1Function = std::bind( &PPNParameterSet::getParameterAlpha1, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha2Function = std::bind( &PPNParameterSet::getParameterAlpha2, ppnParameterSet );
+
+    std::shared_ptr< RelativisticAccelerationCorrection > accelerationModel =
+            std::make_shared< RelativisticAccelerationCorrection >
+            ( std::bind( &Body::getState, mercury ),
+              std::bind( &Body::getState, sun ),
+              std::bind( &GravityFieldModel::getGravitationalParameter, sunGravityField ),
+              std::bind( &GravityFieldModel::getGravitationalParameter, mercuryGravityField ),
+              angularMomentumFunction, nameOfBodyExertingAccelerationFunction,
+              ppnParameterGammaFunction, ppnParameterBetaFunction,
+              ppnParameterAlpha1Function, ppnParameterAlpha2Function);
+
+    std::cout<<"ss:"<<accelerationModel->getCalculateSchwarzschildCorrection()
+             <<" lt:"<<accelerationModel->getCalculateLenseThirringCorrection()
+             <<" ds:"<<accelerationModel->getCalculateDeSitterCorrection()<<std::endl;
+
+    // Create acceleration partial object.
+    std::shared_ptr< RelativisticAccelerationPartial > accelerationPartial = std::make_shared< RelativisticAccelerationPartial >(
+                accelerationModel, "Vehicle", "Earth" );
+
+    // Create parameter objects.
+    std::shared_ptr< EstimatableParameter< double > > gravitationalParameterParameter = std::make_shared<
+            GravitationalParameter >( mercuryGravityField, "Mercury" );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterGamma = std::make_shared<
+            PPNParameterGamma >( ppnParameterSet );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterBeta = std::make_shared<
+            PPNParameterBeta >( ppnParameterSet );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterAlpha1 = std::make_shared<
+            PPNParameterAlpha1 >( ppnParameterSet );
+    std::shared_ptr< EstimatableParameter< double > > ppnParameterAlpha2 = std::make_shared<
+            PPNParameterAlpha2 >( ppnParameterSet );
+
+    // Calculate analytical partials.
+    accelerationModel->updateMembers( );
+    accelerationPartial->update( );
+
+    Eigen::MatrixXd partialWrtSunPosition = Eigen::Matrix3d::Zero( );
+    accelerationPartial->wrtPositionOfAcceleratingBody( partialWrtSunPosition.block( 0, 0, 3, 3 ) );
+
+    Eigen::MatrixXd partialWrtSunVelocity = Eigen::Matrix3d::Zero( );
+    accelerationPartial->wrtVelocityOfAcceleratingBody( partialWrtSunVelocity.block( 0, 0, 3, 3 ) );
+
+    Eigen::MatrixXd partialWrtMercuryPosition = Eigen::Matrix3d::Zero( );
+    accelerationPartial->wrtPositionOfAcceleratedBody( partialWrtMercuryPosition.block( 0, 0, 3, 3 ) );
+
+    Eigen::MatrixXd partialWrtMercuryVelocity = Eigen::Matrix3d::Zero( );
+    accelerationPartial->wrtVelocityOfAcceleratedBody( partialWrtMercuryVelocity.block( 0, 0, 3, 3 ) );
+
+    Eigen::Vector3d partialWrtSunGravitationalParameter = accelerationPartial->wrtParameter(
+                gravitationalParameterParameter );
+
+    Eigen::Vector3d partialWrtGamma = accelerationPartial->wrtParameter( ppnParameterGamma );
+    Eigen::Vector3d partialWrtBeta = accelerationPartial->wrtParameter( ppnParameterBeta );
+    Eigen::Vector3d partialWrtAlpha1 = accelerationPartial->wrtParameter( ppnParameterAlpha1 );
+    Eigen::Vector3d partialWrtAlpha2 = accelerationPartial->wrtParameter( ppnParameterAlpha2 );
 
     // Declare perturbations in position for numerical partial/
     Eigen::Vector3d positionPerturbation;
@@ -750,41 +996,58 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
     velocityPerturbation << 1.0, 1.0, 1.0;
 
     // Calculate numerical partials.
-    Eigen::Matrix3d testPartialWrtVehiclePosition = calculateAccelerationWrtStatePartials(
-                vehicleStateSetFunction, accelerationModel, vehicle->getState( ), positionPerturbation, 0 );
-    Eigen::Matrix3d testPartialWrtVehicleVelocity = calculateAccelerationWrtStatePartials(
-                vehicleStateSetFunction, accelerationModel, vehicle->getState( ), velocityPerturbation, 3 );
-    Eigen::Matrix3d testPartialWrtEarthPosition = calculateAccelerationWrtStatePartials(
-                earthStateSetFunction, accelerationModel, earth->getState( ), positionPerturbation, 0 );
-    Eigen::Matrix3d testPartialWrtEarthVelocity = calculateAccelerationWrtStatePartials(
-                earthStateSetFunction, accelerationModel, earth->getState( ), velocityPerturbation, 3 );
-    Eigen::Vector3d testPartialWrtEarthGravitationalParameter = calculateAccelerationWrtParameterPartials(
+    Eigen::Matrix3d testPartialWrtMercuryPosition = calculateAccelerationWrtStatePartials(
+                mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0 );
+    Eigen::Matrix3d testPartialWrtMercuryVelocity = calculateAccelerationWrtStatePartials(
+                mercuryStateSetFunction, accelerationModel, mercury->getState( ), velocityPerturbation, 3 );
+
+    Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
+                sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0 );
+    Eigen::Matrix3d testPartialWrtSunVelocity = calculateAccelerationWrtStatePartials(
+                sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3 );
+
+    Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
                 gravitationalParameterParameter, accelerationModel, 1.0E10 );
+
     Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
                 ppnParameterGamma, accelerationModel, 100.0 );
     Eigen::Vector3d testPartialWrtPpnParameterBeta = calculateAccelerationWrtParameterPartials(
                 ppnParameterBeta, accelerationModel, 100.0 );
 
+    Eigen::Vector3d testPartialWrtPpnParameterAlpha1 = calculateAccelerationWrtParameterPartials(
+                ppnParameterAlpha1, accelerationModel, 100.0 );
+    Eigen::Vector3d testPartialWrtPpnParameterAlpha2 = calculateAccelerationWrtParameterPartials(
+                ppnParameterAlpha2, accelerationModel, 100.0 );
+
+
+
     // Compare numerical and analytical results.
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtEarthPosition,
-                                       partialWrtEarthPosition, 1.0e-7 );
+    double stateTolerance = 1.0E-5;
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtEarthVelocity,
-                                       partialWrtEarthVelocity, 1.0e-7 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunPosition,
+                                       partialWrtSunPosition, stateTolerance); // score 0/9
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtVehiclePosition,
-                                       partialWrtVehiclePosition, 1.0e-7 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunVelocity,
+                                       partialWrtSunVelocity, stateTolerance); // score 7/9
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtVehicleVelocity,
-                                       partialWrtVehicleVelocity, 1.0e-7 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtMercuryPosition,
+                                       partialWrtMercuryPosition, stateTolerance ); // score 0/9
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtEarthGravitationalParameter,
-                                       partialWrtEarthGravitationalParameter, 1.0e-8 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtMercuryVelocity,
+                                       partialWrtMercuryVelocity, stateTolerance ); // score 7/9
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterGamma, partialWrtGamma, 1.0e-8 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
+                                       partialWrtSunGravitationalParameter, 1.0e-8 ); // score 0/3
 
-    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterBeta, partialWrtBeta, 1.0e-8 );
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterGamma, partialWrtGamma, 1.0e-8 ); // pass!
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterBeta, partialWrtBeta, 1.0e-8 ); // pass!
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterAlpha1, partialWrtAlpha1, 1.0e-8 ); // score 0/3
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPpnParameterAlpha2, partialWrtAlpha2, 1.0e-8 ); // score 0/3
 }
+
 
 
 BOOST_AUTO_TEST_CASE( testEmpiricalAccelerationPartial )

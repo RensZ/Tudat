@@ -19,6 +19,8 @@
 #include "Tudat/Astrodynamics/BasicAstrodynamics/torqueModel.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/estimatableParameter.h"
 #include "Tudat/Basics/basicTypedefs.h"
+#include "Tudat/Astrodynamics/Relativity/relativisticAccelerationCorrection.h"
+
 
 namespace tudat
 {
@@ -241,6 +243,19 @@ Eigen::Matrix< double, 3, Eigen::Dynamic > calculateTorqueWrtParameterPartials(
         std::function< void( ) > updateDependentVariables = emptyFunction,
         const double currentTime = 0.0,
         std::function< void( const double ) > timeDependentUpdateDependentVariables = emptyTimeFunction );
+
+// CUSTOM MADE
+
+Eigen::Matrix3d calculateAccelerationWrtStatePartialsRelativity(
+        std::function< void( Eigen::Vector6d ) > setBodyState,
+        std::shared_ptr< relativity::RelativisticAccelerationCorrection > accelerationModel,
+        Eigen::Vector6d originalState,
+        Eigen::Vector3d statePerturbation,
+        int startIndex,
+        const int term, //1 for Schwarzschild, 2 for Schwarzschild alpha terms, 3 for Lense-Thirring, 4 for de-sitter
+        std::function< void( ) > updateFunction = emptyFunction,
+        const double evaluationTime = TUDAT_NAN );
+
 
 } // namespace acceleration_partials
 

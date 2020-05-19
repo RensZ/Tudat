@@ -477,6 +477,9 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
                         variableFunction = std::bind(&relativity::RelativisticAccelerationCorrection::getDeSitterAcceleration,
                                                  relativityClass );
                         break; }
+		    default: {
+			std::runtime_error("ERROR: not a viable input");
+                        break; }
                     }
 
                 } else{

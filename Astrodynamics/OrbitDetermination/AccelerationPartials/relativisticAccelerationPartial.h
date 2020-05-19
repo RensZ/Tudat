@@ -571,6 +571,31 @@ public:
     }
 
 
+    Eigen::MatrixXd returnPositionPartialOfOneTerm( const int term)
+    {
+        Eigen::MatrixXd partial;
+        switch(term){
+        case 1: { partial = currentSchwarzschildPartialWrtPosition_; break; }
+        case 2: { partial = currentSchwarzschildAlphaTermsPartialWrtPosition_; break; }
+        case 3: { partial = currentLenseThirringPartialWrtPosition_; break; }
+        default: { std::runtime_error("ERROR: invalid input for term"); break; }
+        }
+        return partial;
+    }
+
+    Eigen::MatrixXd returnVelocityPartialOfOneTerm( const int term)
+    {
+        Eigen::MatrixXd partial;
+        switch(term){
+        case 1: { partial = currentSchwarzschildPartialWrtVelocity_; break; }
+        case 2: { partial = currentSchwarzschildAlphaTermsPartialWrtVelocity_; break; }
+        case 3: { partial = currentLenseThirringPartialWrtVelocity_; break; }
+        default: { std::runtime_error("ERROR: invalid input for term"); break; }
+        }
+        return partial;
+    }
+
+
 
     //! Function for updating partial w.r.t. the bodies' states
     /*!

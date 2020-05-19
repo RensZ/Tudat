@@ -72,18 +72,20 @@ Eigen::Vector3d calculateScharzschildAlphaTermsAccelerationCorrection(
         const double ppnParameterAlpha1,
         const double ppnParameterAlpha2)
 {
+    double gravitationalParameterRatio = acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter;
+
     Eigen::Vector3d acceleration =
             (
                 (2.0 + ppnParameterAlpha1) * acceleratedBodyGravitationalParameter / relativeDistance
                 - 0.5 * (6.0 + ppnParameterAlpha1 + ppnParameterAlpha2)
-                    * (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
+                    * gravitationalParameterRatio
                     * (relativeVelocity.dot(relativeVelocity))
-                + 1.5 * (1.0 + ppnParameterAlpha1)
-                    * (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
-                    * (relativeVelocity.dot(relativePosition)/relativeDistance)
-                    * (relativeVelocity.dot(relativePosition)/relativeDistance)
+                + 1.5 * (1.0 + ppnParameterAlpha2)
+                    * gravitationalParameterRatio
+                    * (relativeVelocity.dot(relativePosition/relativeDistance))
+                    * (relativeVelocity.dot(relativePosition/relativeDistance))
             ) * relativePosition
-            + (acceleratedBodyGravitationalParameter/centralBodyGravitationalParameter)
+            - gravitationalParameterRatio
             * (2.0 - ppnParameterAlpha1 + ppnParameterAlpha2)
             * (relativePosition.dot(relativeVelocity))
             * relativeVelocity;
