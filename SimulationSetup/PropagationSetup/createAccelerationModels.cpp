@@ -992,7 +992,8 @@ Eigen::Vector3d getSEPCorrectedPosition(
         const std::shared_ptr< Body > bodyExertingAcceleration,
         const std::string& nameOfBodyExertingAcceleration,
         const NamedBodyMap& bodyMap,
-        std::vector< std::string > bodyNames)
+        std::vector< std::string > bodyNames,
+        std::function< double( ) > nordtvedtParameterFunction)
 {
     using namespace relativity;
 
@@ -1002,10 +1003,7 @@ Eigen::Vector3d getSEPCorrectedPosition(
     // Simplified solution by using taylor series expansion
     Eigen::Vector3d SEPPositionCorrectionSimplified;
 
-    double nordtvedtParameter = ppnParameterSet->getNordtvedtParameter();
-
-//    double nordtvedtParameter = 0.0; //for testing purposes
-//    std::cout<<"eta: "<<nordtvedtParameter;
+    double nordtvedtParameter = nordtvedtParameterFunction();
 
     if (nordtvedtParameter == 0.0){ // to prevent dividing by 0 in the calculations below
         SEPPositionCorrectionSimplified << 0.0, 0.0, 0.0;
@@ -1022,7 +1020,6 @@ Eigen::Vector3d getSEPCorrectedPosition(
         const double gravitationalSelfEnergyBodyExertingAcceleration =
                 getGravitationalSelfEnergy(nameOfBodyExertingAcceleration,
                                            gravitationalParameterBodyExertingAcceleration);
-
 
 
 //        double referenceCentralBodyTerm =
@@ -1085,10 +1082,10 @@ Eigen::Vector3d getSEPCorrectedPosition(
                        currentBodyGravitationalParameter
                        * currentBodyPosition
                        * ( gravitationalSelfEnergyBodyExertingAcceleration
-                         * 1.0/( gravitationalParameterBodyExertingAcceleration/physical_constants::GRAVITATIONAL_CONSTANT )
+                         /( gravitationalParameterBodyExertingAcceleration/physical_constants::GRAVITATIONAL_CONSTANT )
                          -
                          currentBodyGravitationalSelfEnergy
-                         * 1.0/( currentBodyGravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT )
+                         /( currentBodyGravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT )
                        );
 
 //               referenceSummationTerm += currentReferenceBodyTerm;
@@ -1113,7 +1110,8 @@ Eigen::Vector3d getSEPCorrectedPosition(
 //        std::cout<<SEPPositionCorrectionError<< " "<<SEPPositionCorrectionError/SEPPositionCorrection.norm()<<std::endl;
 
     }
-//    std::cout<<" dr_SEP: "<<SEPPositionCorrectionSimplified.transpose()<<std::endl;
+    std::cout<<"eta: "<<nordtvedtParameter;
+    std::cout<<" dr_SEP: "<<SEPPositionCorrectionSimplified.transpose()<<std::endl;
     return SEPPositionCorrectionSimplified;
 }
 
@@ -1221,7 +1219,7 @@ Eigen::Vector3d getNordtvedtPartial(
                        * distanceBodyExertingAccelerationWrtCurrentBody);
 
             // third term
-            term3 += gravitationalParameterCurrentBody
+            term3 -= gravitationalParameterCurrentBody
                     * (gravitationalSelfEnergyCurrentBody
                        * 1.0/(gravitationalParameterCurrentBody/physical_constants::GRAVITATIONAL_CONSTANT)
                        * 1.0/(physical_constants::SPEED_OF_LIGHT*physical_constants::SPEED_OF_LIGHT)
@@ -1315,13 +1313,12 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
 //        ppnParameterSet->setNordtvedtParameter(
 //                    sepViolationAccelerationSettings->nordtvedtParameter_);
 
+        std::function< double( ) >  nordtvedtParameterFunction;
         if (sepViolationAccelerationSettings->useNordtvedtConstraint_ == true){
-            std::function< double( ) >  nordtvedtParameterFunction;
             nordtvedtParameterFunction =
                     std::bind( &PPNParameterSet::getNordtvedtParameterFromPpnParameters, ppnParameterSet );
         }
         else{
-            std::function< double( ) >  nordtvedtParameterFunction;
             nordtvedtParameterFunction =
                     std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
         }
@@ -1351,7 +1348,8 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
                                 bodyExertingAcceleration,
                                 nameOfBodyExertingAcceleration,
                                 bodyMap,
-                                sepViolationAccelerationSettings->bodyNames_);
+                                sepViolationAccelerationSettings->bodyNames_,
+                                nordtvedtParameterFunction);
 
         // get Nordtvedt partial (see functions above)
         std::function< Eigen::Vector3d( ) > nordtvedtPartialFunction =

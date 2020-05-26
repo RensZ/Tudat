@@ -71,6 +71,10 @@ Eigen::Matrix3d calculateAccelerationWrtStatePartials(
     basic_astrodynamics::updateAndGetAcceleration< Eigen::Vector3d >(
                 accelerationModel, evaluationTime );
 
+//    std::cout<<"up:"<<std::endl<<upAccelerations<<std::endl
+//             <<"down:"<<std::endl<<downAccelerations<<std::endl
+//             <<"dif:"<<std::endl<<upAccelerations-downAccelerations<<std::endl;
+
     // Numerically compute partial derivatives.
     Eigen::Matrix3d accelerationPartials = upAccelerations - downAccelerations;
     for( int i = 0; i < 3; i++ )

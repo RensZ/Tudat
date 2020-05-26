@@ -43,6 +43,19 @@ Eigen::Vector3d computeGravitationalAcceleration(
             / ( distance * distance * distance );
 }
 
+//! Compute gravitational acceleration, input and ouptut are long
+const Eigen::Matrix<long double, 3, 1> computeGravitationalAccelerationLong(
+        const Eigen::Matrix<long double, 3, 1> positionOfBodySubjectToAcceleration,
+        const long double gravitationalParameterOfBodyExertingAcceleration,
+        const Eigen::Matrix<long double, 3, 1> positionOfBodyExertingAcceleration )
+{
+    long double distance = ( positionOfBodySubjectToAcceleration - positionOfBodyExertingAcceleration ).norm( );
+    return -gravitationalParameterOfBodyExertingAcceleration
+            * ( positionOfBodySubjectToAcceleration - positionOfBodyExertingAcceleration )
+            / ( distance * distance * distance );
+}
+
+
 //! Compute gravitational force.
 Eigen::Vector3d computeGravitationalForce(
         const double universalGravitationalParameter,

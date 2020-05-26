@@ -27,7 +27,7 @@ void computePartialOfTVGPWrtPosition(
             * timeVaryingGravitationalParameter
             * (currentTime/tudat::physical_constants::JULIAN_YEAR)
             * ( Eigen::Matrix3d::Identity( ) / (distanceCubed)
-                + 3.0 * (1/distanceSquared) * (1/distanceCubed) * position * position.transpose()
+                - 3.0 * (1/distanceSquared) * (1/distanceCubed) * position * position.transpose()
                );
 
 }

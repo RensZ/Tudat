@@ -539,7 +539,8 @@ Eigen::Vector3d getSEPCorrectedPosition(
         const std::shared_ptr< Body > bodyExertingAcceleration,
         const std::string& nameOfBodyExertingAcceleration,
         const NamedBodyMap& bodyMap,
-        std::vector< std::string > bodyNames);
+        std::vector< std::string > bodyNames,
+        std::function< double( ) > nordtvedtParameterFunction);
 
 //! the partial equation of the SEP violation acceleration w.r.t. the Nordtvedt parameter is calculated
 //!     This is passed on via sepViolationAcceleration to sepViolationAccelerationPartial

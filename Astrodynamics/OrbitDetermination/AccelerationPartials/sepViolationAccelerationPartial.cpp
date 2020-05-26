@@ -18,45 +18,42 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 
     // if Nordtvedt parameter = 0, there will be no correction, and the corrected position will be equal to the original position
     // as a result the partial matrix will be the zero matrix (the terms with and without correction are then equal, but with opposite signs)
-    if (sepPositionCorrection.norm( ) != 0.0){
-        std::runtime_error( "ERROR: if nordtvedt parameter = 0 exactly, no partial w.r.t. the state can be calculated" );
+    if (sepPositionCorrection.norm( ) == 0.0){
+        partialMatrix = Eigen::Matrix3d::Zero();
+    } else{
+
+        // convert doubles to long doubles
+        Eigen::Matrix<long double, 3, 1> relativePositionLong = relativePosition.cast<long double>();
+        Eigen::Matrix<long double, 3, 1> sepPositionCorrectionLong = sepPositionCorrection.cast<long double>();
+        long double gravitationalParameterLong = static_cast<long double>(gravitationalParameter);
+
+        // get necessary variables
+        Eigen::Matrix<long double, 3, 1> relativeCorrectedPosition = relativePositionLong - sepPositionCorrectionLong;
+        long double relativeNorm = relativePositionLong.norm( );
+        long double invSquareRelativeNorm = 1.0 / (relativeNorm * relativeNorm);
+        long double invCubedRelativeNorm = invSquareRelativeNorm / relativeNorm;
+
+        long double relativeCorrectedNorm = relativeCorrectedPosition.norm( );
+        long double invSquareRelativeCorrectedNorm = 1.0 / (relativeCorrectedNorm * relativeCorrectedNorm);
+        long double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / relativeCorrectedNorm;
+
+        // calculate partial derivative terms
+        Eigen::Matrix<long double, 3, 3> partialMatrixLong = Eigen::Matrix<long double, 3, 3>::Zero( );
+
+        partialMatrixLong += -1.0 * Eigen::Matrix<long double, 3, 3>::Identity( ) * invCubedRelativeCorrectedNorm;
+        partialMatrixLong += 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
+                * relativeCorrectedPosition * relativeCorrectedPosition.transpose( );
+
+        partialMatrixLong += Eigen::Matrix<long double, 3, 3>::Identity( ) * invCubedRelativeNorm;
+        partialMatrixLong += -3.0 * invSquareRelativeNorm * invCubedRelativeNorm
+                * relativePositionLong * relativePositionLong.transpose( );
+
+        partialMatrixLong *= gravitationalParameterLong;
+
+        // cast back to double for output
+        partialMatrix = partialMatrixLong.cast<double>();
+
     }
-
-//    std::cout<<relativePosition<<std::endl;
-//    std::cout<<sepPositionCorrection<<std::endl;
-
-    Eigen::Vector3d relativeCorrectedPosition = relativePosition - sepPositionCorrection;
-    double relativeNorm = relativePosition.norm( );
-    double invSquareRelativeNorm = 1.0 / (relativeNorm * relativeNorm);
-    double invCubedRelativeNorm = invSquareRelativeNorm / relativeNorm;
-
-    double relativeCorrectedNorm = relativeCorrectedPosition.norm( );
-    double invSquareRelativeCorrectedNorm = 1.0 / (relativeCorrectedNorm * relativeCorrectedNorm);
-    double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / relativeCorrectedNorm;       
-
-
-    partialMatrix = Eigen::Matrix3d::Zero( );
-
-    partialMatrix += -Eigen::Matrix3d::Identity( ) * invCubedRelativeCorrectedNorm;
-    partialMatrix += 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-            * relativeCorrectedPosition * relativeCorrectedPosition.transpose( );
-
-//    partialMatrix += -3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-//            * sepPositionCorrection * relativeCorrectedPosition.transpose( );
-
-    partialMatrix += Eigen::Matrix3d::Identity( ) * invCubedRelativeNorm;
-    partialMatrix += -3.0 * invSquareRelativeNorm * invCubedRelativeNorm
-            * relativePosition * relativePosition.transpose( );
-
-    partialMatrix *= gravitationalParameter;
-
-//    std::cout<<partialMatrix<<std::endl;
-
-
-//    partialMatrix = gravitationalParameter *
-//            ( Eigen::Matrix3d::Identity( ) * invCubeOfPositionNorm -
-//              ( 3.0 * invSquareOfPositionNorm * invCubeOfPositionNorm ) * relativePosition * relativePosition.transpose( ) );
-
 }
 
 
