@@ -61,50 +61,100 @@ void computePartialOfSEPViolationAccelerationWrtPosition(
 
 //! Function to compute partial of TVGP w.r.t. gravitational parameter of central body
 void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
-        const Eigen::Vector3d& centralBodyPosition,
+        const Eigen::Vector3d& centralBodyPositionShort,
         Eigen::MatrixXd& partialMatrix,
-        const Eigen::Vector3d& acceleratedBodyPosition,
-        const Eigen::Vector3d& sepCorrection,
-        const double gravitationalParameterOfCentralBody)
+        const Eigen::Vector3d& acceleratedBodyPositionShort,
+        const Eigen::Vector3d& sepCorrectionShort,
+        const double gravitationalParameterOfCentralBodyShort,
+        const Eigen::Vector3d& currentAccelerationShort)
 {
 
-//    std::cout<<centralBodyPosition.transpose()<<" / "
-//             <<sepCorrection.transpose()<<std::endl;
+    // convert everything to long for additional accuracy
+    Eigen::Matrix<long double, 3, 1> centralBodyPosition = centralBodyPositionShort.cast<long double>();
+    Eigen::Matrix<long double, 3, 1> acceleratedBodyPosition = acceleratedBodyPositionShort.cast<long double>();
+    Eigen::Matrix<long double, 3, 1> sepCorrection = sepCorrectionShort.cast<long double>();
+    long double gravitationalParameterOfCentralBody = static_cast<long double>(gravitationalParameterOfCentralBodyShort);
+//    Eigen::Matrix<long double, 3, 1> currentAcceleration = currentAccelerationShort.cast<long double>();
 
-    Eigen::Vector3d correctedCentralBodyPosition =
-            centralBodyPosition + sepCorrection;
+    partialMatrix = Eigen::Vector3d::Zero();
 
-    Eigen::Vector3d currentAcceleration = gravitation::computeGravitationalAcceleration(
-                acceleratedBodyPosition,
-                gravitationalParameterOfCentralBody,
-                centralBodyPosition);
-    Eigen::Vector3d currentCorrectedAcceleration = gravitation::computeGravitationalAcceleration(
-                acceleratedBodyPosition,
-                gravitationalParameterOfCentralBody,
-                correctedCentralBodyPosition);
+//    // some useful variables
+//    Eigen::Matrix<long double, 3, 1> relativePosition =
+//            acceleratedBodyPosition - centralBodyPosition;
+//    long double positionNorm = relativePosition.norm();
+//    long double invCubedRelativeNorm = 1.0 / (positionNorm * positionNorm * positionNorm);
 
-    Eigen::Vector3d sepCorrectedRelativePosition =
-            acceleratedBodyPosition - correctedCentralBodyPosition;
+//    Eigen::Matrix<long double, 3, 1> correctedCentralBodyPosition =
+//            centralBodyPosition + sepCorrection;
+//    Eigen::Matrix<long double, 3, 1> sepCorrectedRelativePosition =
+//            acceleratedBodyPosition - correctedCentralBodyPosition;
+//    long double positionNormSEPCorrected = sepCorrectedRelativePosition.norm( );
+//    long double invSquareRelativeCorrectedNorm = 1.0 / (positionNormSEPCorrected * positionNormSEPCorrected);
+//    long double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / positionNormSEPCorrected;
 
-    double positionNormSEPCorrected = sepCorrectedRelativePosition.norm( );
-    double invSquareRelativeCorrectedNorm = 1.0 / (positionNormSEPCorrected * positionNormSEPCorrected);
-    double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / positionNormSEPCorrected;
+////    Eigen::Matrix<long double, 3, 1> c = sepCorrection / gravitationalParameterOfCentralBody;
 
-    //first term, simply the point mass acceleration divided by gravitational parameter
-    partialMatrix =
-            (currentCorrectedAcceleration - currentAcceleration)
-            / gravitationalParameterOfCentralBody;
+//    Eigen::Matrix<long double, 3, 1> currentConventionalAcceleration
+//            = gravitation::computeGravitationalAccelerationLong(
+//                acceleratedBodyPosition,
+//                gravitationalParameterOfCentralBody,
+//                centralBodyPosition);
+//    Eigen::Matrix<long double, 3, 1> currentCorrectedAcceleration
+//            = gravitation::computeGravitationalAccelerationLong(
+//                acceleratedBodyPosition,
+//                gravitationalParameterOfCentralBody,
+//                correctedCentralBodyPosition);
 
-//    std::cout<<partialMatrix.transpose()<< " // ";
+//    Eigen::Matrix<long double, 3, 1> currentAcceleration =
+//            currentCorrectedAcceleration - currentConventionalAcceleration;
 
-    //second term, result of the chain rule because gravitational parameter is present in delta r
-    partialMatrix -=
-            (Eigen::Matrix3d::Identity( ) * invCubedRelativeCorrectedNorm
-            - 3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-            * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( )
-            ) * sepCorrection;
 
-//    std::cout<<partialMatrix.transpose()<<std::endl;
+//    // calculate terms
+//    Eigen::Matrix<long double, 3, 1> term1 =
+//            currentAcceleration / gravitationalParameterOfCentralBody;
+
+//    Eigen::Matrix<long double, 3, 3> term2a =
+//            Eigen::Matrix<long double, 3, 3>::Identity( ) * invCubedRelativeCorrectedNorm;
+
+//    Eigen::Matrix<long double, 3, 3> term2b =
+//            3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
+//            * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( );
+
+//    Eigen::Matrix<long double, 3, 1> term2 =
+//            (term2a - term2b) * sepCorrection;
+
+//    Eigen::Matrix<long double, 3, 1> partialMatrixLong = term1 - term2;
+
+//    partialMatrix = partialMatrixLong.cast<double>();
+
+//    std::cout<<"partial wrt grav parameter"<<std::endl;
+//    std::cout<<gravitationalParameterOfCentralBody<<std::endl;
+//    std::cout<<currentConventionalAcceleration<<std::endl;
+//    std::cout<<currentCorrectedAcceleration<<std::endl;
+//    std::cout<<currentAcceleration<<std::endl;
+//    std::cout<<term1<<std::endl;
+//    std::cout<<term2a<<std::endl;
+//    std::cout<<term2b<<std::endl;
+//    std::cout<<term2<<std::endl;
+//    std::cout<<partialMatrixLong<<std::endl;
+//    std::cout<<partialMatrix<<std::endl;
+
+
+
+//    Eigen::Matrix<long double, 3, 1> partialMatrixLong =
+//            -1.0 * sepCorrectedRelativePosition * invCubedRelativeCorrectedNorm;
+
+//    partialMatrixLong += 3.0
+//            * sepCorrectedRelativePosition.transpose().dot(sepCorrectedRelativePosition)
+//            * c * invCubedRelativeCorrectedNorm * invSquareRelativeCorrectedNorm
+//            / gravitationalParameterOfCentralBody;
+
+//    partialMatrixLong -= c
+//            * invCubedRelativeCorrectedNorm
+//            / gravitationalParameterOfCentralBody;
+
+//    partialMatrixLong += relativePosition * invCubedRelativeNorm;
+
 
 }
 
@@ -152,6 +202,37 @@ void computePartialOfSEPViolationAccelerationWrtPpnParameterAlpha2(
 };
 
 
+//! Function to compute partial of SEP violation acceleration w.r.t. the Nordtvedt parameter,
+//! which is used as a base for the functions above
+void calculateNordtvedtPartial(
+        const Eigen::Vector3d& correctedPosition,
+        Eigen::Vector3d& partialMatrix,
+        const Eigen::Vector3d& sepCorrection,
+        const double gravitationalParameterOfCentralBody,
+        const double nordtvedtParameter){
+
+    if (sepCorrection.norm() == 0.0){
+        partialMatrix = Eigen::Vector3d::Zero();
+    } else{
+
+        double distance = correctedPosition.norm();
+
+        Eigen::Matrix3d bracketTerm = Eigen::Matrix3d::Identity( )
+                / (distance * distance * distance);
+
+        bracketTerm -= 3.0 * correctedPosition
+                * correctedPosition.transpose()
+                / (distance * distance * distance * distance *distance);
+
+        partialMatrix = bracketTerm
+                * gravitationalParameterOfCentralBody
+                * sepCorrection
+                / nordtvedtParameter;
+    }
+}
+
+
+
 
 //! Function for setting up and retrieving a function returning a partial w.r.t. a double parameter.
 std::pair< std::function< void( Eigen::MatrixXd& ) >, int >
@@ -166,10 +247,10 @@ SEPViolationAccelerationPartial::getParameterPartialFunction(
     {
         switch( parameter->getParameterName( ).first )
         {
-        case estimatable_parameters::gravitational_parameter:
-            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtGravitationalParameterOfCentralBody, this, std::placeholders::_1 );
-            numberOfRows = 1;
-            break;
+//        case estimatable_parameters::gravitational_parameter:
+//            partialFunction = std::bind( &SEPViolationAccelerationPartial::wrtGravitationalParameterOfCentralBody, this, std::placeholders::_1 );
+//            numberOfRows = 1;
+//            break;
         default:
             break;
         }

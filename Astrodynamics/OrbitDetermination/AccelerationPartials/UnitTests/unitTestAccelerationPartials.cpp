@@ -820,7 +820,7 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
 
 
     double stateTolerance = 1.0E-3; //orginally E-7?
-    double parameterTolerance = 1.0E-3; //originally E-8
+    double parameterTolerance = 1.0E-4; //originally E-8
 
     // Compare numerical and analytical results.
     for (unsigned int i=1; i<4; i++){
@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
     // Compare numerical and analytical results.
     double stateTolerance = 1.0E-3; //orginally E-7?
-    double parameterTolerance = 1.0E-3; //originally E-8
+    double parameterTolerance = 1.0E-4; //originally E-8
 
 
     std::cout<<"wrt sun position:"
@@ -1142,70 +1142,114 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
 BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 {
-    // Create earth and vehicle bodies.
-    std::shared_ptr< Body > sun = std::make_shared< Body >( );
-    std::shared_ptr< Body > mercury = std::make_shared< Body >( );
-    std::shared_ptr< Body > venus = std::make_shared< Body >( );
-    std::shared_ptr< Body > jupiter = std::make_shared< Body >( );
-
-    // Create links to set and get state functions of bodies.
-    std::function< void( Eigen::Vector6d ) > sunStateSetFunction =
-            std::bind( &Body::setState, sun, std::placeholders::_1  );
-    std::function< void( Eigen::Vector6d ) > mercuryStateSetFunction =
-            std::bind( &Body::setState, mercury, std::placeholders::_1  );
-    std::function< void( Eigen::Vector6d ) > venusStateSetFunction =
-            std::bind( &Body::setState, venus, std::placeholders::_1  );
-    std::function< void( Eigen::Vector6d ) > jupiterStateSetFunction =
-            std::bind( &Body::setState, jupiter, std::placeholders::_1  );
-
-    std::function< Eigen::Vector6d( ) > sunStateGetFunction =
-            std::bind( &Body::getState, sun );
-    std::function< Eigen::Vector6d( ) > mercuryStateGetFunction =
-            std::bind( &Body::getState, mercury);
-    std::function< Eigen::Vector6d( ) > venusStateGetFunction =
-            std::bind( &Body::getState, venus );
-    std::function< Eigen::Vector6d( ) > jupiterStateGetFunction =
-            std::bind( &Body::getState, jupiter);
-
 
     // Load spice kernel.
     spice_interface::loadStandardSpiceKernels( );
-
-    // Set vehicle and earth state.
-    sun->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", 1.0E6 ) );
-    mercury->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", 1.0E6 ) );
-    venus->setState( getBodyCartesianStateAtEpoch(  "Venus", "SSB", "J2000", "NONE", 1.0E6 ) );
-    jupiter->setState( getBodyCartesianStateAtEpoch(  "Jupiter", "SSB", "J2000", "NONE", 1.0E6 ) );
-
-    NamedBodyMap bodyMap;
-    bodyMap[ "Sun" ] = sun;
-    bodyMap[ "Mercury" ] = mercury;
-    bodyMap[ "Venus" ] = venus;
-    bodyMap[ "Jupiter" ] = jupiter;
-
-    std::vector< std::string > bodyNames;
-    bodyNames.push_back( "Sun" );
-    bodyNames.push_back( "Mercury" );
-    bodyNames.push_back( "Venus" );
-    bodyNames.push_back( "Jupiter" );
-
-    // Create gravity field.
     std::shared_ptr< GravityFieldSettings > gravityFieldSettings = std::make_shared< GravityFieldSettings >( central_spice );
-    std::shared_ptr< gravitation::GravityFieldModel > sunGravityField =
-            createGravityFieldModel( gravityFieldSettings, "Sun", bodyMap );
-    sun->setGravityFieldModel( sunGravityField );
-    std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
-            createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
-    mercury->setGravityFieldModel( mercuryGravityField );
-    std::shared_ptr< gravitation::GravityFieldModel > venusGravityField =
-            createGravityFieldModel( gravityFieldSettings, "Venus", bodyMap );
-    venus->setGravityFieldModel( venusGravityField );
-    std::shared_ptr< gravitation::GravityFieldModel > jupiterGravityField =
-            createGravityFieldModel( gravityFieldSettings, "Jupiter", bodyMap );
-    jupiter->setGravityFieldModel( jupiterGravityField );
+
+    // Define bodies
+    unsigned int totalNumberOfBodies = 8;
+    std::vector< std::string > bodyNames;
+    bodyNames.resize( totalNumberOfBodies );
+    bodyNames[ 0 ] = "Sun";
+    bodyNames[ 1 ] = "Mercury";
+    bodyNames[ 2 ] = "Venus";
+    bodyNames[ 3 ] = "Earth";
+    bodyNames[ 4 ] = "Mars";
+    bodyNames[ 5 ] = "Jupiter";
+    bodyNames[ 6 ] = "Saturn";
+//    bodyNames[ 7 ] = "Uranus";
+//    bodyNames[ 8 ] = "Neptune";
+    bodyNames[ 7 ] = "Moon";
+
+    // Manually load body settings
+    NamedBodyMap bodyMap;
+    for (unsigned int i=0; i<totalNumberOfBodies; i++){
+
+        std::shared_ptr< Body > body = std::make_shared< Body >( );
+
+        std::function< void( Eigen::Vector6d ) > bodyStateSetFunction =
+                std::bind( &Body::setState, body, std::placeholders::_1  );
+        std::function< Eigen::Vector6d( ) > bodyStateGetFunction =
+                std::bind( &Body::getState, body );
+
+        body->setState( getBodyCartesianStateAtEpoch( bodyNames.at(i), "SSB", "J2000", "NONE", 1.0E6 ) );
+
+        bodyMap[ bodyNames.at(i) ] = body;
+
+        std::shared_ptr< gravitation::GravityFieldModel > bodyGravityField =
+                createGravityFieldModel( gravityFieldSettings, bodyNames.at(i), bodyMap );
+        body->setGravityFieldModel( bodyGravityField );
+
+        bodyMap[ bodyNames.at(i) ] = body;
+
+    }
+
+
+
+
+//    // Create earth and vehicle bodies.
+//    std::shared_ptr< Body > sun = std::make_shared< Body >( );
+//    std::shared_ptr< Body > mercury = std::make_shared< Body >( );
+//    std::shared_ptr< Body > venus = std::make_shared< Body >( );
+//    std::shared_ptr< Body > jupiter = std::make_shared< Body >( );
+
+//    // Create links to set and get state functions of bodies.
+//    std::function< void( Eigen::Vector6d ) > sunStateSetFunction =
+//            std::bind( &Body::setState, sun, std::placeholders::_1  );
+//    std::function< void( Eigen::Vector6d ) > mercuryStateSetFunction =
+//            std::bind( &Body::setState, mercury, std::placeholders::_1  );
+//    std::function< void( Eigen::Vector6d ) > venusStateSetFunction =
+//            std::bind( &Body::setState, venus, std::placeholders::_1  );
+//    std::function< void( Eigen::Vector6d ) > jupiterStateSetFunction =
+//            std::bind( &Body::setState, jupiter, std::placeholders::_1  );
+
+//    std::function< Eigen::Vector6d( ) > sunStateGetFunction =
+//            std::bind( &Body::getState, sun );
+//    std::function< Eigen::Vector6d( ) > mercuryStateGetFunction =
+//            std::bind( &Body::getState, mercury);
+//    std::function< Eigen::Vector6d( ) > venusStateGetFunction =
+//            std::bind( &Body::getState, venus );
+//    std::function< Eigen::Vector6d( ) > jupiterStateGetFunction =
+//            std::bind( &Body::getState, jupiter);
+
+//    // Set vehicle and earth state.
+//    sun->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", 1.0E6 ) );
+//    mercury->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", 1.0E6 ) );
+//    venus->setState( getBodyCartesianStateAtEpoch(  "Venus", "SSB", "J2000", "NONE", 1.0E6 ) );
+//    jupiter->setState( getBodyCartesianStateAtEpoch(  "Jupiter", "SSB", "J2000", "NONE", 1.0E6 ) );
+
+//    NamedBodyMap bodyMap;
+//    bodyMap[ "Sun" ] = sun;
+//    bodyMap[ "Mercury" ] = mercury;
+//    bodyMap[ "Venus" ] = venus;
+//    bodyMap[ "Jupiter" ] = jupiter;
+
+//    std::vector< std::string > bodyNames;
+//    bodyNames.push_back( "Sun" );
+//    bodyNames.push_back( "Mercury" );
+//    bodyNames.push_back( "Venus" );
+//    bodyNames.push_back( "Jupiter" );
+
+//    // Create gravity field.
+//    std::shared_ptr< gravitation::GravityFieldModel > sunGravityField =
+//            createGravityFieldModel( gravityFieldSettings, "Sun", bodyMap );
+//    sun->setGravityFieldModel( sunGravityField );
+//    std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
+//            createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
+//    mercury->setGravityFieldModel( mercuryGravityField );
+//    std::shared_ptr< gravitation::GravityFieldModel > venusGravityField =
+//            createGravityFieldModel( gravityFieldSettings, "Venus", bodyMap );
+//    venus->setGravityFieldModel( venusGravityField );
+//    std::shared_ptr< gravitation::GravityFieldModel > jupiterGravityField =
+//            createGravityFieldModel( gravityFieldSettings, "Jupiter", bodyMap );
+//    jupiter->setGravityFieldModel( jupiterGravityField );
 
     std::function< Eigen::Vector3d( ) > nordtvedtPartialFunction =
-            std::bind( getNordtvedtPartial, sun, mercury, "Sun", "Mercury", bodyMap, bodyNames);
+            std::bind( getNordtvedtPartial,
+                       bodyMap.at( "Sun" ), bodyMap.at( "Mercury" ),
+                       "Sun", "Mercury",
+                       bodyMap, bodyNames);
 
     // run unit test for two cases: nordtvedt constraint true and false
     for (int j = 0; j<2; j++){
@@ -1214,6 +1258,10 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         std::function< double( ) >  nordtvedtParameterFunction;
         if(j){
             useNordtvedtConstraintFunction = [ = ]( ){ return true; };
+//            ppnParameterSet->setParameterGamma(1.0);
+//            ppnParameterSet->setParameterBeta(1.0);
+//            ppnParameterSet->setParameterAlpha1(0.0);
+//            ppnParameterSet->setParameterAlpha2(0.0);
             ppnParameterSet->setParameterGamma(1.0 + 1.0E-4);
             ppnParameterSet->setParameterBeta(1.0 + 2.0E-4);
             ppnParameterSet->setParameterAlpha1(3.0E-4);
@@ -1223,7 +1271,8 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 
         } else{
             useNordtvedtConstraintFunction = [ = ]( ){ return false; };
-            ppnParameterSet->setNordtvedtParameter(1.0E-4);
+//            ppnParameterSet->setNordtvedtParameter(0.0);
+            ppnParameterSet->setNordtvedtParameter(1.0E-3);
             nordtvedtParameterFunction =
                     std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
 
@@ -1232,7 +1281,17 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         std::cout<<"nordtvedt constraint true/false: "<<useNordtvedtConstraintFunction()<<std::endl;
 
         std::function< Eigen::Vector3d( ) > sepPositionCorrectionFunction =
-                std::bind( getSEPCorrectedPosition, sun, "Sun", bodyMap, bodyNames, nordtvedtParameterFunction);
+                std::bind( getSEPCorrectedPosition,
+                           bodyMap.at( "Sun" ), "Sun",
+                           bodyMap, bodyNames,
+                           nordtvedtParameterFunction);
+
+
+        std::function< Eigen::Vector3d( ) > sepPositionCorrectionFunctionUnsimplified =
+                std::bind( getSEPCorrectedPositionUnsimplified,
+                           bodyMap.at( "Sun" ), "Sun",
+                           bodyMap, bodyNames,
+                           nordtvedtParameterFunction);
 
 //        std::cout<<useNordtvedtConstraintFunction()<<std::endl;
 //        std::cout<<sepPositionCorrectionFunction().transpose()<<std::endl;
@@ -1241,12 +1300,25 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         // Create acceleration model.
         std::shared_ptr< SEPViolationAcceleration > accelerationModel
                 = std::make_shared< SEPViolationAcceleration >
-                ( std::bind( &Body::getPosition, mercury ),
-                  std::bind( &Body::getPosition, sun ),
+                ( std::bind( &Body::getPosition, bodyMap.at( "Mercury" ) ),
+                  std::bind( &Body::getPosition, bodyMap.at( "Sun" ) ),
                   sepPositionCorrectionFunction,
-                  std::bind( &GravityFieldModel::getGravitationalParameter, sunGravityField ),
+                  std::bind( &GravityFieldModel::getGravitationalParameter, bodyMap.at( "Sun" )->getGravityFieldModel() ),
                   nordtvedtPartialFunction,
-                  useNordtvedtConstraintFunction
+                  useNordtvedtConstraintFunction,
+                  nordtvedtParameterFunction
+                  );
+
+        // Create acceleration model.
+        std::shared_ptr< SEPViolationAcceleration > accelerationModelUnsimplified
+                = std::make_shared< SEPViolationAcceleration >
+                ( std::bind( &Body::getPosition, bodyMap.at( "Mercury" ) ),
+                  std::bind( &Body::getPosition, bodyMap.at( "Sun" ) ),
+                  sepPositionCorrectionFunctionUnsimplified,
+                  std::bind( &GravityFieldModel::getGravitationalParameter, bodyMap.at( "Sun" )->getGravityFieldModel() ),
+                  nordtvedtPartialFunction,
+                  useNordtvedtConstraintFunction,
+                  nordtvedtParameterFunction
                   );
 
 
@@ -1258,7 +1330,7 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 
         // Create parameter objects.
         std::shared_ptr< EstimatableParameter< double > > gravitationalParameterParameter = std::make_shared<
-                GravitationalParameter >( sunGravityField, "Sun" );
+                GravitationalParameter >( bodyMap.at( "Sun" )->getGravityFieldModel(), "Sun" );
         std::shared_ptr< EstimatableParameter< double > > ppnParameterGamma = std::make_shared<
                 PPNParameterGamma >( ppnParameterSet );
         std::shared_ptr< EstimatableParameter< double > > ppnParameterBeta = std::make_shared<
@@ -1273,12 +1345,24 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 
         // Calculate analytical partials.
         accelerationModel->updateMembers( );
+        accelerationModelUnsimplified->updateMembers( );
         accelerationPartial->update( );
 
-        std::cout<<"mu sun: "<<sun->getGravityFieldModel()->getGravitationalParameter()<<std::endl;
-        std::cout<<"state sun: "<<sun->getState().transpose()<<std::endl;
-        std::cout<<"state mercury: "<<mercury->getState().transpose()<<std::endl;
-        std::cout<<"acceleration: "<<accelerationModel->getAcceleration().transpose()<<std::endl;
+//        Eigen::Vector3d currentSEPcorrection = accelerationModel->;
+//        Eigen::Vector3d currentSEPcorrectionUnsimplified = accelerationModelUnsimplified->getSEPPositionCorrectionFunction();
+
+        Eigen::Vector3d currentAcceleration = accelerationModel->getAcceleration();
+        Eigen::Vector3d currentAccelerationUnsimplified = accelerationModelUnsimplified->getAcceleration();
+
+        std::cout<<"acceleration: "<<currentAcceleration.transpose()<<std::endl;
+        std::cout<<"acceleration unsimplified: "<<currentAccelerationUnsimplified.transpose()<<std::endl;
+        std::cout<<"difference: "<<(currentAcceleration-currentAccelerationUnsimplified).transpose()<<std::endl;
+        std::cout<<"relative difference: "<<((currentAcceleration-currentAccelerationUnsimplified).cwiseQuotient(currentAccelerationUnsimplified)).transpose()<<std::endl;
+
+//        std::cout<<"mu sun: "<<bodyMap.at( "Sun" )->getGravityFieldModel()->getGravitationalParameter()<<std::endl;
+//        std::cout<<"state sun: "<<bodyMap.at( "Sun" )->getState().transpose()<<std::endl;
+//        std::cout<<"state mercury: "<<bodyMap.at( "Mercury" )->getState().transpose()<<std::endl;
+//        std::cout<<"acceleration: "<<accelerationModel->getAcceleration().transpose()<<std::endl;
 
         Eigen::MatrixXd partialWrtSunPosition = Eigen::Matrix3d::Zero( );
         accelerationPartial->wrtPositionOfAcceleratingBody( partialWrtSunPosition.block( 0, 0, 3, 3 ) );
@@ -1309,24 +1393,50 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         velocityPerturbation << 1.0, 1.0, 1.0;
 
 
-        // The partials for position have been omitted here
+        // The partials for position and gravitational parameter have been omitted here
         // In the acceleration and partial calculation long values are used because numerical precision of double's is not sufficient
         // The calculateAccelerationWithStatePartials does not have such functionality
         // To replace the unit test, SEPPartialUnitTest.py is available in python,
         // where it is shown that the partial and central difference matches with tolerance of approximately 10^-15
 
-//        Eigen::Matrix3d testPartialWrtMercuryPosition = calculateAccelerationWrtStatePartials(
-//                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0 );
-        Eigen::Matrix3d testPartialWrtMercuryVelocity = calculateAccelerationWrtStatePartials(
-                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), velocityPerturbation, 3 );
+        //        Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
+        //                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0 );
+        //        Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
+        //                    gravitationalParameterParameter, accelerationModel, 1.0E19 );
 
-//        Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
-//                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0 );
+
+        Eigen::Matrix3d testPartialWrtSunPosition;
+        Eigen::Vector3d testPartialWrtSunGravitationalParameter;
+        if (useNordtvedtConstraintFunction()){
+            testPartialWrtSunPosition
+                    << -5.254917872395E-27, 2.41689255306E-26, 1.45063710477E-26,
+                       2.4168925530635E-26, 8.8214542175E-28, -7.3907355489E-27,
+                       1.4506371047675E-26, -7.39073554885E-27, 4.37277245065E-27;
+            testPartialWrtSunGravitationalParameter
+                    << 6.9104839E-50, 9.1491455E-50, 4.1317575E-50;
+        } else{
+            testPartialWrtSunPosition
+                    << -3.9411884042995E-26, 1.812669414795E-25, 1.087977828576E-25,
+                       1.81266941479565E-25, 6.6160906632E-27, -5.543051661675E-26,
+                       1.087977828576E-25, -5.54305166168E-26, 3.279579337975E-26;
+            testPartialWrtSunGravitationalParameter
+                    << 3.887147085E-48, 5.14639427E-48, 2.32411352E-48;
+        }
+
         Eigen::Matrix3d testPartialWrtSunVelocity = calculateAccelerationWrtStatePartials(
-                    sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3 );
+                    std::bind( &Body::setState, bodyMap.at( "Sun" ), std::placeholders::_1  ),
+                    accelerationModel,
+                    bodyMap.at( "Sun" )->getState( ),
+                    velocityPerturbation, 3 );
 
-        Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
-                    gravitationalParameterParameter, accelerationModel, 1.0E19 );
+        Eigen::Matrix3d testPartialWrtMercuryPosition =
+                -1.0 * testPartialWrtSunPosition;
+
+        Eigen::Matrix3d testPartialWrtMercuryVelocity = calculateAccelerationWrtStatePartials(
+                    std::bind( &Body::setState, bodyMap.at( "Mercury" ), std::placeholders::_1  ),
+                    accelerationModel,
+                    bodyMap.at( "Mercury" )->getState( ),
+                    velocityPerturbation, 3 );
 
         Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
                     ppnParameterGamma, accelerationModel, 100.0 );
@@ -1339,22 +1449,22 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
                     ppnParameterAlpha2, accelerationModel, 100.0 );
 
         Eigen::Vector3d testPartialWrtNordtvedtParameter = calculateAccelerationWrtParameterPartials(
-                    nordtvedtParameter, accelerationModel, 100.0 );
+                    nordtvedtParameter, accelerationModel, 1.0E-4 );
 
 
         // Compare numerical and analytical results.
         double stateTolerance = 1.0E-3; //orginally E-7?
-        double parameterTolerance = 1.0E-3; //originally E-8
+        double parameterTolerance = 1.0E-4; //originally E-8
 
 
-//        std::cout<<"wrt sun position:"
-//                 <<std::endl<<partialWrtSunPosition
-//                 <<std::endl<<testPartialWrtSunPosition
-//                 <<std::endl<<partialWrtSunPosition-testPartialWrtSunPosition
-//                 <<std::endl;
+        std::cout<<"wrt sun position:"
+                 <<std::endl<<partialWrtSunPosition
+                 <<std::endl<<testPartialWrtSunPosition
+                 <<std::endl<<partialWrtSunPosition-testPartialWrtSunPosition
+                 <<std::endl;
 
-//        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunPosition,
-//                                           partialWrtSunPosition, stateTolerance);
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunPosition,
+                                           partialWrtSunPosition, stateTolerance);
 
         std::cout<<"wrt sun velocity:"
                  <<std::endl<<partialWrtSunVelocity
@@ -1365,14 +1475,14 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunVelocity,
                                            partialWrtSunVelocity, stateTolerance);
 
-//        std::cout<<"wrt mercury position:"
-//                 <<std::endl<<partialWrtMercuryPosition
-//                 <<std::endl<<testPartialWrtMercuryPosition
-//                 <<std::endl<<partialWrtMercuryPosition-testPartialWrtMercuryPosition
-//                 <<std::endl;
+        std::cout<<"wrt mercury position:"
+                 <<std::endl<<partialWrtMercuryPosition
+                 <<std::endl<<testPartialWrtMercuryPosition
+                 <<std::endl<<partialWrtMercuryPosition-testPartialWrtMercuryPosition
+                 <<std::endl;
 
-//        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtMercuryPosition,
-//                                           partialWrtMercuryPosition, stateTolerance );
+        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtMercuryPosition,
+                                           partialWrtMercuryPosition, stateTolerance );
 
         std::cout<<"wrt mercury velocity:"
                  <<std::endl<<partialWrtMercuryVelocity
@@ -1383,14 +1493,14 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtMercuryVelocity,
                                            partialWrtMercuryVelocity, stateTolerance );
 
-        std::cout<<"wrt grav parameter:"
-                 <<std::endl<<partialWrtSunGravitationalParameter.transpose()
-                 <<std::endl<<testPartialWrtSunGravitationalParameter.transpose()
-                 <<std::endl<<partialWrtSunGravitationalParameter.transpose()-testPartialWrtSunGravitationalParameter.transpose()
-                 <<std::endl;
+//        std::cout<<"wrt grav parameter:"
+//                 <<std::endl<<partialWrtSunGravitationalParameter.transpose()
+//                 <<std::endl<<testPartialWrtSunGravitationalParameter.transpose()
+//                 <<std::endl<<partialWrtSunGravitationalParameter.transpose()-testPartialWrtSunGravitationalParameter.transpose()
+//                 <<std::endl;
 
-        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
-                                           partialWrtSunGravitationalParameter, parameterTolerance );
+//        TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
+//                                           partialWrtSunGravitationalParameter, parameterTolerance );
 
         std::cout<<"wrt gamma:"
                  <<std::endl<<partialWrtGamma.transpose()
@@ -1553,7 +1663,7 @@ BOOST_AUTO_TEST_CASE( testTimeVaryingGravitationalParameterPartial )
 
     // Compare numerical and analytical results.
     double stateTolerance = 1.0E-3; //orginally E-7?
-    double parameterTolerance = 1.0E-3; //originally E-8
+    double parameterTolerance = 1.0E-4; //originally E-8
 
 
     std::cout<<"wrt sun position:"
