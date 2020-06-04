@@ -67,7 +67,10 @@ enum EstimatebleParametersEnum
     time_varying_gravitational_parameter,
     ppn_nordtvedt_parameter,
     ppn_parameter_alpha1,
-    ppn_parameter_alpha2
+    ppn_parameter_alpha2,
+    variable_J2_amplitude,
+    variable_J2_period,
+    variable_J2_phase
 };
 
 std::string getParameterTypeString( const EstimatebleParametersEnum parameterType );

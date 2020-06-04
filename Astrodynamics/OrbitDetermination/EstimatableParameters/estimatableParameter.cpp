@@ -126,6 +126,15 @@ std::string getParameterTypeString( const EstimatebleParametersEnum parameterTyp
     case time_varying_gravitational_parameter:
         parameterDescription = " time varying gravitational parameter ";
         break;
+    case variable_J2_amplitude:
+        parameterDescription = " variable J2 amplitude ";
+        break;
+    case variable_J2_period:
+        parameterDescription = " variable J2 period ";
+        break;
+    case variable_J2_phase:
+        parameterDescription = " variable J2 phase ";
+        break;
     default:
         std::string errorMessage = "Error when getting parameter string, did not recognize parameter " +
                 std::to_string( parameterType );
@@ -256,6 +265,15 @@ bool isDoubleParameter( const EstimatebleParametersEnum parameterType )
         isDoubleParameter = true;
         break;
     case time_varying_gravitational_parameter:
+        isDoubleParameter = true;
+        break;
+    case variable_J2_amplitude:
+        isDoubleParameter = true;
+        break;
+    case variable_J2_period:
+        isDoubleParameter = true;
+        break;
+    case variable_J2_phase:
         isDoubleParameter = true;
         break;
     default:

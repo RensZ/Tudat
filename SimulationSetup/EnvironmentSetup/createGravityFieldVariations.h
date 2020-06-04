@@ -214,10 +214,13 @@ public:
             const std::map< double, Eigen::MatrixXd > cosineCoefficientCorrections,
             const std::map< double, Eigen::MatrixXd > sineCoefficientCorrections,
             const int minimumDegree, const int minimumOrder,
-            const std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings ):
+            const std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings,
+            const double initialTime = TUDAT_NAN, // RZ 3/6/2020: added these three arguments, which were previously TUDAT_NAN by default causing the creation of interpolators to fail
+            const double finalTime = TUDAT_NAN,
+            const double timeStep = TUDAT_NAN):
         GravityFieldVariationSettings(
             gravitation::tabulated_variation, std::make_shared< ModelInterpolationSettings >(
-                TUDAT_NAN, TUDAT_NAN, TUDAT_NAN, interpolatorSettings ) ),
+                initialTime, finalTime, timeStep, interpolatorSettings ) ),
         cosineCoefficientCorrections_( cosineCoefficientCorrections ),
         sineCoefficientCorrections_( sineCoefficientCorrections ),
         minimumDegree_( minimumDegree ), minimumOrder_( minimumOrder ){ }
