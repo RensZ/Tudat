@@ -15,6 +15,8 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/sphericalHarmonicCosineCoefficients.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/sphericalHarmonicSineCoefficients.h"
 
+#include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
+
 namespace tudat
 {
 
@@ -81,6 +83,27 @@ std::pair< std::function< void( Eigen::MatrixXd& ) >, int > SphericalHarmonicsGr
         partialFunction = partialFunctionPair.first;
         numberOfRows = partialFunctionPair.second;
     }
+
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J2_amplitude)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J2_period)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ2Period,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J2_phase)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ2Phase,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+
+
     else if( parameter->getParameterName( ).second.first == acceleratingBody_ )
     {
         // Check if partial is a rotational property of body exerting acceleration.
@@ -398,6 +421,94 @@ void SphericalHarmonicsGravityPartial::update( const double currentTime )
         }
     }
 }
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J2indices;
+    J2indices.push_back(std::make_pair(2, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                2, 0 );
+
+    double secondPartialTerm = sin(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ2Interface->getPeriod()
+                + relativity::variableJ2Interface->getPhase()
+              );
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+}
+
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ2Period(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J2indices;
+    J2indices.push_back(std::make_pair(2, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                2, 0 );
+
+    double secondPartialTerm =
+            - 2.0 * mathematical_constants::PI
+            * relativity::variableJ2Interface->getAmplitude()
+            * currentTime_
+            * cos(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ2Interface->getPeriod()
+                + relativity::variableJ2Interface->getPhase()
+              )
+            / (relativity::variableJ2Interface->getPeriod()
+               * relativity::variableJ2Interface->getPeriod());
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+}
+
+
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ2Phase(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J2indices;
+    J2indices.push_back(std::make_pair(2, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                2, 0 );
+
+    double secondPartialTerm =
+            relativity::variableJ2Interface->getAmplitude()
+            * cos(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ2Interface->getPeriod()
+                + relativity::variableJ2Interface->getPhase()
+              );
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+}
+
+
 
 //! Function to calculate the partial of the acceleration wrt a set of cosine coefficients.
 void SphericalHarmonicsGravityPartial::wrtCosineCoefficientBlock(

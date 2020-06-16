@@ -11,6 +11,7 @@
 #include "Tudat/Basics/utilities.h"
 #include "Tudat/Astrodynamics/Gravitation/gravityFieldVariations.h"
 #include "Tudat/Astrodynamics/Gravitation/basicSolidBodyTideGravityFieldVariations.h"
+#include "Tudat/Astrodynamics/Gravitation/tabulatedGravityFieldVariations.h"
 #include "Tudat/Mathematics/Interpolators/linearInterpolator.h"
 
 namespace tudat
@@ -130,6 +131,27 @@ createInterpolatedSphericalHarmonicCorrectionFunctions(
     // Declare map of combined cosine and since corrections, to be filled and passed to interpolator
     std::map< double, Eigen::MatrixXd > cosineSineCorrectionsMap;
 
+    std::shared_ptr < TabulatedGravityFieldVariationsWithCosineFunction > variationObjectTabulated
+            = std::dynamic_pointer_cast< TabulatedGravityFieldVariationsWithCosineFunction >
+                (variationObject);
+
+    // hope this avoids other classes from getting cast... otherwise things might break
+    if (variationObjectTabulated != nullptr){
+
+        std::function< std::map< double, Eigen::MatrixXd > () > cosineCorrectionsFunction
+                = variationObjectTabulated->getCosineCoefficientCorrectionsFunction();
+        const std::map< double, Eigen::MatrixXd > sineCorrections
+                = variationObjectTabulated->getSineCoefficientCorrections();
+
+        std::map< double, Eigen::MatrixXd > test = cosineCorrectionsFunction();
+
+        variationObjectTabulated->resetCoefficientInterpolator(
+                    cosineCorrectionsFunction, sineCorrections);
+
+        variationObject = variationObjectTabulated;
+
+    }
+
     // Perform once for matrices size determination.
     double currentTime = initialTime;
     std::pair< Eigen::MatrixXd, Eigen::MatrixXd > singleCorrections;
@@ -238,6 +260,8 @@ GravityFieldVariationsSet::GravityFieldVariationsSet(
 std::vector< std::function< void( const double, Eigen::MatrixXd&, Eigen::MatrixXd& ) > >
 GravityFieldVariationsSet::getVariationFunctions( )
 {
+    std::cout<<"getting variation functions"<<std::endl;
+
     // Declare list
     std::vector< std::function< void( const double, Eigen::MatrixXd&, Eigen::MatrixXd& ) > >
             variationFunctions;

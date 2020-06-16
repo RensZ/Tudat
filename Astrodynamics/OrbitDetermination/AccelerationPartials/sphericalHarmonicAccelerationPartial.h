@@ -332,6 +332,12 @@ protected:
         }
     }
 
+    void wrtVariableJ2Amplitude(Eigen::MatrixXd& partialDerivatives);
+
+    void wrtVariableJ2Period(Eigen::MatrixXd& partialDerivatives);
+
+    void wrtVariableJ2Phase(Eigen::MatrixXd& partialDerivatives);
+
     //! Function to calculate the partial of the acceleration wrt a set of cosine coefficients.
     /*!
      *  Function to calculate the partial of the acceleration wrt a set of cosine coefficients.

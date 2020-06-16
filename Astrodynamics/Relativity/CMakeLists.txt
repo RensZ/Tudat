@@ -13,6 +13,7 @@ set(RELATIVITY_SOURCES
   "${SRCROOT}${RELATIVITYDIR}/relativisticLightTimeCorrection.cpp"
   "${SRCROOT}${RELATIVITYDIR}/relativisticAccelerationCorrection.cpp"
   "${SRCROOT}${RELATIVITYDIR}/relativisticTimeConversion.cpp"
+  "${SRCROOT}${RELATIVITYDIR}/variableJ2Interface.cpp"
   "${SRCROOT}${RELATIVITYDIR}/metric.cpp"
 )
 
@@ -21,6 +22,7 @@ set(RELATIVITY_HEADERS
   "${SRCROOT}${RELATIVITYDIR}/relativisticLightTimeCorrection.h"
   "${SRCROOT}${RELATIVITYDIR}/relativisticAccelerationCorrection.h"
   "${SRCROOT}${RELATIVITYDIR}/relativisticTimeConversion.h"
+  "${SRCROOT}${RELATIVITYDIR}/variableJ2Interface.h"
   "${SRCROOT}${RELATIVITYDIR}/metric.h"
 )
 

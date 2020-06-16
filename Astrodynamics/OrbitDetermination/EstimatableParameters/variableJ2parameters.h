@@ -8,13 +8,14 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#ifndef TUDAT_SPHERICALHARMONICCOSINECOEFFICIENTS_H
-#define TUDAT_SPHERICALHARMONICCOSINECOEFFICIENTS_H
+#ifndef TUDAT_VARIABLEJ2PARAMETERS_H
+#define TUDAT_VARIABLEJ2PARAMETERS_H
 
 #include <map>
 
 #include <functional>
 
+#include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/estimatableParameter.h"
 
 namespace tudat
@@ -23,166 +24,105 @@ namespace tudat
 namespace estimatable_parameters
 {
 
-//! Interface class for estimation of spherical harmonic gravity field cosine coefficients
-/*!
- * Interface class for estimation of spherical harmonic gravity field cosine coefficients. Interfaces the estimation with the
- * member coefficients of an instance of the SphericalHarmonicsGravityField (or nominal coefficients of
- * TimeDependentSphericalHarmonicsGravityField).
- */
-class SphericalHarmonicsCosineCoefficients: public EstimatableParameter< Eigen::VectorXd >
+
+class VariableJ2Amplitude: public EstimatableParameter< double >
 {
 
 public:
 
-    //! Constructor
-    /*!
-     * Constructor
-     * \param getCosineCoefficients Function to retrieve the full set of sine coefficients, of which a subset is to be
-     * estimated.
-     * \param setCosineCoefficients Function to reset the full set of sine coefficients, of which a subset is to be
-     * estimated.
-     * \param blockIndices List of cosine coefficient indices which are to be estimated (first and second
-     * are degree and order for each vector entry).
-     * \param associatedBody Name of body for which cosine coefficients are to be estimated.
-     */
-    SphericalHarmonicsCosineCoefficients(
-            const std::function< Eigen::MatrixXd( ) > getCosineCoefficients,
-            const std::function< void( Eigen::MatrixXd ) > setCosineCoefficients,
-            const std::vector< std::pair< int, int > > blockIndices,
-            const std::string& associatedBody ):
-        EstimatableParameter< Eigen::VectorXd >( spherical_harmonics_cosine_coefficient_block, associatedBody ),
-        getCosineCoefficients_( getCosineCoefficients ), setCosineCoefficients_( setCosineCoefficients ),
-        blockIndices_( blockIndices )
-    {
-        parameterSize_ = blockIndices_.size( );
-    }
+    VariableJ2Amplitude(
+            const std::string& associatedBody,
+            const std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface
+                = relativity::variableJ2Interface):
+        EstimatableParameter< double >( variable_J2_amplitude, associatedBody ),
+        variableJ2Interface_( variableJ2Interface )
+    { }
 
     //! Destructor
-    ~SphericalHarmonicsCosineCoefficients( ) { }
+    ~VariableJ2Amplitude( ) { }
 
-    //! Function to retrieve the current values of the cosine coefficients that are to be estimated.
-    /*!
-     * Function to retrieve the current values of the cosine coefficients that are to be estimated. The order of the entries
-     * in this vector is the same as in the blockIndices_ member vector.
-     * \return List of values for cosine coefficients that are to be estimated.
-     */
-    Eigen::VectorXd getParameterValue( );
+    double getParameterValue( )
+    { return variableJ2Interface_->getAmplitude(); }
 
-    //! Function to reset the cosine coefficients that are to be estimated.
-    /*!
-     * Function to reset the cosine coefficients that are to be estimated. The order of the entries in this vector
-     * is the same as in the blockIndices_ member vector.
-     * \param parameterValue List of new values for cosine coefficients that are to be estimated.
-     */
-    void setParameterValue( const Eigen::VectorXd parameterValue );
+    void setParameterValue( double parameterValue )
+    { variableJ2Interface_->setAmplitude(parameterValue); }
 
-    //! Function to retrieve the size of the parameter
-    /*!
-     *  Function to retrieve the size of the parameter, equal to the length of the blcokIndices_ member vector, i.e. the
-     *  number of coefficients that are to be estimated.
-     *  \return Size of parameter value.
-     */
-    int getParameterSize( ) { return parameterSize_; }
+    int getParameterSize(){ return 1; }
 
-    //! Function to retrieve the list of cosine coefficient indices which are to be estimated.
-    /*!
-     * Function to retrieve the list of cosine coefficient indices which are to be estimated (first and second are degree
-     *  and order for each vector entry).
-     * \return List of cosine coefficient indices which are to be estimated.
-     */
-    std::vector< std::pair< int, int > > getBlockIndices( ){ return blockIndices_; }
-
-
-    std::string getParameterDescription( )
-    {
-        std::string parameterDescription =
-                getParameterTypeString( parameterName_.first ) + "of (" + parameterName_.second.first + "), ";
-        parameterDescription += "Minimum D/O: (" +
-                std::to_string( blockIndices_.at( 0 ).first ) + ", " +
-                std::to_string( blockIndices_.at( 0 ).second ) + "), ";
-
-        parameterDescription += "Maximum D/O: (" +
-                std::to_string( blockIndices_.at( blockIndices_.size( ) - 1 ).first ) + ", " +
-                std::to_string( blockIndices_.at( blockIndices_.size( ) - 1 ).second ) + "). ";
-        return parameterDescription;
-    }
-
-    //! Function that returns the indices for degree two coefficients (if any)
-    /*!
-     * Function that returns the indices for degree two coefficients (if any)
-     * \param c20Index Index for degree=2, order=0 entry (-1 if none; returned by reference)
-     * \param c21Index Index for degree=2, order=1 entry (-1 if none; returned by reference)
-     * \param c22Index Index for degree=2, order=2 entry (-1 if none; returned by reference)
-     */
-    void getDegreeTwoEntries(
-            int& c20Index, int& c21Index, int& c22Index )
-    {
-        c20Index = -1;
-        c21Index = -1;
-        c22Index = -1;
-
-        for( unsigned int i = 0; i < blockIndices_.size( ); i++ )
-        {
-            if( blockIndices_.at( i ).first == 2 && blockIndices_.at( i ).second == 0 )
-            {
-               c20Index = i;
-            }
-
-            if( blockIndices_.at( i ).first == 2 && blockIndices_.at( i ).second == 1 )
-            {
-               c21Index = i;
-            }
-
-            if( blockIndices_.at( i ).first == 2 && blockIndices_.at( i ).second == 2 )
-            {
-               c22Index = i;
-            }
-        }
-    }
 protected:
 
 private:
 
+    std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface_;
 
-    //! Function to retrieve the full set of sine coefficients, of which a subset is to be estimated.
-    std::function< Eigen::MatrixXd( ) > getCosineCoefficients_;
-
-    //! Function to reset the full set of sine coefficients, of which a subset is to be estimated.
-    std::function< void( Eigen::MatrixXd ) > setCosineCoefficients_;
-
-    //! List of cosine coefficient indices which are to be estimated
-    /*!
-      *  List of cosine coefficient indices which are to be estimated (first and second are degree and order for
-      *  each vector entry).
-      */
-    std::vector< std::pair< int, int > > blockIndices_;
-
-    int parameterSize_;
 };
 
-//! Function to get a list of Kaula constraint values for gravity field coefficients at given degrees and indices
-/*!
- * Function to get a list of Kaula constraint values for gravity field coefficients at given degrees and indices
- * \param blockIndices List of indices (degree and order) of coefficients for which Kaula constraint is to be given
- * \param constraintMultiplier Multiplier A for Kaula constraint, obtained from A/l^{2}, which l the current coefficient's degree
- * \return Vector of Kaula constraint values on gravity field coefficients
- */
-Eigen::VectorXd getKaulaConstraintVector(
-        const std::vector< std::pair< int, int > > blockIndices,
-        const double constraintMultiplier );
+class VariableJ2Period: public EstimatableParameter< double >
+{
 
-//! Function to get a list of Kaula constraint values for gravity field coefficients for given parameter
-/*!
- * Function to get a list of Kaula constraint values for gravity field coefficients for given parameter
- * \param parameter Parameter that defines the list of cosine spherical harmonic coefficients
- * \param constraintMultiplier Multiplier A for Kaula constraint, obtained from A/l^{2}, which l the current coefficient's degree
- * \return Vector of Kaula constraint values on gravity field coefficients
- */
-Eigen::VectorXd getKaulaConstraintVector(const std::shared_ptr< SphericalHarmonicsCosineCoefficients > parameter,
-        const double constraintMultiplier );
+public:
+
+    VariableJ2Period(
+            const std::string& associatedBody,
+            const std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface
+                = relativity::variableJ2Interface):
+        EstimatableParameter< double >( variable_J2_period, associatedBody ),
+        variableJ2Interface_( variableJ2Interface )
+    { }
+
+    //! Destructor
+    ~VariableJ2Period( ) { }
+
+    double getParameterValue( )
+    { return variableJ2Interface_->getPeriod(); }
+
+    void setParameterValue( double parameterValue )
+    { variableJ2Interface_->setPeriod(parameterValue); }
+
+    int getParameterSize(){ return 1; }
+
+protected:
+
+private:
+
+    std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface_;
+
+};
+
+class VariableJ2Phase: public EstimatableParameter< double >
+{
+
+public:
+
+    VariableJ2Phase(
+            const std::string& associatedBody,
+            const std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface
+                = relativity::variableJ2Interface):
+        EstimatableParameter< double >( variable_J2_phase, associatedBody ),
+        variableJ2Interface_( variableJ2Interface )
+    { }
+
+    //! Destructor
+    ~VariableJ2Phase( ) { }
+
+    double getParameterValue( )
+    { return variableJ2Interface_->getPhase(); }
+
+    void setParameterValue( double parameterValue )
+    { variableJ2Interface_->setPhase(parameterValue); }
+
+    int getParameterSize(){ return 1; }
+
+protected:
+
+private:
+
+    std::shared_ptr< relativity::VariableJ2Interface > variableJ2Interface_;
+
+};
 
 } // namespace estimatable_parameters
 
 } // namespace tudat
 
-#endif // TUDAT_SPHERICALHARMONICCOSINECOEFFICIENTS_H
+#endif // TUDAT_VARIABLEJ2PARAMETERS_H

@@ -222,19 +222,33 @@ std::shared_ptr< gravitation::GravityFieldVariations > createGravityFieldVariati
         std::shared_ptr< TabulatedGravityFieldVariationSettings > tabulatedGravityFieldVariationSettings
                 = std::dynamic_pointer_cast< TabulatedGravityFieldVariationSettings >(
                     gravityFieldVariationSettings );
-        if( tabulatedGravityFieldVariationSettings == nullptr )
+        std::shared_ptr< TabulatedGravityFieldVariationSettingsWithCosineFunction > tabulatedGravityFieldVariationSettingsWithCosineFunction
+                = std::dynamic_pointer_cast< TabulatedGravityFieldVariationSettingsWithCosineFunction >(
+                    gravityFieldVariationSettings );
+        if( tabulatedGravityFieldVariationSettings == nullptr && tabulatedGravityFieldVariationSettingsWithCosineFunction == nullptr)
         {
             throw std::runtime_error( "Error, expected tabulated gravity field variation settings for " + body );
         }
         else
         {
-            // Create variation.
-            gravityFieldVariationModel = std::make_shared< TabulatedGravityFieldVariations >
-                    (  tabulatedGravityFieldVariationSettings->getCosineCoefficientCorrections( ),
-                       tabulatedGravityFieldVariationSettings->getSineCoefficientCorrections( ),
-                       tabulatedGravityFieldVariationSettings->getMinimumDegree( ),
-                       tabulatedGravityFieldVariationSettings->getMinimumOrder( ),
-                       tabulatedGravityFieldVariationSettings->getInterpolatorSettings( )->interpolatorSettings_ );
+            if( tabulatedGravityFieldVariationSettings != nullptr ){
+                // Create variation.
+                gravityFieldVariationModel = std::make_shared< TabulatedGravityFieldVariations >
+                        (  tabulatedGravityFieldVariationSettings->getCosineCoefficientCorrections( ),
+                           tabulatedGravityFieldVariationSettings->getSineCoefficientCorrections( ),
+                           tabulatedGravityFieldVariationSettings->getMinimumDegree( ),
+                           tabulatedGravityFieldVariationSettings->getMinimumOrder( ),
+                           tabulatedGravityFieldVariationSettings->getInterpolatorSettings( )->interpolatorSettings_ );
+            }
+            else{
+                gravityFieldVariationModel = std::make_shared< TabulatedGravityFieldVariationsWithCosineFunction >
+                        (  tabulatedGravityFieldVariationSettingsWithCosineFunction->getCosineCoefficientCorrectionsFunction( ),
+                           tabulatedGravityFieldVariationSettingsWithCosineFunction->getSineCoefficientCorrections( ),
+                           tabulatedGravityFieldVariationSettingsWithCosineFunction->getMinimumDegree( ),
+                           tabulatedGravityFieldVariationSettingsWithCosineFunction->getMinimumOrder( ),
+                           tabulatedGravityFieldVariationSettingsWithCosineFunction->getInterpolatorSettings( )->interpolatorSettings_ );
+            }
+
         }
         break;
     }

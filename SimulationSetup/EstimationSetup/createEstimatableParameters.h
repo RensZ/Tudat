@@ -27,6 +27,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/sphericalHarmonicSineCoefficients.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/radiationPressureCoefficient.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/ppnParameters.h"
+#include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/variableJ2parameters.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/equivalencePrincipleViolationParameter.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/tidalLoveNumber.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/directTidalTimeLag.h"
@@ -38,6 +39,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/freeCoreNutationRate.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/desaturationDeltaV.h"
 #include "Tudat/Astrodynamics/Relativity/metric.h"
+#include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
 #include "Tudat/Astrodynamics/BasicAstrodynamics/accelerationModelTypes.h"
 #include "Tudat/SimulationSetup/EstimationSetup/estimatableParameterSettings.h"
 #include "Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h"
@@ -628,6 +630,21 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
         case ppn_parameter_alpha2:
         {
             doubleParameterToEstimate = std::make_shared< PPNParameterAlpha2 >( relativity::ppnParameterSet );
+            break;
+        }
+        case variable_J2_amplitude:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ2Amplitude >( currentBodyName, relativity::variableJ2Interface );
+            break;
+        }
+        case variable_J2_period:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ2Period >( currentBodyName, relativity::variableJ2Interface );
+            break;
+        }
+        case variable_J2_phase:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ2Phase >( currentBodyName, relativity::variableJ2Interface );
             break;
         }
         case time_varying_gravitational_parameter:

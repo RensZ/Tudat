@@ -280,6 +280,95 @@ private:
 
 };
 
+
+//! Class to define settings for tabulated gravity field variations.
+class TabulatedGravityFieldVariationSettingsWithCosineFunction: public GravityFieldVariationSettings
+{
+public:
+
+    //! Constructor
+    /*!
+     * Constructor
+     * \param cosineCoefficientCorrections Map of corrections to cosine coefficients (key is time)
+     * \param sineCoefficientCorrections Map of corrections to sine coefficients (key is time)
+     * \param minimumDegree Minimum degree (i.e. degree represented by first row of correction
+     * matrix values in (co)sineCoefficientCorrections) of spherical harmonic corrections.
+     * \param minimumOrder Minimum order (i.e. degree represented by first column of correction
+     * matrix values in (co)sineCoefficientCorrections of spherical harmonic corrections.
+     * \param interpolatorSettings Settings to use for the interpolator that is to be used.
+     */
+    TabulatedGravityFieldVariationSettingsWithCosineFunction(
+            const std::function < std::map< double, Eigen::MatrixXd >( ) > cosineCoefficientCorrectionsFunction,
+            const std::map< double, Eigen::MatrixXd > sineCoefficientCorrections,
+            const int minimumDegree, const int minimumOrder,
+            const std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings,
+            const double initialTime = TUDAT_NAN, // RZ 3/6/2020: added these three arguments, which were previously TUDAT_NAN by default causing the creation of interpolators to fail
+            const double finalTime = TUDAT_NAN,
+            const double timeStep = TUDAT_NAN):
+        GravityFieldVariationSettings(
+            gravitation::tabulated_variation, std::make_shared< ModelInterpolationSettings >(
+                initialTime, finalTime, timeStep, interpolatorSettings ) ),
+        cosineCoefficientCorrectionsFunction_( cosineCoefficientCorrectionsFunction ),
+        sineCoefficientCorrections_( sineCoefficientCorrections ),
+        minimumDegree_( minimumDegree ), minimumOrder_( minimumOrder ){ }
+
+    //! Function to retrieve map of corrections to cosine coefficients (key is time)
+    /*!
+     * \brief Function to retrieve map of corrections to cosine coefficients (key is time)
+     * \return Map of corrections to cosine coefficients (key is time)
+     */
+    std::function< std::map< double, Eigen::MatrixXd > ( ) > getCosineCoefficientCorrectionsFunction( )
+    {
+        return cosineCoefficientCorrectionsFunction_;
+    }
+
+    //! Function to retrieve map of corrections to sine coefficients (key is time)
+    /*!
+     * \brief Function to retrieve map of corrections to sine coefficients (key is time)
+     * \return Map of corrections to sine coefficients (key is time)
+     */
+    std::map< double, Eigen::MatrixXd > getSineCoefficientCorrections( )
+    {
+        return sineCoefficientCorrections_;
+    }
+
+    //! Function to retrieve minimum degree of spherical harmonic corrections.
+    /*!
+     * \brief Function to retrieve minimum degree of spherical harmonic corrections.
+     * \return Minimum degree of spherical harmonic corrections.
+     */
+    int getMinimumDegree( )
+    {
+        return minimumDegree_;
+    }
+
+    //! Function to retrieve minimum order of spherical harmonic corrections.
+    /*!
+     * \brief Function to retrieve minimum order of spherical harmonic corrections.
+     * \return Minimum order of spherical harmonic corrections.
+     */
+    int getMinimumOrder( )
+    {
+        return minimumOrder_;
+    }
+private:
+
+    //! Map of corrections to cosine coefficients (key is time)
+    std::function < std::map< double, Eigen::MatrixXd >( ) > cosineCoefficientCorrectionsFunction_;
+
+    //! Map of corrections to sine coefficients (key is time)
+    std::map< double, Eigen::MatrixXd > sineCoefficientCorrections_;
+
+    //! Minimum degree of spherical harmonic corrections.
+    int minimumDegree_;
+
+    //! Minimum order of spherical harmonic corrections.
+    int minimumOrder_;
+
+};
+
+
+
 //! Function to create a set of gravity field variations, stored in the associated interface class
 /*!
  * Function to create a set of gravity field variations, stored in the associated interface class of
