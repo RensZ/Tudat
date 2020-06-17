@@ -260,7 +260,6 @@ GravityFieldVariationsSet::GravityFieldVariationsSet(
 std::vector< std::function< void( const double, Eigen::MatrixXd&, Eigen::MatrixXd& ) > >
 GravityFieldVariationsSet::getVariationFunctions( )
 {
-    std::cout<<"getting variation functions"<<std::endl;
 
     // Declare list
     std::vector< std::function< void( const double, Eigen::MatrixXd&, Eigen::MatrixXd& ) > >

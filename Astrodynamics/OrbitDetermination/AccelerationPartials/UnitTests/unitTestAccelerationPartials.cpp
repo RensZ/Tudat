@@ -41,6 +41,7 @@
 #include "Tudat/SimulationSetup/EstimationSetup/createEstimatableParameters.h"
 #include "Tudat/SimulationSetup/EnvironmentSetup/defaultBodies.h"
 
+#include "tudatApplications/thesis/MyApplications/customFunctions.h"
 #include "tudatApplications/thesis/MyApplications/sepViolationAcceleration.h"
 #include "tudatApplications/thesis/MyApplications/timeVaryingGravitationalParameterAcceleration.h"
 
@@ -63,6 +64,8 @@ using namespace tudat::orbit_determination;
 using namespace tudat::estimatable_parameters;
 using namespace tudat::electro_magnetism;
 using namespace tudat::basic_astrodynamics;
+using namespace tudat::basic_mathematics;
+using namespace tudat::interpolators;
 
 BOOST_AUTO_TEST_SUITE( test_acceleration_partials )
 
@@ -699,7 +702,7 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
     sun->setGravityFieldModel( sunGravityField );
     std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
             createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
-    sun->setGravityFieldModel( mercuryGravityField );
+    mercury->setGravityFieldModel( mercuryGravityField );
 
     // Get angular momentum Sun
     const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, 190.0E39);
@@ -946,7 +949,7 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
     sun->setGravityFieldModel( sunGravityField );
     std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
             createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
-    sun->setGravityFieldModel( mercuryGravityField );
+    mercury->setGravityFieldModel( mercuryGravityField );
 
     // Get angular momentum Sun
     const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, 190.0E39);
@@ -1587,7 +1590,7 @@ BOOST_AUTO_TEST_CASE( testTimeVaryingGravitationalParameterPartial )
     sun->setGravityFieldModel( sunGravityField );
     std::shared_ptr< gravitation::GravityFieldModel > mercuryGravityField =
             createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
-    sun->setGravityFieldModel( mercuryGravityField );
+    mercury->setGravityFieldModel( mercuryGravityField );
 
 
     // Create acceleration model.
@@ -1955,6 +1958,173 @@ BOOST_AUTO_TEST_CASE( testEmpiricalAccelerationPartial )
                                            partialWrtEmpiricalCoefficients, 1.0e-6 );
     }
 }
+
+
+
+BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
+{
+    // Define bodies
+    unsigned int totalNumberOfBodies = 2;
+    std::vector< std::string > bodyNames;
+    bodyNames.resize( totalNumberOfBodies );
+    bodyNames[ 0 ] = "Sun";
+    bodyNames[ 1 ] = "Mercury";
+
+    // Load spice kernel.
+    spice_interface::loadStandardSpiceKernels( );
+
+    // Set vehicle and earth state.
+    double currentTime = 1.0E6;
+    double initialSimulationTime = 0.9*currentTime;
+    double finalSimulationTime = 1.1*currentTime;
+
+    // Default body settings
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings;
+    bodySettings = getDefaultBodySettings( bodyNames, initialSimulationTime, finalSimulationTime );
+
+
+    // Values coefficients and their variation
+    Eigen::MatrixXd sineCoefficients = Eigen::MatrixXd::Zero(3,3);
+    Eigen::MatrixXd cosineCoefficients = Eigen::MatrixXd::Zero(3,3);
+    cosineCoefficients(0,0) = 1.0;
+    cosineCoefficients(2,0) = 2.0E-7 / calculateLegendreGeodesyNormalizationFactor(2,0);
+
+    Eigen::Vector6i solarMinimumDatetime; solarMinimumDatetime << 2008, 12, 15, 0, 0, 0;
+    const double solarMinimumEpoch = secondsAfterJ2000(solarMinimumDatetime);
+    const double solarCycleDuration = 11.0*physical_constants::JULIAN_YEAR;
+
+    double J2amplitude = 0.005E-7 / calculateLegendreGeodesyNormalizationFactor(2,0); // currently from Antia et al 2008
+    double J2period = solarCycleDuration;
+    double J2phase = phaseAccordingToSolarMinimum(solarMinimumEpoch, J2period);
+
+    bodySettings[ "Sun" ] -> gravityFieldSettings = std::make_shared< SphericalHarmonicsGravityFieldSettings >(
+                getBodyGravitationalParameter( "Sun" ), getAverageRadius( "Sun" ),
+                cosineCoefficients, sineCoefficients, "IAU_Sun" );
+
+
+    std::vector< std::shared_ptr< GravityFieldVariationSettings > > gravityFieldVariationSettings;
+
+    relativity::variableJ2Interface->setAmplitude(J2amplitude);
+    relativity::variableJ2Interface->setPeriod(J2period);
+    relativity::variableJ2Interface->setPhase(J2phase);
+
+    std::function< double() > amplitudeFunction =
+            std::bind( &relativity::VariableJ2Interface::getAmplitude, relativity::variableJ2Interface );
+    std::function< double() > periodFunction =
+            std::bind( &relativity::VariableJ2Interface::getPeriod, relativity::variableJ2Interface );
+    std::function< double() > phaseFunction =
+            std::bind( &relativity::VariableJ2Interface::getPhase, relativity::variableJ2Interface );
+
+    std::function< std::map< double, Eigen::MatrixXd >( ) > tabulatedSphericalHarmonicsCoefficientCorrectionsFunction =
+            std::bind(tabulatedSphericalHarmonicsCoefficientCorrections,
+                      initialSimulationTime, finalSimulationTime,
+                      amplitudeFunction, periodFunction, phaseFunction);
+
+    std::map< double, Eigen::MatrixXd > sineCoefficientCorrections =
+            zeroTabulatedSphericalHarmonicsCoefficientCorrections(initialSimulationTime, finalSimulationTime);
+
+    const std::shared_ptr< InterpolatorSettings > interpolatorSettings =
+            std::make_shared< InterpolatorSettings >( cubic_spline_interpolator ); //interpolator of Sun SH coefficient variation
+
+    const std::shared_ptr< GravityFieldVariationSettings > timeVaryingSphericalHarmonicsSettings =
+            std::make_shared< TabulatedGravityFieldVariationSettingsWithCosineFunction >(
+                tabulatedSphericalHarmonicsCoefficientCorrectionsFunction,
+                sineCoefficientCorrections,
+                2, 0, interpolatorSettings,
+                initialSimulationTime, finalSimulationTime, 3600.0);
+
+    gravityFieldVariationSettings.push_back( timeVaryingSphericalHarmonicsSettings );
+
+    bodySettings[ "Sun" ]->gravityFieldVariationSettings = gravityFieldVariationSettings;
+
+
+
+    // Create body map
+    NamedBodyMap bodyMap = createBodies( bodySettings );
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
+
+    bodyMap.at("Sun")->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", currentTime ) );
+    bodyMap.at("Mercury")->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", currentTime ) );
+
+
+    // Create acceleration model.
+    std::function< double( ) > ppnParameterGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
+    std::function< double( ) > ppnParameterBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha1Function = std::bind( &PPNParameterSet::getParameterAlpha1, ppnParameterSet );
+    std::function< double( ) > ppnParameterAlpha2Function = std::bind( &PPNParameterSet::getParameterAlpha2, ppnParameterSet );
+
+    std::shared_ptr< SphericalHarmonicAccelerationSettings > accelerationSettings =
+            std::make_shared< SphericalHarmonicAccelerationSettings > (2,0);
+
+    std::shared_ptr< SphericalHarmonicsGravitationalAccelerationModel > accelerationModel =
+            createSphericalHarmonicsGravityAcceleration( bodyMap.at("Mercury"), bodyMap.at("Sun"),
+                                                         "Mercury", "Sun",
+                                                         accelerationSettings, true);
+
+    // Create acceleration partial object.
+    std::shared_ptr< SphericalHarmonicsGravityPartial > accelerationPartial =
+            std::make_shared< SphericalHarmonicsGravityPartial >(
+                "Mercury", "Sun", accelerationModel);
+
+    // Create parameter objects.
+    std::shared_ptr< EstimatableParameter< double > > J2AmplitudeParameter
+            = std::make_shared< VariableJ2Amplitude >( "Sun", relativity::variableJ2Interface );
+    std::shared_ptr< EstimatableParameter< double > > J2PeriodParameter
+            = std::make_shared< VariableJ2Period >( "Sun", relativity::variableJ2Interface );
+    std::shared_ptr< EstimatableParameter< double > > J2PhaseParameter
+            = std::make_shared< VariableJ2Phase >( "Sun", relativity::variableJ2Interface );
+
+    // Calculate analytical partials.
+    accelerationModel->updateMembers( currentTime );
+    accelerationPartial->update( currentTime );
+
+    Eigen::Vector3d partialWrtAmplitude = accelerationPartial->wrtParameter( J2AmplitudeParameter );
+    Eigen::Vector3d partialWrtPeriod = accelerationPartial->wrtParameter( J2PeriodParameter );
+    Eigen::Vector3d partialWrtPhase = accelerationPartial->wrtParameter( J2PhaseParameter );
+
+
+    // Calculate numerical partials.
+    Eigen::Vector3d testPartialWrtAmplitude = calculateAccelerationWrtParameterPartials(
+                J2AmplitudeParameter, accelerationModel, J2amplitude/10.0 );
+    Eigen::Vector3d testPartialWrtPeriod = calculateAccelerationWrtParameterPartials(
+                J2PeriodParameter, accelerationModel, J2period/10.0 );
+    Eigen::Vector3d testPartialWrtPhase = calculateAccelerationWrtParameterPartials(
+                J2PhaseParameter, accelerationModel, J2phase/10.0 );
+
+
+    // Compare numerical and analytical results.
+    double stateTolerance = 1.0E-3; //orginally E-7?
+    double parameterTolerance = 1.0E-4; //originally E-8
+
+    std::cout<<"wrt J2 amplitude:"
+             <<std::endl<<partialWrtAmplitude.transpose()
+             <<std::endl<<testPartialWrtAmplitude.transpose()
+             <<std::endl<<partialWrtAmplitude.transpose()-testPartialWrtAmplitude.transpose()
+             <<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtAmplitude, partialWrtAmplitude, parameterTolerance );
+
+    std::cout<<"wrt J2 period:"
+             <<std::endl<<partialWrtPeriod.transpose()
+             <<std::endl<<testPartialWrtPeriod.transpose()
+             <<std::endl<<partialWrtPeriod.transpose()-testPartialWrtPeriod.transpose()
+             <<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPeriod, partialWrtPeriod, parameterTolerance );
+
+    std::cout<<"wrt J2 phase:"
+             <<std::endl<<partialWrtPhase.transpose()
+             <<std::endl<<testPartialWrtPhase.transpose()
+             <<std::endl<<partialWrtPhase.transpose()-testPartialWrtPhase.transpose()
+             <<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPhase, partialWrtPhase, parameterTolerance );
+
+}
+
+
+
+
 
 BOOST_AUTO_TEST_CASE( testDirectDissipationAccelerationPartial )
 {

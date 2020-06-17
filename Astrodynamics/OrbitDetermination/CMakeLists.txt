@@ -29,12 +29,14 @@ get_target_property(OBSERVATIONPARTIALSSOURCES tudat_observation_partials SOURCE
 set(ORBIT_DETERMINATION_SOURCES
   "${SRCROOT}${ORBITDETERMINATIONDIR}/stateDerivativePartial.cpp"
   "${SRCROOT}${ORBITDETERMINATIONDIR}/podInputOutputTypes.cpp"
+  "/home/rens/tudatBundle/tudatApplications/thesis/MyApplications/customFunctions.cpp"
 )
 
 # Set the header files.
 set(ORBIT_DETERMINATION_HEADERS
   "${SRCROOT}${ORBITDETERMINATIONDIR}/stateDerivativePartial.h"
   "${SRCROOT}${ORBITDETERMINATIONDIR}/podInputOutputTypes.h"
+  "/home/rens/tudatBundle/tudatApplications/thesis/MyApplications/customFunctions.h"
 )
 
 
