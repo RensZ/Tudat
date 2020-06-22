@@ -637,6 +637,17 @@ struct PodOutput
         dynamicsHistoryPerIteration_ = dynamicsHistoryPerIteration;
         dependentVariableHistoryPerIteration_ = dependentVariableHistoryPerIteration;
     }
+
+
+    void setStateHistoriesForFinalIteration(
+            std::vector< std::map< TimeType, Eigen::Matrix< ObservationScalarType, Eigen::Dynamic, 1 > > >
+            dynamicsHistoryFinalIteration,
+            std::vector< std::map< TimeType, Eigen::VectorXd > > dependentVariableHistoryFinalIteration )
+    {
+        dynamicsHistoryFinalIteration_ = dynamicsHistoryFinalIteration;
+        dependentVariableHistoryFinalIteration_ = dependentVariableHistoryFinalIteration;
+    }
+
     //! Vector of estimated parameter values.
     Eigen::Matrix< ObservationScalarType, Eigen::Dynamic, 1 > parameterEstimate_;
 
@@ -669,6 +680,12 @@ struct PodOutput
 
     //! List of numerical solutions of dependent variables (per iteration, per arc)
     std::vector< std::vector< std::map< TimeType, Eigen::VectorXd > > > dependentVariableHistoryPerIteration_;
+
+    //! List of numerical solutions of dynamics (per iteration, per arc)
+    std::vector< std::map< TimeType, Eigen::Matrix< ObservationScalarType, Eigen::Dynamic, 1 > > > dynamicsHistoryFinalIteration_;
+
+    //! List of numerical solutions of dependent variables (per iteration, per arc)
+    std::vector< std::map< TimeType, Eigen::VectorXd > > dependentVariableHistoryFinalIteration_;
 
     //! Boolean denoting whether an exception was caught during inversion of normal equations
     bool exceptionDuringInversion_;

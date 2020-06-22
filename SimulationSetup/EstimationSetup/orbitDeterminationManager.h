@@ -455,6 +455,8 @@ public:
         std::vector< Eigen::VectorXd > parameterHistory;
         std::vector< std::vector< std::map< TimeType, Eigen::Matrix< ObservationScalarType, Eigen::Dynamic, 1 > > > > dynamicsHistoryPerIteration;
         std::vector< std::vector< std::map< TimeType, Eigen::VectorXd > > > dependentVariableHistoryPerIteration;
+        std::vector< std::map< TimeType, Eigen::Matrix< ObservationScalarType, Eigen::Dynamic, 1 > > > dynamicsHistoryFinalIteration;
+        std::vector< std::map< TimeType, Eigen::VectorXd > > dependentVariableHistoryFinalIteration;
 
         // Declare residual bookkeeping variables
         std::vector< double > rmsResidualHistory;
@@ -484,10 +486,10 @@ public:
 
                 if( podInput->getSaveStateHistoryForEachIteration( ) )
                 {
-                    dynamicsHistoryPerIteration.push_back(
-                                variationalEquationsSolver_->getDynamicsSimulatorBase( )->getEquationsOfMotionNumericalSolutionBase( ) );
-                    dependentVariableHistoryPerIteration.push_back(
-                                variationalEquationsSolver_->getDynamicsSimulatorBase( )->getDependentVariableNumericalSolutionBase( ) );
+                    dynamicsHistoryFinalIteration =
+                                variationalEquationsSolver_->getDynamicsSimulatorBase( )->getEquationsOfMotionNumericalSolutionBase( );
+                    dependentVariableHistoryFinalIteration =
+                                variationalEquationsSolver_->getDynamicsSimulatorBase( )->getDependentVariableNumericalSolutionBase( );
                 }
             }
 //            catch( std::runtime_error& error )
@@ -626,8 +628,9 @@ public:
 
         if( podInput->getSaveStateHistoryForEachIteration( ) )
         {
-            podOutput->setStateHistories(
-                        dynamicsHistoryPerIteration, dependentVariableHistoryPerIteration );
+            std::cout<<"saving history final iteration (hardcoded instead of saving all iterations to save space)"<<std::endl;
+            podOutput->setStateHistoriesForFinalIteration(
+                        dynamicsHistoryFinalIteration, dependentVariableHistoryFinalIteration );
         }
 
         return podOutput;
