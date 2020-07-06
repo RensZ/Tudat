@@ -12,6 +12,7 @@
 #define TUDAT_METRIC_H
 
 #include <memory>
+#include <iostream>
 
 #include <Eigen/Core>
 
@@ -80,6 +81,7 @@ public:
     //! Function to retrieve value of the Nordtvedt parameter.
     double getNordtvedtParameter( )
     {
+//        std::cout<<"retreived Nordtvedt parameter: "<<nordtvedtParameter_<<std::endl;
         return nordtvedtParameter_;
     }
 
@@ -97,6 +99,10 @@ public:
 
     double getNordtvedtParameterFromPpnParameters( )
     {
+//        std::cout<<"retreived Nordtvedt parameter from PPN parameters: "
+//                 <<4.0*getParameterBeta() - getParameterGamma() - 3.0 - getParameterAlpha1() - (2.0/3.0)*getParameterAlpha2()
+//                 <<std::endl;
+
         return 4.0*getParameterBeta() - getParameterGamma() - 3.0
                 - getParameterAlpha1() - (2.0/3.0)*getParameterAlpha2();
     }

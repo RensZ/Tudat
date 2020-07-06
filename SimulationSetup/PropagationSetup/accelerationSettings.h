@@ -232,13 +232,13 @@ public:
     SEPViolationAccelerationSettings(
             std::vector< std::string > bodyNames,
             const bool useNordtvedtConstraint,
-            const double nordtvedtParameter = 0.0
+            const double ignoreNordtvedtConstraintInEstimation = false
 //            const bool includePPNalphas
             ):
         AccelerationSettings( basic_astrodynamics::sep_violation_acceleration ),
         bodyNames_( bodyNames ),
         useNordtvedtConstraint_( useNordtvedtConstraint ),
-        nordtvedtParameter_( nordtvedtParameter )
+        ignoreNordtvedtConstraintInEstimation_( ignoreNordtvedtConstraintInEstimation )
 
 //        includePPNalphas_( includePPNalphas )
     { }
@@ -249,9 +249,7 @@ public:
     //! use nordtvedt constraint or not
     bool useNordtvedtConstraint_;
 
-    //! nordtvedt Parameter on initialisation (default 0.0)
-    //! if useNordtvedtConstraint is true, this parameter has no effect, as the parameter will be calculated with the other PPN parameters
-    double nordtvedtParameter_;
+    bool ignoreNordtvedtConstraintInEstimation_;
 
 //    //! include alphas or not
 //    bool includePPNalphas_;

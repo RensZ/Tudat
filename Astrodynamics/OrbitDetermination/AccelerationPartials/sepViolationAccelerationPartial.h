@@ -254,8 +254,8 @@ public:
                         centralBodyGravitationalParameter_
                         );
 
-
 //            currentNordtvedtPartial_ = nordtvedtPartialFunction_( ); // uses the partial as given in Genova et al 2018, Nature communications, eq. 10
+
             calculateNordtvedtPartial( // uses a self-derived partial equation based on the simplified delta r_SEP
                         currentSEPCorrectedRelativePosition_,
                         currentNordtvedtPartial_,

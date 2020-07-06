@@ -1064,6 +1064,8 @@ Eigen::Vector3d getSEPCorrectedPosition(
 
 //    std::cout<<SEPPositionCorrectionSimplified.transpose()<<std::endl;
 
+//    std::cout<<"retreived SEP Sun position correction: "<<SEPPositionCorrectionSimplified.transpose()<<std::endl;
+
     return SEPPositionCorrectionSimplified;
 
 }
@@ -1298,6 +1300,8 @@ Eigen::Vector3d getNordtvedtPartial(
 
     Eigen::Vector3d NordtvedtPartial = term1 + term2 + term3;
 
+//    std::cout<<"retreived Nordtvedt Partial: "<<NordtvedtPartial.transpose()<<std::endl;
+
 //    std::cout<<NordtvedtPartial.transpose()<<" = "
 //             <<term1.transpose()<<" + "
 //             <<term2.transpose()<<" + "
@@ -1362,13 +1366,12 @@ std::shared_ptr< relativity::SEPViolationAcceleration > createSEPViolationAccele
 
         // ppn parameters
         std::function< double( ) >  nordtvedtParameterFunction;
-        if (sepViolationAccelerationSettings->useNordtvedtConstraint_){
+        if (sepViolationAccelerationSettings->useNordtvedtConstraint_
+                && sepViolationAccelerationSettings->ignoreNordtvedtConstraintInEstimation_){
             nordtvedtParameterFunction =
                     std::bind( &PPNParameterSet::getNordtvedtParameterFromPpnParameters, ppnParameterSet );
         }
         else{
-            ppnParameterSet->setNordtvedtParameter(
-                        sepViolationAccelerationSettings->nordtvedtParameter_);
             nordtvedtParameterFunction =
                     std::bind( &PPNParameterSet::getNordtvedtParameter, ppnParameterSet );
         }

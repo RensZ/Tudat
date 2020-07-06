@@ -680,8 +680,10 @@ public:
      * \param constraintStateMultiplier Multiplier for parameter linear constraint
      * \param constraintRightHandSide Right-hand side for parameter linear constraint
      */
-    void getConstraints( Eigen::MatrixXd& constraintStateMultiplier, Eigen::VectorXd& constraintRightHandSide )
+    void getConstraints( Eigen::MatrixXd& constraintStateMultiplier,
+                         Eigen::VectorXd& constraintRightHandSide)
     {
+
         // Resize constraint elements
         constraintStateMultiplier.setZero( totalConstraintSize_, estimatedParameterSetSize_ );
         constraintRightHandSide.setZero( totalConstraintSize_, 1 );
@@ -712,8 +714,9 @@ public:
         for( auto parameterIterator = doubleParameters_.begin( ); parameterIterator != doubleParameters_.end( );
              parameterIterator++ )
         {
-            // Add constraint if of non-zero size
+            // if the nordtvedt equation should be enforced and the current parameter is a ppn parameter, get constraint
             currentConstraintSize = parameterIterator->second->getConstraintSize( );
+
             if( currentConstraintSize > 0 )
             {
                 constraintStateMultiplier.block(
@@ -745,6 +748,63 @@ public:
                 currentConstraintRow += currentConstraintSize;
             }
         }
+    }
+
+    void getNordtvedtConstraint( Eigen::MatrixXd& constraintStateMultiplier,
+                                 Eigen::VectorXd& constraintRightHandSide){
+
+        // Resize amount of constraints if nordvedt constraint should be enforced
+        totalConstraintSize_ = 1;
+        constraintStateMultiplier = Eigen::MatrixXd::Zero(totalConstraintSize_, estimatedParameterSetSize_);
+        constraintRightHandSide = Eigen::VectorXd::Zero(totalConstraintSize_);
+
+        bool gammaIsPresent = false;
+        bool betaIsPresent = false;
+
+        int currentRow = totalConstraintSize_-1;
+
+        // Iterate over all double parameters
+        for( auto parameterIterator = doubleParameters_.begin( ); parameterIterator != doubleParameters_.end( );
+             parameterIterator++ )
+        {
+            // go through cases
+            double coeffInNordtvedtConstraint = 0.0;
+            EstimatebleParametersEnum parameterName = parameterIterator->second->getParameterName().first;
+            switch(parameterName){
+            case estimatable_parameters::ppn_parameter_gamma:
+                gammaIsPresent = true;
+                coeffInNordtvedtConstraint = -1.0; break;
+            case estimatable_parameters::ppn_parameter_beta:
+                betaIsPresent = true;
+                coeffInNordtvedtConstraint = 4.0; break;
+            case estimatable_parameters::ppn_parameter_alpha1:
+                coeffInNordtvedtConstraint = -1.0; break;
+            case estimatable_parameters::ppn_parameter_alpha2:
+                coeffInNordtvedtConstraint = 2.0/3.0; break;
+            case estimatable_parameters::ppn_nordtvedt_parameter:
+                coeffInNordtvedtConstraint = -1.0; break;
+            default:
+                break;
+            }
+
+            constraintStateMultiplier(currentRow, parameterIterator->first) = coeffInNordtvedtConstraint;
+
+        }
+
+        // if gamma or beta are not present, the outcome has to change (e.g. when gamma/beta is a consider parameter)
+        constraintRightHandSide(totalConstraintSize_-1, 0 ) = 3.0;
+        if (gammaIsPresent == false){
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += 1.0;
+        }
+        if (betaIsPresent == false){
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += -4.0;
+        }
+
+//        std::cout<<"constraintStateMultiplier:"<<std::endl;
+//        std::cout<<constraintStateMultiplier<<std::endl;
+//        std::cout<<"constraintRightHandSide:"<<std::endl;
+//        std::cout<<constraintRightHandSide<<std::endl;
+
     }
 
     //! Total size of linear constraint that is to be applied during estimation

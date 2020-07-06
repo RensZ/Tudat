@@ -532,7 +532,18 @@ public:
             {
                 Eigen::MatrixXd constraintStateMultiplier;
                 Eigen::VectorXd constraintRightHandSide;
-                parametersToEstimate_->getConstraints( constraintStateMultiplier, constraintRightHandSide );
+
+//                parametersToEstimate_->getConstraints( constraintStateMultiplier, constraintRightHandSide );
+                std::cout<<"warning: function getConstraints is commented out"<<std::endl;
+
+                if (podInput->getEnforceNordtvedtConstraintInEstimation()){
+                    parametersToEstimate_->getNordtvedtConstraint( constraintStateMultiplier, constraintRightHandSide );
+                }
+
+//                std::cout<<"csMult "<<constraintStateMultiplier<<std::endl;
+//                std::cout<<"csRHS "<<constraintRightHandSide.transpose( )<<std::endl;
+
+
                 leastSquaresOutput =
                         std::move( linear_algebra::performLeastSquaresAdjustmentFromInformationMatrix(
                                        residualsAndPartials.second.block( 0, 0, residualsAndPartials.second.rows( ), numberOfEstimatedParameters ),

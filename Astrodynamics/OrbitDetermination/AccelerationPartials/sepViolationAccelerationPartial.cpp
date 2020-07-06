@@ -167,6 +167,7 @@ void computePartialOfSEPViolationAccelerationWrtNordtvedtParameter(
         Eigen::MatrixXd& partialMatrix)
 {
     partialMatrix = nordtvedtPartial;
+//    std::cout<<partialMatrix.transpose()<<std::endl;
 };
 
 //! Function to compute partial of SEP violation acceleration w.r.t. PPN parameter gamma

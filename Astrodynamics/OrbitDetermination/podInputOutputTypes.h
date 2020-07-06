@@ -224,7 +224,8 @@ public:
                                    const bool saveInformationMatrix = 1,
                                    const bool printOutput = 1,
                                    const bool saveResidualsAndParametersFromEachIteration = 1,
-                                   const bool saveStateHistoryForEachIteration = 0 )
+                                   const bool saveStateHistoryForEachIteration = 0,
+                                   const bool enforceNordtvedtConstraintInEstimation = 0 )
     {
         reintegrateEquationsOnFirstIteration_ = reintegrateEquationsOnFirstIteration;
         reintegrateVariationalEquations_ = reintegrateVariationalEquations;
@@ -232,6 +233,7 @@ public:
         printOutput_ = printOutput;
         saveResidualsAndParametersFromEachIteration_ = saveResidualsAndParametersFromEachIteration;
         saveStateHistoryForEachIteration_ = saveStateHistoryForEachIteration;
+        enforceNordtvedtConstraintInEstimation_ = enforceNordtvedtConstraintInEstimation;
     }
 
     //! Function to return the total data structure of observations and associated times/link ends/type (by reference)
@@ -337,6 +339,12 @@ public:
         return saveStateHistoryForEachIteration_;
     }
 
+    bool getEnforceNordtvedtConstraintInEstimation( )
+    {
+        return enforceNordtvedtConstraintInEstimation_;
+    }
+
+
 private:
     //! Total data structure of observations and associated times/link ends/type
     PodInputDataType observationsAndTimes_;
@@ -368,6 +376,11 @@ private:
 
     //! Boolean denoting whether the state history is to be saved on each iteration.
     bool saveStateHistoryForEachIteration_;
+
+    //! Boolean denoting whether the nordtvedt constraint is to be enforced in the estimation.
+    bool enforceNordtvedtConstraintInEstimation_;
+
+    int numberOfPPNParameters_;
 
 };
 
@@ -490,7 +503,9 @@ struct PodOutput
         parameterHistory_( parameterHistory ),
         exceptionDuringInversion_( exceptionDuringInversion ),
         exceptionDuringPropagation_( exceptionDuringPropagation)
-    { }
+    {
+        numberOfParameters_ = parameterHistory.at(0).size( );
+    }
 
     //! Function to retrieve the unnormalized inverse estimation covariance matrix
     /*!
@@ -500,7 +515,7 @@ struct PodOutput
     Eigen::MatrixXd getUnnormalizedInverseCovarianceMatrix( )
     {
 
-        Eigen::MatrixXd inverseUnnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_;
+        Eigen::MatrixXd inverseUnnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.block(0,0,numberOfParameters_,numberOfParameters_);
 
         for( int i = 0; i < informationMatrixTransformationDiagonal_.rows( ); i++ )
         {
@@ -521,7 +536,7 @@ struct PodOutput
      */
     Eigen::MatrixXd getUnnormalizedCovarianceMatrix( )
     {
-        Eigen::MatrixXd unnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.inverse( );
+        Eigen::MatrixXd unnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.block(0,0,numberOfParameters_,numberOfParameters_).inverse( );
 
         for( int i = 0; i < informationMatrixTransformationDiagonal_.rows( ); i++ )
         {
@@ -692,6 +707,8 @@ struct PodOutput
 
     //! Boolean denoting whether an exception was caught during (re)propagation of equations of motion (and variational equations)
     bool exceptionDuringPropagation_;
+
+    int numberOfParameters_; //added to avoid the constraints, which are also included in the information matrix
 };
 
 
