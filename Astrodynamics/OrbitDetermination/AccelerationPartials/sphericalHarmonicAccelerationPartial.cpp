@@ -16,6 +16,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/sphericalHarmonicSineCoefficients.h"
 
 #include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
+#include "Tudat/Astrodynamics/Relativity/variableJ4Interface.h"
 
 namespace tudat
 {
@@ -99,6 +100,24 @@ std::pair< std::function< void( Eigen::MatrixXd& ) >, int > SphericalHarmonicsGr
     else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J2_phase)
     {
         partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ2Phase,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J4_amplitude)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ4Amplitude,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J4_period)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ4Period,
+                                     this, std::placeholders::_1);
+        numberOfRows = 1;
+    }
+    else if( parameter->getParameterName( ).first == estimatable_parameters::variable_J4_phase)
+    {
+        partialFunction = std::bind( &SphericalHarmonicsGravityPartial::wrtVariableJ4Phase,
                                      this, std::placeholders::_1);
         numberOfRows = 1;
     }
@@ -502,6 +521,95 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Phase(
                 * currentTime_
                 / relativity::variableJ2Interface->getPeriod()
                 + relativity::variableJ2Interface->getPhase()
+              );
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+}
+
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ4Amplitude(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J4indices;
+    J4indices.push_back(std::make_pair(4, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J4indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                4, 0 );
+
+    double secondPartialTerm = sin(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ4Interface->getPeriod()
+                + relativity::variableJ4Interface->getPhase()
+              );
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+//    std::cout<<partialDerivatives.transpose()<<std::endl;
+
+}
+
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ4Period(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J4indices;
+    J4indices.push_back(std::make_pair(4, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J4indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                4, 0 );
+
+    double secondPartialTerm =
+            - 2.0 * mathematical_constants::PI
+            * relativity::variableJ4Interface->getAmplitude()
+            * currentTime_
+            * cos(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ4Interface->getPeriod()
+                + relativity::variableJ4Interface->getPhase()
+              )
+            / (relativity::variableJ4Interface->getPeriod()
+               * relativity::variableJ4Interface->getPeriod());
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+}
+
+
+
+void SphericalHarmonicsGravityPartial::wrtVariableJ4Phase(
+        Eigen::MatrixXd& partialDerivatives)
+{
+    std::vector< std::pair< int, int> > J4indices;
+    J4indices.push_back(std::make_pair(4, 0));
+
+    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    calculateSphericalHarmonicGravityWrtCCoefficients(
+                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+                J4indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
+                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                4, 0 );
+
+    double secondPartialTerm =
+            relativity::variableJ4Interface->getAmplitude()
+            * cos(
+                2.0 * mathematical_constants::PI
+                * currentTime_
+                / relativity::variableJ4Interface->getPeriod()
+                + relativity::variableJ4Interface->getPhase()
               );
 
     partialDerivatives = firstPartialTerm * secondPartialTerm;

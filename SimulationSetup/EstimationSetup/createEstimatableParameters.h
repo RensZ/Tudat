@@ -28,6 +28,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/radiationPressureCoefficient.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/ppnParameters.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/variableJ2parameters.h"
+#include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/variableJ4parameters.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/equivalencePrincipleViolationParameter.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/tidalLoveNumber.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/directTidalTimeLag.h"
@@ -40,6 +41,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/desaturationDeltaV.h"
 #include "Tudat/Astrodynamics/Relativity/metric.h"
 #include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
+#include "Tudat/Astrodynamics/Relativity/variableJ4Interface.h"
 #include "Tudat/Astrodynamics/BasicAstrodynamics/accelerationModelTypes.h"
 #include "Tudat/SimulationSetup/EstimationSetup/estimatableParameterSettings.h"
 #include "Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h"
@@ -645,6 +647,21 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
         case variable_J2_phase:
         {
             doubleParameterToEstimate = std::make_shared< VariableJ2Phase >( currentBodyName, relativity::variableJ2Interface );
+            break;
+        }
+        case variable_J4_amplitude:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ4Amplitude >( currentBodyName, relativity::variableJ4Interface );
+            break;
+        }
+        case variable_J4_period:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ4Period >( currentBodyName, relativity::variableJ4Interface );
+            break;
+        }
+        case variable_J4_phase:
+        {
+            doubleParameterToEstimate = std::make_shared< VariableJ4Phase >( currentBodyName, relativity::variableJ4Interface );
             break;
         }
         case time_varying_gravitational_parameter:

@@ -30,6 +30,7 @@ set(ESTIMATABLE_PARAMETERS_HEADERS
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/observationBiasParameter.h"
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/ppnParameters.h"
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/variableJ2parameters.h"
+  "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/variableJ4parameters.h"
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/groundStationPosition.h"
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/equivalencePrincipleViolationParameter.h"
   "${SRCROOT}${ESTIMATABLEPARAMETERSDIR}/empiricalAccelerationCoefficients.h"

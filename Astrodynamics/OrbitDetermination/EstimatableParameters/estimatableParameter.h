@@ -70,7 +70,10 @@ enum EstimatebleParametersEnum
     ppn_parameter_alpha2,
     variable_J2_amplitude,
     variable_J2_period,
-    variable_J2_phase
+    variable_J2_phase,
+    variable_J4_amplitude,
+    variable_J4_period,
+    variable_J4_phase
 };
 
 std::string getParameterTypeString( const EstimatebleParametersEnum parameterType );
@@ -773,16 +776,16 @@ public:
             switch(parameterName){
             case estimatable_parameters::ppn_parameter_gamma:
                 gammaIsPresent = true;
-                coeffInNordtvedtConstraint = -1.0; break;
+                coeffInNordtvedtConstraint = 1.0; break;
             case estimatable_parameters::ppn_parameter_beta:
                 betaIsPresent = true;
-                coeffInNordtvedtConstraint = 4.0; break;
+                coeffInNordtvedtConstraint = -4.0; break;
             case estimatable_parameters::ppn_parameter_alpha1:
-                coeffInNordtvedtConstraint = -1.0; break;
+                coeffInNordtvedtConstraint = 1.0; break;
             case estimatable_parameters::ppn_parameter_alpha2:
                 coeffInNordtvedtConstraint = 2.0/3.0; break;
             case estimatable_parameters::ppn_nordtvedt_parameter:
-                coeffInNordtvedtConstraint = -1.0; break;
+                coeffInNordtvedtConstraint = 1.0; break;
             default:
                 break;
             }
@@ -792,12 +795,12 @@ public:
         }
 
         // if gamma or beta are not present, the outcome has to change (e.g. when gamma/beta is a consider parameter)
-        constraintRightHandSide(totalConstraintSize_-1, 0 ) = 3.0;
+        constraintRightHandSide(totalConstraintSize_-1, 0 ) = -3.0;
         if (gammaIsPresent == false){
-            constraintRightHandSide(totalConstraintSize_-1, 0 ) += 1.0;
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += -1.0;
         }
         if (betaIsPresent == false){
-            constraintRightHandSide(totalConstraintSize_-1, 0 ) += -4.0;
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += 4.0;
         }
 
 //        std::cout<<"constraintStateMultiplier:"<<std::endl;

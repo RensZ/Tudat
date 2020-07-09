@@ -74,25 +74,25 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
     Eigen::Matrix<long double, 3, 1> acceleratedBodyPosition = acceleratedBodyPositionShort.cast<long double>();
     Eigen::Matrix<long double, 3, 1> sepCorrection = sepCorrectionShort.cast<long double>();
     long double gravitationalParameterOfCentralBody = static_cast<long double>(gravitationalParameterOfCentralBodyShort);
-//    Eigen::Matrix<long double, 3, 1> currentAcceleration = currentAccelerationShort.cast<long double>();
+    Eigen::Matrix<long double, 3, 1> currentAcceleration = currentAccelerationShort.cast<long double>();
 
-    partialMatrix = Eigen::Vector3d::Zero();
+//    partialMatrix = Eigen::Vector3d::Zero();
 
-//    // some useful variables
-//    Eigen::Matrix<long double, 3, 1> relativePosition =
-//            acceleratedBodyPosition - centralBodyPosition;
-//    long double positionNorm = relativePosition.norm();
-//    long double invCubedRelativeNorm = 1.0 / (positionNorm * positionNorm * positionNorm);
+    // some useful variables
+    Eigen::Matrix<long double, 3, 1> relativePosition =
+            acceleratedBodyPosition - centralBodyPosition;
+    long double positionNorm = relativePosition.norm();
+    long double invCubedRelativeNorm = 1.0 / (positionNorm * positionNorm * positionNorm);
 
-//    Eigen::Matrix<long double, 3, 1> correctedCentralBodyPosition =
-//            centralBodyPosition + sepCorrection;
-//    Eigen::Matrix<long double, 3, 1> sepCorrectedRelativePosition =
-//            acceleratedBodyPosition - correctedCentralBodyPosition;
-//    long double positionNormSEPCorrected = sepCorrectedRelativePosition.norm( );
-//    long double invSquareRelativeCorrectedNorm = 1.0 / (positionNormSEPCorrected * positionNormSEPCorrected);
-//    long double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / positionNormSEPCorrected;
+    Eigen::Matrix<long double, 3, 1> correctedCentralBodyPosition =
+            centralBodyPosition + sepCorrection;
+    Eigen::Matrix<long double, 3, 1> sepCorrectedRelativePosition =
+            acceleratedBodyPosition - correctedCentralBodyPosition;
+    long double positionNormSEPCorrected = sepCorrectedRelativePosition.norm( );
+    long double invSquareRelativeCorrectedNorm = 1.0 / (positionNormSEPCorrected * positionNormSEPCorrected);
+    long double invCubedRelativeCorrectedNorm = invSquareRelativeCorrectedNorm / positionNormSEPCorrected;
 
-////    Eigen::Matrix<long double, 3, 1> c = sepCorrection / gravitationalParameterOfCentralBody;
+//    Eigen::Matrix<long double, 3, 1> c = sepCorrection / gravitationalParameterOfCentralBody;
 
 //    Eigen::Matrix<long double, 3, 1> currentConventionalAcceleration
 //            = gravitation::computeGravitationalAccelerationLong(
@@ -109,35 +109,35 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
 //            currentCorrectedAcceleration - currentConventionalAcceleration;
 
 
-//    // calculate terms
-//    Eigen::Matrix<long double, 3, 1> term1 =
-//            currentAcceleration / gravitationalParameterOfCentralBody;
+    // calculate terms
+    Eigen::Matrix<long double, 3, 1> term1 =
+            currentAcceleration / gravitationalParameterOfCentralBody;
 
-//    Eigen::Matrix<long double, 3, 3> term2a =
-//            Eigen::Matrix<long double, 3, 3>::Identity( ) * invCubedRelativeCorrectedNorm;
+    Eigen::Matrix<long double, 3, 3> term2a =
+            Eigen::Matrix<long double, 3, 3>::Identity( ) * invCubedRelativeCorrectedNorm;
 
-//    Eigen::Matrix<long double, 3, 3> term2b =
-//            3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
-//            * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( );
+    Eigen::Matrix<long double, 3, 3> term2b =
+            3.0 * invSquareRelativeCorrectedNorm * invCubedRelativeCorrectedNorm
+            * sepCorrectedRelativePosition * sepCorrectedRelativePosition.transpose( );
 
-//    Eigen::Matrix<long double, 3, 1> term2 =
-//            (term2a - term2b) * sepCorrection;
+    Eigen::Matrix<long double, 3, 1> term2 =
+            (term2a - term2b) * sepCorrection;
 
-//    Eigen::Matrix<long double, 3, 1> partialMatrixLong = term1 - term2;
+    Eigen::Matrix<long double, 3, 1> partialMatrixLong = term1 - term2;
 
-//    partialMatrix = partialMatrixLong.cast<double>();
+    partialMatrix = partialMatrixLong.cast<double>();
 
-//    std::cout<<"partial wrt grav parameter"<<std::endl;
-//    std::cout<<gravitationalParameterOfCentralBody<<std::endl;
+    std::cout<<"partial wrt grav parameter"<<std::endl;
+    std::cout<<gravitationalParameterOfCentralBody<<std::endl;
 //    std::cout<<currentConventionalAcceleration<<std::endl;
 //    std::cout<<currentCorrectedAcceleration<<std::endl;
-//    std::cout<<currentAcceleration<<std::endl;
-//    std::cout<<term1<<std::endl;
-//    std::cout<<term2a<<std::endl;
-//    std::cout<<term2b<<std::endl;
-//    std::cout<<term2<<std::endl;
-//    std::cout<<partialMatrixLong<<std::endl;
-//    std::cout<<partialMatrix<<std::endl;
+    std::cout<<currentAcceleration<<std::endl;
+    std::cout<<term1<<std::endl;
+    std::cout<<term2a<<std::endl;
+    std::cout<<term2b<<std::endl;
+    std::cout<<term2<<std::endl;
+    std::cout<<partialMatrixLong<<std::endl;
+    std::cout<<partialMatrix<<std::endl;
 
 
 

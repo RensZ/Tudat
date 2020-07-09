@@ -1382,6 +1382,9 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         Eigen::Vector3d partialWrtSunGravitationalParameter = accelerationPartial->wrtParameter(
                     gravitationalParameterParameter );
 
+        std::cout<<"partialWrtSunGravitationalParameter: "<<std::endl;
+        std::cout<<partialWrtSunGravitationalParameter.transpose()<<std::endl;
+
         Eigen::Vector3d partialWrtGamma = accelerationPartial->wrtParameter( ppnParameterGamma );
         Eigen::Vector3d partialWrtBeta = accelerationPartial->wrtParameter( ppnParameterBeta );
         Eigen::Vector3d partialWrtAlpha1 = accelerationPartial->wrtParameter( ppnParameterAlpha1 );
@@ -1987,6 +1990,11 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
     double J2period = solarCycleDuration;
     double J2phase = phaseAccordingToSolarMinimum(solarMinimumEpoch, J2period);
 
+    double J4amplitude = 0.06E-9 / calculateLegendreGeodesyNormalizationFactor(4,0); // currently from Antia et al 2008
+    double J4period = solarCycleDuration;
+    double J4phase = phaseAccordingToSolarMinimum(solarMinimumEpoch, J4period); //antiphase?
+
+
 
     // Create parameter objects.
     std::shared_ptr< EstimatableParameter< double > > J2AmplitudeParameter
@@ -1995,6 +2003,13 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
             = std::make_shared< VariableJ2Period >( "Sun", relativity::variableJ2Interface );
     std::shared_ptr< EstimatableParameter< double > > J2PhaseParameter
             = std::make_shared< VariableJ2Phase >( "Sun", relativity::variableJ2Interface );
+
+    std::shared_ptr< EstimatableParameter< double > > J4AmplitudeParameter
+            = std::make_shared< VariableJ4Amplitude >( "Sun", relativity::variableJ4Interface );
+    std::shared_ptr< EstimatableParameter< double > > J4PeriodParameter
+            = std::make_shared< VariableJ4Period >( "Sun", relativity::variableJ4Interface );
+    std::shared_ptr< EstimatableParameter< double > > J4PhaseParameter
+            = std::make_shared< VariableJ4Phase >( "Sun", relativity::variableJ4Interface );
 
 
     // Loop over different cases
