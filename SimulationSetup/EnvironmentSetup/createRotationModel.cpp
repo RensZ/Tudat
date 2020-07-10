@@ -120,7 +120,8 @@ std::shared_ptr< ephemerides::RotationalEphemeris > createRotationModel(
                         simpleRotationSettings->getRotationRate( ),
                         simpleRotationSettings->getInitialTime( ),
                         simpleRotationSettings->getOriginalFrame( ),
-                        simpleRotationSettings->getTargetFrame( ) );
+                        simpleRotationSettings->getTargetFrame( ),
+                        simpleRotationSettings->getAngularMomentum( ));
         }
         break;
     }

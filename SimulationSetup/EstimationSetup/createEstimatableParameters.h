@@ -29,6 +29,7 @@
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/ppnParameters.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/variableJ2parameters.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/variableJ4parameters.h"
+#include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/angularMomentum.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/equivalencePrincipleViolationParameter.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/tidalLoveNumber.h"
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/directTidalTimeLag.h"
@@ -545,6 +546,22 @@ std::shared_ptr< estimatable_parameters::EstimatableParameter< double > > create
                 std::shared_ptr< GravityFieldModel > gravityFieldModel = currentBody->getGravityFieldModel( );
                 doubleParameterToEstimate = std::make_shared< GravitationalParameter >
                         ( gravityFieldModel, currentBodyName );
+            }
+            break;
+        }
+        case angular_momentum:
+        {
+            if( currentBody->getRotationalEphemeris( ) == nullptr )
+            {
+                std::string errorMessage = "Error, body " +
+                        currentBodyName + " has no rotational ephemeris, cannot estimate angular momentum.";
+                throw std::runtime_error( errorMessage );
+            }
+            else
+            {
+                std::shared_ptr< ephemerides::RotationalEphemeris > rotationModel = currentBody->getRotationalEphemeris( );
+                doubleParameterToEstimate = std::make_shared< AngularMomentum >
+                        ( rotationModel, currentBodyName );
             }
             break;
         }

@@ -15,6 +15,9 @@
 #include <iostream>
 #include <boost/lambda/lambda.hpp>
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
 #include "Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h"
 #include "Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h"
 #include "Tudat/Basics/basicTypedefs.h"
@@ -210,8 +213,12 @@ public:
             std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
             std::function< double( ) > gravitationalParameterFunctionOfPrimaryBody,
             std::string primaryBodyName,
-            std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction = std::function< Eigen::Vector3d( ) >( ),
-            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction = std::function< std::string() >( ),
+            std::function< double( ) > centralBodyAngularMomentumFunction =
+                std::function< double( ) >( ),
+            std::function< Eigen::Quaterniond( const double ) > quaternoidFromCentralBodyToGlobalFrameFunction =
+                std::function< Eigen::Quaterniond( const double ) >( ),
+            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction
+                = std::function< std::string() >( ),
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterAlpha1Function = [ ]( ){ return 0.0; },
@@ -225,7 +232,8 @@ public:
         gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
         gravitationalParameterFunctionOfPrimaryBody_( gravitationalParameterFunctionOfPrimaryBody ),
         primaryBodyName_( primaryBodyName ),
-        centralBodyAngularMomentumInLocalFrameFunction_( centralBodyAngularMomentumInLocalFrameFunction ),
+        centralBodyAngularMomentumFunction_( centralBodyAngularMomentumFunction ),
+        quaternoidFromCentralBodyToGlobalFrameFunction_( quaternoidFromCentralBodyToGlobalFrameFunction ),
         nameOfBodyExertingAccelerationFunction_( nameOfBodyExertingAccelerationFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
@@ -233,7 +241,7 @@ public:
         ppnParameterAlpha2Function_( ppnParameterAlpha2Function ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateDeSitterCorrection_( true ),
-        calculateLenseThirringCorrection_( !( centralBodyAngularMomentumInLocalFrameFunction == nullptr ) )
+        calculateLenseThirringCorrection_( !( centralBodyAngularMomentumFunction == nullptr ) )
     { }
 
     //! Constructor, used when including Lense-Thirring, but not de Sitter, acceleration
@@ -254,7 +262,8 @@ public:
             std::function< Eigen::Vector6d( ) > stateFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfCentralBody,
             std::function< double( ) > gravitationalParameterFunctionOfAcceleratedBody,
-            std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction,
+            std::function< double( ) > centralBodyAngularMomentumFunction,
+            std::function< Eigen::Quaterniond( const double ) > quaternoidFromCentralBodyToGlobalFrameFunction,
             std::function< std::string( ) > nameOfBodyExertingAccelerationFunction,
             std::function< double( ) > ppnParameterGammaFunction = [ ]( ){ return 1.0; },
             std::function< double( ) > ppnParameterBetaFunction = [ ]( ){ return 1.0; },
@@ -266,7 +275,8 @@ public:
         stateFunctionOfCentralBody_( stateFunctionOfCentralBody ),
         gravitationalParameterFunctionOfCentralBody_( gravitationalParameterFunctionOfCentralBody ),
         gravitationalParameterFunctionOfAcceleratedBody_( gravitationalParameterFunctionOfAcceleratedBody ),
-        centralBodyAngularMomentumInLocalFrameFunction_( centralBodyAngularMomentumInLocalFrameFunction ),
+        centralBodyAngularMomentumFunction_( centralBodyAngularMomentumFunction ),
+        quaternoidFromCentralBodyToGlobalFrameFunction_( quaternoidFromCentralBodyToGlobalFrameFunction ),
         nameOfBodyExertingAccelerationFunction_( nameOfBodyExertingAccelerationFunction ),
         ppnParameterGammaFunction_( ppnParameterGammaFunction ),
         ppnParameterBetaFunction_( ppnParameterBetaFunction ),
@@ -339,9 +349,14 @@ public:
     {
         return  currentDeSitterAcceleration_;
     }
-    Eigen::Vector3d getCentralBodyAngularMomentum( )
+
+    double getCentralBodyAngularMomentum( )
     {
         return  centralBodyAngularMomentum_;
+    }
+    Eigen::Vector3d getCentralBodyAngularMomentumVector( )
+    {
+        return  centralBodyAngularMomentumVector_;
     }
 
 
@@ -407,18 +422,25 @@ public:
             }
 
 
+            // get angular momentum vector: normalize w.r.t. mass and find vector in the global frame
+            centralBodyAngularMomentum_ = centralBodyAngularMomentumFunction_( );
+            double massNormalisedCentralBodyAngularMomentum = centralBodyAngularMomentum_
+                    / (gravitationalParameterOfCentralBody_/physical_constants::GRAVITATIONAL_CONSTANT);
+            Eigen::Matrix3d transformationFromCentralBodyLocalFrameToGlobalFrame =
+                    quaternoidFromCentralBodyToGlobalFrameFunction_(currentTime).normalized().toRotationMatrix();
+            Eigen::Vector3d centralBodyAngularMomentumVectorInBaseFrame = {0.0, 0.0, massNormalisedCentralBodyAngularMomentum};
+            centralBodyAngularMomentumVector_ =
+                    transformationFromCentralBodyLocalFrameToGlobalFrame * centralBodyAngularMomentumVectorInBaseFrame;
 
             // Compute Lense-Thirring term (if requested)
             if( calculateLenseThirringCorrection_ )
             {
-                centralBodyAngularMomentum_ = centralBodyAngularMomentumInLocalFrameFunction_( );
-
                 currentLenseThirringAcceleration_ =  calculateLenseThirringCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),
                             relativeDistance,
                             gravitationalParameterOfCentralBody_,
-                            centralBodyAngularMomentum_,
+                            centralBodyAngularMomentumVector_,
                             ppnParameterGamma_ );
             } else{
                 currentLenseThirringAcceleration_ = Eigen::Vector3d::Zero();
@@ -591,7 +613,10 @@ private:
     std::string primaryBodyName_;
 
     //! Function returning the angular momenum of the central body (expressed in the propagation frame)
-    std::function< Eigen::Vector3d( ) > centralBodyAngularMomentumInLocalFrameFunction_;
+    std::function< double( ) > centralBodyAngularMomentumFunction_;
+
+    std::function< Eigen::Quaterniond( const double ) > quaternoidFromCentralBodyToGlobalFrameFunction_;
+
     std::function< std::string( ) > nameOfBodyExertingAccelerationFunction_;
 
     //! Function returning the PPN parameter gamma
@@ -626,8 +651,11 @@ private:
     //! Current gravitational parameter of primary body
     double gravitationalParameterOfPrimaryBody_;
 
-    //! Current angulat momentum vector of central body
-    Eigen::Vector3d centralBodyAngularMomentum_;
+    //! Angular momentum magnitude of central body around its z-axis
+    double centralBodyAngularMomentum_;
+
+    //! Angular momentum vector of central body around its z-axis in global frame
+    Eigen::Vector3d centralBodyAngularMomentumVector_;
 
     //! Current PPN parameter gamma
     double ppnParameterGamma_;

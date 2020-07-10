@@ -175,9 +175,11 @@ public:
      * \param targetFrameOrientation Target frame identifier.
      */
     RotationalEphemeris( const std::string& baseFrameOrientation = "",
-                         const std::string& targetFrameOrientation = "" )
+                         const std::string& targetFrameOrientation = "",
+                         const double angularMomentum = 0.0)
         : baseFrameOrientation_( baseFrameOrientation ),
-          targetFrameOrientation_( targetFrameOrientation )
+          targetFrameOrientation_( targetFrameOrientation ),
+          angularMomentum_( angularMomentum )
     { }
 
     //! Virtual destructor.
@@ -453,6 +455,16 @@ public:
      */
     std::string getTargetFrameOrientation( ) { return targetFrameOrientation_; }
 
+
+    //! Get scalar angular momentum along z-axis
+    double getAngularMomentum( ) { return angularMomentum_; }
+
+    //! Function to reset angular momentum along z-axis
+    void resetAngularMomentum( const double angularMomentum ) { angularMomentum_ = angularMomentum; }
+
+
+
+
 protected:
 
     //! Base reference frame orientation.
@@ -466,6 +478,13 @@ protected:
      * Target reference frame orientation.
      */
     const std::string targetFrameOrientation_;
+
+
+    //! Angular momentum along z-axis (scalar)
+    /*!
+     * Angular momentum along z-axis (scalar)
+     */
+    double angularMomentum_;
 
 };
 

@@ -44,8 +44,9 @@ public:
                                const double rotationRate,
                                const double initialSecondsSinceEpoch,
                                const std::string& baseFrameOrientation = "",
-                               const std::string& targetFrameOrientation = "" )
-        : RotationalEphemeris( baseFrameOrientation, targetFrameOrientation ),
+                               const std::string& targetFrameOrientation = "",
+                               const double angularMomentum = 0.0)
+        : RotationalEphemeris( baseFrameOrientation, targetFrameOrientation, angularMomentum ),
           rotationRate_( rotationRate ),
           initialRotationToTargetFrame_( initialRotationToTargetFrame ),
           initialSecondsSinceEpoch_( initialSecondsSinceEpoch )
@@ -74,8 +75,9 @@ public:
                                const double rotationRate,
                                const double initialSecondsSinceEpoch,
                                const std::string& baseFrameOrientation = "",
-                               const std::string& targetFrameOrientation = ""  )
-        : RotationalEphemeris( baseFrameOrientation, targetFrameOrientation ),
+                               const std::string& targetFrameOrientation = "",
+                               const double angularMomentum = 0.0)
+        : RotationalEphemeris( baseFrameOrientation, targetFrameOrientation, angularMomentum ),
           rotationRate_( rotationRate ),
           initialRotationToTargetFrame_(
               reference_frames::getInertialToPlanetocentricFrameTransformationQuaternion(
@@ -210,6 +212,8 @@ private:
      * Seconds since epoch at which initialRotationToTargetFrame is valid.
      */
     double initialSecondsSinceEpoch_;
+
+
 
 
     //! Initial Euler angles describing the rotational state of the body at initialSecondsSinceEpoch_

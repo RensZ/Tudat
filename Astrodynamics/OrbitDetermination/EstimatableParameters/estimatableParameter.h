@@ -73,7 +73,8 @@ enum EstimatebleParametersEnum
     variable_J2_phase,
     variable_J4_amplitude,
     variable_J4_period,
-    variable_J4_phase
+    variable_J4_phase,
+    angular_momentum
 };
 
 std::string getParameterTypeString( const EstimatebleParametersEnum parameterType );

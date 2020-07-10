@@ -349,6 +349,36 @@ void computePartialOfLenseThirringAccelerationCorrectionWrtGravitationalParamete
 
 
 
+//! Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. angular momentum of central body
+void computePartialOfLenseThirringAccelerationCorrectionWrtAngularMomentum(
+        const Eigen::Vector6d& relativeState,
+        const double gravitationalParameter,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::MatrixXd& partialMatrix,
+        const double ppnParameterGamma)
+{
+    Eigen::Vector3d position = relativeState.segment( 0, 3 );
+    Eigen::Vector3d velocity = relativeState.segment( 3, 3 );
+    double distance = position.norm( );
+
+    double centralBodyMass = gravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT;
+    Eigen::Vector3d unitVectorAngularMomentum = centralBodyAngularMomentum.normalized();
+
+    double commonCorrectionTerm = gravitationalParameter
+            * (1.0 + ppnParameterGamma)
+            / ( physical_constants::SPEED_OF_LIGHT * physical_constants::SPEED_OF_LIGHT *
+                distance * distance * distance );
+    Eigen::Vector3d termInBrackets =
+            3.0 / ( distance * distance ) *
+            position.cross( velocity ) *
+            ( position.dot( unitVectorAngularMomentum / centralBodyMass ) ) +
+            velocity.cross( unitVectorAngularMomentum / centralBodyMass );
+
+    partialMatrix = commonCorrectionTerm * termInBrackets;
+
+}
+
+
 //! Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. PPN parameter gamma
 void computePartialOfLenseThirringAccelerationCorrectionWrtPpnParameterGamma(
         const Eigen::Vector6d& relativeState,
@@ -391,6 +421,10 @@ RelativisticAccelerationPartial::getParameterPartialFunction(
         {
         case estimatable_parameters::gravitational_parameter:
             partialFunction = std::bind( &RelativisticAccelerationPartial::wrtGravitationalParameterOfCentralBody, this, std::placeholders::_1 );
+            numberOfRows = 1;
+            break;
+        case estimatable_parameters::angular_momentum:
+            partialFunction = std::bind( &RelativisticAccelerationPartial::wrtAngularMomentumOfCentralBody, this, std::placeholders::_1 );
             numberOfRows = 1;
             break;
         default:

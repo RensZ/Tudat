@@ -1540,48 +1540,75 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
             }
 
             // Retrieve angular momentum vector if Lense-Thirring
-            std::function< Eigen::Vector3d( ) > angularMomentumInLocalFrameFunction;
-            std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
             if( relativisticAccelerationSettings->calculateLenseThirringCorrection_ == true  ){
 
-                angularMomentumInLocalFrameFunction = [ = ]( ){ return
-                            relativisticAccelerationSettings->centralBodyAngularMomentumInLocalFrame_; };
+                // check if rotation model is set
+                std::shared_ptr< ephemerides::RotationalEphemeris > rotationalEphemeris = bodyExertingAcceleration->getRotationalEphemeris( );
+                if( rotationalEphemeris  == nullptr )
+                {
+                    throw std::runtime_error( "Error " + nameOfBodyExertingAcceleration + " needs to have a simple rotational ephemeris set to calculate Lense-Thirring acceleration ");
+                }
+
+                if( rotationalEphemeris->getAngularMomentum() == 0.0){
+                    throw std::runtime_error( "Error " + nameOfBodyExertingAcceleration + " has an angular momentum of 0, asked Lense-Thirring acceleration does not exist ");
+                }
+
+
+                // get constant angular momentum along z-axis of central body
+                std::function< double( ) > angularMomentumFunction;
+//                angularMomentumFunction = [ = ]( ){ return
+//                            relativisticAccelerationSettings->centralBodyAngularMomentum_;};
+                angularMomentumFunction =
+                            std::bind( &ephemerides::RotationalEphemeris::getAngularMomentum,
+                                       bodyExertingAcceleration->getRotationalEphemeris( ));
+
+
+                // get transformation quaternoind from body local frame to global frame
+                std::function< Eigen::Quaterniond( const double ) > quaternoidFromCentralBodyToGlobalFrameFunction;
+                quaternoidFromCentralBodyToGlobalFrameFunction =
+                    std::bind( &ephemerides::RotationalEphemeris::getRotationToTargetFrame,
+                               bodyExertingAcceleration->getRotationalEphemeris( ),
+                               std::placeholders::_1 );
+
+                // function to retrieve central body name
+                std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
                 nameOfBodyExertingAccelerationFunction = [ = ]( ){ return
                             nameOfBodyExertingAcceleration; };
 
-            }
+                if( relativisticAccelerationSettings->calculateDeSitterCorrection_ == true )
+                {
+                    // Create acceleration model with Lense-Thirring and de Sitter terms.
+                    accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
+                            ( stateFunctionOfBodyUndergoingAcceleration,
+                              stateFunctionOfBodyExertingAcceleration,
+                              stateFunctionOfPrimaryBody,
+                              centralBodyGravitationalParameterFunction,
+                              acceleratedBodyGravitationalParameterFunction,
+                              primaryBodyGravitationalParameterFunction,
+                              relativisticAccelerationSettings->primaryBody_,
+                              angularMomentumFunction,
+                              quaternoidFromCentralBodyToGlobalFrameFunction,
+                              nameOfBodyExertingAccelerationFunction,
+                              ppnGammaFunction, ppnBetaFunction,
+                              ppnAlpha1Function, ppnAlpha2Function,
+                              relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
+                }
+                else
+                {
 
-            if( relativisticAccelerationSettings->calculateDeSitterCorrection_ == true )
-            {
-                // Create acceleration model with Lense-Thirring and de Sitter terms.
-                accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
-                        ( stateFunctionOfBodyUndergoingAcceleration,
-                          stateFunctionOfBodyExertingAcceleration,
-                          stateFunctionOfPrimaryBody,
-                          centralBodyGravitationalParameterFunction,
-                          acceleratedBodyGravitationalParameterFunction,
-                          primaryBodyGravitationalParameterFunction,
-                          relativisticAccelerationSettings->primaryBody_,
-                          angularMomentumInLocalFrameFunction,
-                          nameOfBodyExertingAccelerationFunction,
-                          ppnGammaFunction, ppnBetaFunction,
-                          ppnAlpha1Function, ppnAlpha2Function,
-                          relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
-            }
-            else
-            {
-
-                // Create acceleration model with Lense-Thirring and term.
-                accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
-                        ( stateFunctionOfBodyUndergoingAcceleration,
-                          stateFunctionOfBodyExertingAcceleration,
-                          centralBodyGravitationalParameterFunction,
-                          acceleratedBodyGravitationalParameterFunction,
-                          angularMomentumInLocalFrameFunction,
-                          nameOfBodyExertingAccelerationFunction,
-                          ppnGammaFunction, ppnBetaFunction,
-                          ppnAlpha1Function, ppnAlpha2Function,
-                          relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
+                    // Create acceleration model with Lense-Thirring and term.
+                    accelerationModel = std::make_shared< RelativisticAccelerationCorrection >
+                            ( stateFunctionOfBodyUndergoingAcceleration,
+                              stateFunctionOfBodyExertingAcceleration,
+                              centralBodyGravitationalParameterFunction,
+                              acceleratedBodyGravitationalParameterFunction,
+                              angularMomentumFunction,
+                              quaternoidFromCentralBodyToGlobalFrameFunction,
+                              nameOfBodyExertingAccelerationFunction,
+                              ppnGammaFunction, ppnBetaFunction,
+                              ppnAlpha1Function, ppnAlpha2Function,
+                              relativisticAccelerationSettings->calculateSchwarzschildCorrection_ );
+                }
             }
         }
     }

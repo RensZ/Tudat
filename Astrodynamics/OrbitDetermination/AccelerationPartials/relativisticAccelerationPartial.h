@@ -235,13 +235,18 @@ void computePartialOfLenseThirringAccelerationCorrectionWrtGravitationalParamete
         Eigen::MatrixXd& partialMatrix,
         const double ppnParameterGamma = 1.0);
 
+
+//! Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. angular momentum of central body
+void computePartialOfLenseThirringAccelerationCorrectionWrtAngularMomentum(
+        const Eigen::Vector6d& relativeState,
+        const double gravitationalParameter,
+        const Eigen::Vector3d& centralBodyAngularMomentum,
+        Eigen::MatrixXd& partialMatrix,
+        const double ppnParameterGamma = 1.0);
+
+
+
 //! Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. PPN parameter gamma
-/*!
- * Function to compute the partial derivative of LenseThirring acceleration correction w.r.t. PPN parameter gamma
- * \param relativeState Cartesian state of body undergoing, w.r.t. body exerting, acceleration.
- * \param gravitationalParameter Gravitational parameter of body exerting acceleration.
- * \param partialMatrix Requested (returnd by reference)
- */
 void computePartialOfLenseThirringAccelerationCorrectionWrtPpnParameterGamma(
         const Eigen::Vector6d& relativeState,
         const double gravitationalParameter,
@@ -297,7 +302,7 @@ public:
                 std::bind( &relativity::RelativisticAccelerationCorrection::getLenseThirringAcceleration,
                            accelerationModel );
         centralBodyAngularMomentumFunction_ =
-                std::bind( &relativity::RelativisticAccelerationCorrection::getCentralBodyAngularMomentum,
+                std::bind( &relativity::RelativisticAccelerationCorrection::getCentralBodyAngularMomentumVector,
                            accelerationModel );
 
         calculateLenseThirringCorrection_ = accelerationModel->getCalculateLenseThirringCorrection( );
@@ -489,6 +494,18 @@ public:
 //                <<" // "<<partialMatrixSchwarzschildAlphaTerms.transpose()
 //                <<" // "<<partialMatrixLenseThirring.transpose()<<std::endl;
     }
+
+
+    void wrtAngularMomentumOfCentralBody( Eigen::MatrixXd& partialMatrix )
+    {
+
+        computePartialOfLenseThirringAccelerationCorrectionWrtAngularMomentum(
+                    currentRelativeState_, centralBodyGravitationalParameterFunction_( ),
+                    centralBodyAngularMomentumFunction_( ),
+                    partialMatrix, ppnGammaParameterFunction_( ) );
+
+    }
+
 
     //! Function to compute partial derivative of relativistic acceleration correction w.r.t. PPN parameter gamma
     /*!

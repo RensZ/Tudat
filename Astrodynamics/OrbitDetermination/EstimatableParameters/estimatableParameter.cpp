@@ -144,6 +144,9 @@ std::string getParameterTypeString( const EstimatebleParametersEnum parameterTyp
     case variable_J4_phase:
         parameterDescription = " variable J4 phase ";
         break;
+    case angular_momentum:
+        parameterDescription = " angular momentum ";
+        break;
     default:
         std::string errorMessage = "Error when getting parameter string, did not recognize parameter " +
                 std::to_string( parameterType );
@@ -274,6 +277,9 @@ bool isDoubleParameter( const EstimatebleParametersEnum parameterType )
         isDoubleParameter = true;
         break;
     case time_varying_gravitational_parameter:
+        isDoubleParameter = true;
+        break;
+    case angular_momentum:
         isDoubleParameter = true;
         break;
     case variable_J2_amplitude:

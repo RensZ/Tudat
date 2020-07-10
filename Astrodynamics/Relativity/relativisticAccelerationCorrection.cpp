@@ -116,6 +116,8 @@ Eigen::Vector3d calculateLenseThirringCorrectionAcceleration(
 
     Eigen::Vector3d acceleration = ( 1.0 + ppnParameterGamma ) * commonCorrectionTerm * termsInBrackets;
 
+//    std::cout<<"LT acc: "<<acceleration.transpose()<<std::endl;
+
     return acceleration;
 //    return Eigen::Vector3d::Zero();
 }

@@ -704,14 +704,25 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
             createGravityFieldModel( gravityFieldSettings, "Mercury", bodyMap );
     mercury->setGravityFieldModel( mercuryGravityField );
 
-    // Get angular momentum Sun
-    const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, 190.0E39);
-    const Eigen::Vector3d sunAngularMomentumVectorPerUnitMass =
-            sunAngularMomentumVector /
-            ( sunGravityField->getGravitationalParameter() / physical_constants::GRAVITATIONAL_CONSTANT );
+    // Create rotational ephemeris
+    const double solarDay = 25.38*physical_constants::JULIAN_DAY; //carrington sidereal rotation period
+    const double sunAngularMomentum = 190.0E39;
+    std::shared_ptr< SimpleRotationModelSettings > rotationSettings =
+            std::make_shared< SimpleRotationModelSettings >(
+                "ECLIPJ2000", "IAU_Sun",
+                spice_interface::computeRotationQuaternionBetweenFrames("ECLIPJ2000", "IAU_Sun", 0.5E6 ),
+                0.5E6, 2.0 * mathematical_constants::PI / solarDay,
+                sunAngularMomentum );
+    std::shared_ptr< ephemerides::RotationalEphemeris > sunRotationModel =
+            createRotationModel( rotationSettings, "Sun", bodyMap );
 
-    std::function< Eigen::Vector3d( ) > angularMomentumFunction;
-    angularMomentumFunction = [ = ]( ){ return sunAngularMomentumVectorPerUnitMass; };
+//    // Get angular momentum Sun
+//    const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, );
+//    const Eigen::Vector3d sunAngularMomentumVectorPerUnitMass =
+//            sunAngularMomentumVector /
+//            ( sunGravityField->getGravitationalParameter() / physical_constants::GRAVITATIONAL_CONSTANT );
+//    std::function< Eigen::Vector3d( ) > angularMomentumFunction;
+//    angularMomentumFunction = [ = ]( ){ return sunAngularMomentumVectorPerUnitMass; };
 
     std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
     nameOfBodyExertingAccelerationFunction = [ = ]( ){ return "Sun"; };
@@ -728,7 +739,9 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
               std::bind( &Body::getState, sun ),
               std::bind( &GravityFieldModel::getGravitationalParameter, sunGravityField ),
               std::bind( &GravityFieldModel::getGravitationalParameter, mercuryGravityField ),
-              angularMomentumFunction, nameOfBodyExertingAccelerationFunction,
+              std::bind( &ephemerides::RotationalEphemeris::getAngularMomentum, sunRotationModel),
+              std::bind( &ephemerides::RotationalEphemeris::getRotationToTargetFrame, sunRotationModel, std::placeholders::_1 ),
+              nameOfBodyExertingAccelerationFunction,
               ppnParameterGammaFunction, ppnParameterBetaFunction,
               ppnParameterAlpha1Function, ppnParameterAlpha2Function);
 
@@ -743,6 +756,8 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
     // Create parameter objects.
     std::shared_ptr< EstimatableParameter< double > > gravitationalParameterParameter = std::make_shared<
             GravitationalParameter >( sunGravityField, "Sun" );
+    std::shared_ptr< EstimatableParameter< double > > angularMomentumParameter = std::make_shared<
+            AngularMomentum >( sunRotationModel, "Sun" );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterGamma = std::make_shared<
             PPNParameterGamma >( ppnParameterSet );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterBeta = std::make_shared<
@@ -753,8 +768,8 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
             PPNParameterAlpha2 >( ppnParameterSet );
 
     // Calculate analytical partials.
-    accelerationModel->updateMembers( );
-    accelerationPartial->update( );
+    accelerationModel->updateMembers( 1.0E6 );
+    accelerationPartial->update( 1.0E6 );
 
     std::vector< Eigen::MatrixXd > partialsWrtSunPosition;
     std::vector< Eigen::MatrixXd > partialsWrtSunVelocity;
@@ -774,6 +789,9 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
 
     Eigen::Vector3d partialWrtSunGravitationalParameter = accelerationPartial->wrtParameter(
                 gravitationalParameterParameter );
+    Eigen::Vector3d partialWrtSunAngularMomentum = accelerationPartial->wrtParameter(
+                angularMomentumParameter );
+
 
     Eigen::Vector3d partialWrtGamma = accelerationPartial->wrtParameter( ppnParameterGamma );
     Eigen::Vector3d partialWrtBeta = accelerationPartial->wrtParameter( ppnParameterBeta );
@@ -796,30 +814,34 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
     for (unsigned int i=1; i<4; i++){
         testPartialsWrtSunPosition.push_back(
                     calculateAccelerationWrtStatePartialsRelativity(
-                                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0, i ));
+                                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0, i, emptyFunction, 1.0E6 ));
         testPartialsWrtSunVelocity.push_back(
                     calculateAccelerationWrtStatePartialsRelativity(
-                                    sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3, i ));
+                                    sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3, i, emptyFunction, 1.0E6 ));
         testPartialsWrtMercuryPosition.push_back(
                     calculateAccelerationWrtStatePartialsRelativity(
-                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0, i ));
+                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0, i, emptyFunction, 1.0E6 ));
         testPartialsWrtMercuryVelocity.push_back(
                     calculateAccelerationWrtStatePartialsRelativity(
-                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 3, i ));
+                                    mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 3, i, emptyFunction, 1.0E6 ));
     }
 
     Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
-                gravitationalParameterParameter, accelerationModel, 1.0E10 );
+                gravitationalParameterParameter, accelerationModel, 1.0E10, emptyFunction, 1.0E6 );
+        std::cout<<"test partial angular momentum start"<<std::endl;
+    Eigen::Vector3d testPartialWrtSunAngularMomentum = calculateAccelerationWrtParameterPartials(
+                angularMomentumParameter, accelerationModel, 1.0E41, emptyFunction, 1.0E6 );
+        std::cout<<"test partial angular momentum end"<<std::endl;
 
     Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
-                ppnParameterGamma, accelerationModel, 100.0 );
+                ppnParameterGamma, accelerationModel, 100.0, emptyFunction, 1.0E6 );
     Eigen::Vector3d testPartialWrtPpnParameterBeta = calculateAccelerationWrtParameterPartials(
-                ppnParameterBeta, accelerationModel, 100.0 );
+                ppnParameterBeta, accelerationModel, 100.0, emptyFunction, 1.0E6 );
 
     Eigen::Vector3d testPartialWrtPpnParameterAlpha1 = calculateAccelerationWrtParameterPartials(
-                ppnParameterAlpha1, accelerationModel, 100.0 );
+                ppnParameterAlpha1, accelerationModel, 100.0, emptyFunction, 1.0E6 );
     Eigen::Vector3d testPartialWrtPpnParameterAlpha2 = calculateAccelerationWrtParameterPartials(
-                ppnParameterAlpha2, accelerationModel, 100.0 );
+                ppnParameterAlpha2, accelerationModel, 100.0, emptyFunction, 1.0E6 );
 
 
     double stateTolerance = 1.0E-3; //orginally E-7?
@@ -877,6 +899,15 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
 
     TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
                                        partialWrtSunGravitationalParameter, parameterTolerance );
+
+    std::cout<<"wrt sun angular momentum:"
+             <<std::endl<<partialWrtSunAngularMomentum.transpose()
+             <<std::endl<<testPartialWrtSunAngularMomentum.transpose()
+             <<std::endl<<partialWrtSunAngularMomentum.transpose()-testPartialWrtSunAngularMomentum.transpose()
+             <<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunAngularMomentum,
+                                       partialWrtSunAngularMomentum, parameterTolerance );
 
     std::cout<<"wrt gamma:"
              <<std::endl<<partialWrtGamma.transpose()
@@ -963,6 +994,27 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
     std::function< std::string( ) > nameOfBodyExertingAccelerationFunction;
     nameOfBodyExertingAccelerationFunction = [ = ]( ){ return "Sun"; };
 
+
+    // Create rotational ephemeris
+    const double solarDay = 25.38*physical_constants::JULIAN_DAY; //carrington sidereal rotation period
+    const double sunAngularMomentum = 190.0E39;
+    std::shared_ptr< SimpleRotationModelSettings > rotationSettings =
+            std::make_shared< SimpleRotationModelSettings >(
+                "ECLIPJ2000", "IAU_Sun",
+                spice_interface::computeRotationQuaternionBetweenFrames("ECLIPJ2000", "IAU_Sun", 0.5E6 ),
+                0.5E6, 2.0 * mathematical_constants::PI / solarDay,
+                sunAngularMomentum );
+    std::shared_ptr< ephemerides::RotationalEphemeris > sunRotationModel =
+            createRotationModel( rotationSettings, "Sun", bodyMap );
+
+//    // Get angular momentum Sun
+//    const Eigen::Vector3d sunAngularMomentumVector(0.0, 0.0, );
+//    const Eigen::Vector3d sunAngularMomentumVectorPerUnitMass =
+//            sunAngularMomentumVector /
+//            ( sunGravityField->getGravitationalParameter() / physical_constants::GRAVITATIONAL_CONSTANT );
+//    std::function< Eigen::Vector3d( ) > angularMomentumFunction;
+//    angularMomentumFunction = [ = ]( ){ return sunAngularMomentumVectorPerUnitMass; };
+
     // Create acceleration model.
     std::function< double( ) > ppnParameterGammaFunction = std::bind( &PPNParameterSet::getParameterGamma, ppnParameterSet );
     std::function< double( ) > ppnParameterBetaFunction = std::bind( &PPNParameterSet::getParameterBeta, ppnParameterSet );
@@ -975,7 +1027,9 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
               std::bind( &Body::getState, sun ),
               std::bind( &GravityFieldModel::getGravitationalParameter, sunGravityField ),
               std::bind( &GravityFieldModel::getGravitationalParameter, mercuryGravityField ),
-              angularMomentumFunction, nameOfBodyExertingAccelerationFunction,
+              std::bind( &ephemerides::RotationalEphemeris::getAngularMomentum, sunRotationModel),
+              std::bind( &ephemerides::RotationalEphemeris::getRotationToTargetFrame, sunRotationModel, std::placeholders::_1 ),
+              nameOfBodyExertingAccelerationFunction,
               ppnParameterGammaFunction, ppnParameterBetaFunction,
               ppnParameterAlpha1Function, ppnParameterAlpha2Function);
 
@@ -990,6 +1044,8 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
     // Create parameter objects.
     std::shared_ptr< EstimatableParameter< double > > gravitationalParameterParameter = std::make_shared<
             GravitationalParameter >( sunGravityField, "Sun" );
+    std::shared_ptr< EstimatableParameter< double > > angularMomentumParameter = std::make_shared<
+            AngularMomentum >( sunRotationModel, "Sun" );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterGamma = std::make_shared<
             PPNParameterGamma >( ppnParameterSet );
     std::shared_ptr< EstimatableParameter< double > > ppnParameterBeta = std::make_shared<
@@ -1000,8 +1056,8 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
             PPNParameterAlpha2 >( ppnParameterSet );
 
     // Calculate analytical partials.
-    accelerationModel->updateMembers( );
-    accelerationPartial->update( );
+    accelerationModel->updateMembers( 1.0E6 );
+    accelerationPartial->update( 1.0E6 );
 
     Eigen::MatrixXd partialWrtSunPosition = Eigen::Matrix3d::Zero( );
     accelerationPartial->wrtPositionOfAcceleratingBody( partialWrtSunPosition.block( 0, 0, 3, 3 ) );
@@ -1017,6 +1073,8 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
     Eigen::Vector3d partialWrtSunGravitationalParameter = accelerationPartial->wrtParameter(
                 gravitationalParameterParameter );
+    Eigen::Vector3d partialWrtSunAngularMomentum = accelerationPartial->wrtParameter(
+                angularMomentumParameter );
 
     Eigen::Vector3d partialWrtGamma = accelerationPartial->wrtParameter( ppnParameterGamma );
     Eigen::Vector3d partialWrtBeta = accelerationPartial->wrtParameter( ppnParameterBeta );
@@ -1031,27 +1089,38 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
     // Calculate numerical partials.
     Eigen::Matrix3d testPartialWrtMercuryPosition = calculateAccelerationWrtStatePartials(
-                mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0 );
+                mercuryStateSetFunction, accelerationModel, mercury->getState( ), positionPerturbation, 0, emptyFunction, 1.0E6  );
     Eigen::Matrix3d testPartialWrtMercuryVelocity = calculateAccelerationWrtStatePartials(
-                mercuryStateSetFunction, accelerationModel, mercury->getState( ), velocityPerturbation, 3 );
+                mercuryStateSetFunction, accelerationModel, mercury->getState( ), velocityPerturbation, 3, emptyFunction, 1.0E6  );
 
     Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
-                sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0 );
+                sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0, emptyFunction, 1.0E6  );
     Eigen::Matrix3d testPartialWrtSunVelocity = calculateAccelerationWrtStatePartials(
-                sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3 );
+                sunStateSetFunction, accelerationModel, sun->getState( ), velocityPerturbation, 3, emptyFunction, 1.0E6  );
 
     Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
-                gravitationalParameterParameter, accelerationModel, 1.0E10 );
+                gravitationalParameterParameter, accelerationModel, 1.0E10, emptyFunction, 1.0E6  );
+    Eigen::Vector3d testPartialWrtSunAngularMomentum = calculateAccelerationWrtParameterPartials(
+                angularMomentumParameter, accelerationModel, 1.0E41, emptyFunction, 1.0E6 );
+
+//    std::cout<<"angular momentum check: "<<angularMomentumParameter->getParameterValue()<<std::endl;
+//    std::cout<<"rotation model check: "<<sunRotationModel->getAngularMomentum()<<std::endl;
+//    angularMomentumParameter->setParameterValue(1.0);
+//    std::cout<<"angular momentum check: "<<angularMomentumParameter->getParameterValue()<<std::endl;
+//    std::cout<<"rotation model check: "<<sunRotationModel->getAngularMomentum()<<std::endl;
+//    angularMomentumParameter->setParameterValue(sunAngularMomentum);
+//    std::cout<<"angular momentum check: "<<angularMomentumParameter->getParameterValue()<<std::endl;
+//    std::cout<<"rotation model check: "<<sunRotationModel->getAngularMomentum()<<std::endl;
 
     Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
-                ppnParameterGamma, accelerationModel, 100.0 );
+                ppnParameterGamma, accelerationModel, 100.0, emptyFunction, 1.0E6  );
     Eigen::Vector3d testPartialWrtPpnParameterBeta = calculateAccelerationWrtParameterPartials(
-                ppnParameterBeta, accelerationModel, 100.0 );
+                ppnParameterBeta, accelerationModel, 100.0, emptyFunction, 1.0E6  );
 
     Eigen::Vector3d testPartialWrtPpnParameterAlpha1 = calculateAccelerationWrtParameterPartials(
-                ppnParameterAlpha1, accelerationModel, 100.0 );
+                ppnParameterAlpha1, accelerationModel, 100.0, emptyFunction, 1.0E6  );
     Eigen::Vector3d testPartialWrtPpnParameterAlpha2 = calculateAccelerationWrtParameterPartials(
-                ppnParameterAlpha2, accelerationModel, 100.0 );
+                ppnParameterAlpha2, accelerationModel, 100.0, emptyFunction, 1.0E6  );
 
 
 
@@ -1104,6 +1173,16 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
     TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunGravitationalParameter,
                                        partialWrtSunGravitationalParameter, parameterTolerance );
+
+    std::cout<<"wrt sun angular momentum:"
+             <<std::endl<<partialWrtSunAngularMomentum.transpose()
+             <<std::endl<<testPartialWrtSunAngularMomentum.transpose()
+             <<std::endl<<partialWrtSunAngularMomentum.transpose()-testPartialWrtSunAngularMomentum.transpose()
+             <<std::endl;
+
+    TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtSunAngularMomentum,
+                                       partialWrtSunAngularMomentum, parameterTolerance );
+
 
     std::cout<<"wrt gamma:"
              <<std::endl<<partialWrtGamma.transpose()

@@ -129,15 +129,20 @@ public:
      *  \param initialOrientation Rotation from base to target frame at initialTime.
      *  \param initialTime Time at which initialOrientation represents the instantaneous rotation.
      *  \param rotationRate Rotation rate of body about its local z-axis.
+     * \param angularMomentum Angular momentum of body about its local z-axis.
      */
     SimpleRotationModelSettings( const std::string& originalFrame,
                                  const std::string& targetFrame,
                                  const Eigen::Quaterniond& initialOrientation,
                                  const double initialTime,
-                                 const double rotationRate ):
+                                 const double rotationRate,
+                                 const double angularMomentum = 0.0):
         RotationModelSettings( simple_rotation_model, originalFrame, targetFrame ),
         initialOrientation_( initialOrientation ),
-        initialTime_( initialTime ), rotationRate_( rotationRate ){ }
+        initialTime_( initialTime ),
+        rotationRate_( rotationRate ),
+        angularMomentum_( angularMomentum )
+    { }
 
     //! Function to return rotation from base to target frame at initialTime.
     /*!
@@ -160,6 +165,13 @@ public:
      */
     double getRotationRate( ){ return rotationRate_; }
 
+    //! Function to return angular momentum of body about its local z-axis.
+    /*!
+     *  Function to return angular momentum of body about its local z-axis.
+     *  \return Rotation rate of body about its local z-axis.
+     */
+    double getAngularMomentum( ){ return angularMomentum_; }
+
 private:
 
     //!  Rotation from base to target frame at initialTime.
@@ -170,6 +182,9 @@ private:
 
     //! Rotation rate of body about its local z-axis.
     double rotationRate_;
+
+    //! Angular momentum of body about its local z-axis.
+    double angularMomentum_;
 };
 
 #if USE_SOFA

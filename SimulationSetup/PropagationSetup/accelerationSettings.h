@@ -165,14 +165,12 @@ public:
             const bool calculateSchwarzschildCorrection = true,
             const bool calculateLenseThirringCorrection = false,
             const bool calculateDeSitterCorrection = false,
-            const std::string primaryBody = "",
-            const Eigen::Vector3d centralBodyAngularMomentumInLocalFrame = Eigen::Vector3d::Zero( ) ):
+            const std::string primaryBody = ""):
         AccelerationSettings(  basic_astrodynamics::relativistic_correction_acceleration ),
         calculateSchwarzschildCorrection_( calculateSchwarzschildCorrection ),
         calculateLenseThirringCorrection_( calculateLenseThirringCorrection ),
         calculateDeSitterCorrection_( calculateDeSitterCorrection ),
-        primaryBody_( primaryBody ),
-        centralBodyAngularMomentumInLocalFrame_( centralBodyAngularMomentumInLocalFrame )
+        primaryBody_( primaryBody )
     {
         if( calculateDeSitterCorrection_ && primaryBody_ == "" )
         {
@@ -193,8 +191,6 @@ public:
     //! Name of primary body (e.g. Sun for acceleration acting on an Earth-orbiting satellite)
     std::string primaryBody_;
 
-    //! Constant angular momentum of central body
-    Eigen::Vector3d centralBodyAngularMomentumInLocalFrame_;
 
 };
 
