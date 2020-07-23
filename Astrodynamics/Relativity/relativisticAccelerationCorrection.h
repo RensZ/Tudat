@@ -421,20 +421,20 @@ public:
                 currentSchwarzschildAlphaTermsAcceleration_ = Eigen::Vector3d::Zero();
             }
 
-
-            // get angular momentum vector: normalize w.r.t. mass and find vector in the global frame
-            centralBodyAngularMomentum_ = centralBodyAngularMomentumFunction_( );
-            double massNormalisedCentralBodyAngularMomentum = centralBodyAngularMomentum_
-                    / (gravitationalParameterOfCentralBody_/physical_constants::GRAVITATIONAL_CONSTANT);
-            Eigen::Matrix3d transformationFromCentralBodyLocalFrameToGlobalFrame =
-                    quaternoidFromCentralBodyToGlobalFrameFunction_(currentTime).normalized().toRotationMatrix();
-            Eigen::Vector3d centralBodyAngularMomentumVectorInBaseFrame = {0.0, 0.0, massNormalisedCentralBodyAngularMomentum};
-            centralBodyAngularMomentumVector_ =
-                    transformationFromCentralBodyLocalFrameToGlobalFrame * centralBodyAngularMomentumVectorInBaseFrame;
-
             // Compute Lense-Thirring term (if requested)
             if( calculateLenseThirringCorrection_ )
             {
+
+                // get angular momentum vector: normalize w.r.t. mass and find vector in the global frame
+                centralBodyAngularMomentum_ = centralBodyAngularMomentumFunction_( );
+                double massNormalisedCentralBodyAngularMomentum = centralBodyAngularMomentum_
+                        / (gravitationalParameterOfCentralBody_/physical_constants::GRAVITATIONAL_CONSTANT);
+                Eigen::Matrix3d transformationFromCentralBodyLocalFrameToGlobalFrame =
+                        quaternoidFromCentralBodyToGlobalFrameFunction_(currentTime).normalized().toRotationMatrix();
+                Eigen::Vector3d centralBodyAngularMomentumVectorInBaseFrame = {0.0, 0.0, massNormalisedCentralBodyAngularMomentum};
+                centralBodyAngularMomentumVector_ =
+                        transformationFromCentralBodyLocalFrameToGlobalFrame * centralBodyAngularMomentumVectorInBaseFrame;
+
                 currentLenseThirringAcceleration_ =  calculateLenseThirringCorrectionAcceleration(
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 0, 3 ),
                             stateOfAcceleratedBodyWrtCentralBody_.segment( 3, 3 ),

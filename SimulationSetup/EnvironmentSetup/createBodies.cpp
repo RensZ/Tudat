@@ -50,6 +50,8 @@ std::vector< std::pair< std::string, std::shared_ptr< BodySettings > > > determi
 NamedBodyMap createBodies(
         const std::map< std::string, std::shared_ptr< BodySettings > >& bodySettings )
 {
+    std::cout<<"    creating empty bodies... "<<std::endl;
+
     std::vector< std::pair< std::string, std::shared_ptr< BodySettings > > > orderedBodySettings
             = determineBodyCreationOrder( bodySettings );
 
@@ -62,6 +64,8 @@ NamedBodyMap createBodies(
         bodyMap[ orderedBodySettings.at( i ).first ] = std::make_shared< Body >( );
     }
 
+    std::cout<<"    defining constant masses... "<<std::endl;
+
     // Define constant mass for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
     {
@@ -71,6 +75,8 @@ NamedBodyMap createBodies(
             bodyMap[ orderedBodySettings.at( i ).first ]->setConstantBodyMass( constantMass );
         }
     }
+
+    std::cout<<"    creating ephemerides... "<<std::endl;
 
     // Create ephemeris objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
@@ -83,6 +89,8 @@ NamedBodyMap createBodies(
         }
     }
 
+    std::cout<<"    creating atmosphere models... "<<std::endl;
+
     // Create atmosphere model objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
     {
@@ -93,6 +101,8 @@ NamedBodyMap createBodies(
                                                orderedBodySettings.at( i ).first ) );
         }
     }
+
+    std::cout<<"    creating shape models... "<<std::endl;
 
     // Create body shape model objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
@@ -105,6 +115,8 @@ NamedBodyMap createBodies(
         }
     }
 
+    std::cout<<"    creating rotation models... "<<std::endl;
+
     // Create rotation model objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
     {
@@ -115,6 +127,8 @@ NamedBodyMap createBodies(
                                              orderedBodySettings.at( i ).first, bodyMap ) );
         }
     }
+
+    std::cout<<"    creating gravity models... "<<std::endl;
 
     // Create gravity field model objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
@@ -128,6 +142,8 @@ NamedBodyMap createBodies(
         }
     }
 
+    std::cout<<"    creating gravity field variations... "<<std::endl;
+
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
     {
         if( orderedBodySettings.at( i ).second->gravityFieldVariationSettings.size( ) > 0 )
@@ -138,6 +154,8 @@ NamedBodyMap createBodies(
                             orderedBodySettings.at( i ).second->gravityFieldVariationSettings ) );
         }
     }
+
+    std::cout<<"    creating aerodynamic models... "<<std::endl;
 
     // Create aerodynamic coefficient interface objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
@@ -151,6 +169,7 @@ NamedBodyMap createBodies(
         }
     }
 
+    std::cout<<"    creating radiation pressure models... "<<std::endl;
 
     // Create radiation pressure coefficient objects for each body (if required).
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
@@ -172,6 +191,8 @@ NamedBodyMap createBodies(
 
     }
 
+    std::cout<<"    creating ground stations... "<<std::endl;
+
     for( unsigned int i = 0; i < orderedBodySettings.size( ); i++ )
     {
         for( unsigned int j = 0; j < orderedBodySettings.at( i ).second->groundStationSettings.size( ); j++ )
@@ -180,6 +201,8 @@ NamedBodyMap createBodies(
                      orderedBodySettings.at( i ).second->groundStationSettings.at( j ) );
         }
     }
+
+    std::cout<<"    body map sucessfully created... "<<std::endl;
     return bodyMap;
 
 }
