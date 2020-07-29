@@ -315,10 +315,14 @@ std::shared_ptr< BodySettings > getDefaultSingleBodySettings(
         singleBodySettings->ephemerisSettings = getDefaultEphemerisSettings(
                     bodyName, initialTime, finalTime, timeStep );
     }
+
     singleBodySettings->gravityFieldSettings = getDefaultGravityFieldSettings(
                 bodyName, initialTime, finalTime );
-    singleBodySettings->shapeModelSettings = getDefaultBodyShapeSettings(
-                bodyName, initialTime, finalTime );
+
+    if (bodyName.substr(0,3) != "200"){ // Rens: added to filter out asteroids, for which shape parameters are not available
+        singleBodySettings->shapeModelSettings = getDefaultBodyShapeSettings(
+                    bodyName, initialTime, finalTime );
+    }
 
     return singleBodySettings;
 }
