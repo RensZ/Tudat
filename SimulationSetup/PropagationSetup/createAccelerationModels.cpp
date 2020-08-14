@@ -969,6 +969,7 @@ double getGravitationalSelfEnergy(
         else if (bodyName == "Saturn"){ bodyRadius = 58232.0E3; }
         else if (bodyName == "Uranus"){ bodyRadius = 25362.0E3; }
         else if (bodyName == "Neptune"){ bodyRadius = 24622.0E3; }
+        else if (bodyName == "2000001"){ bodyRadius = 469.73E3; } //Ceres
         else {
             throw std::runtime_error( "Error, gravitational self energy for body "
                                       + bodyName + " can not be implemented, body radius unknown");
