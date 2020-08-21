@@ -1481,8 +1481,10 @@ std::shared_ptr< relativity::RelativisticAccelerationCorrection > createRelativi
         std::shared_ptr< GravityFieldModel > gravityField2 = bodyUndergoingAcceleration->getGravityFieldModel( );
         if( gravityField2 == nullptr )
         {
-            throw std::runtime_error( "Error " + nameOfBodyUndergoingAcceleration + " does not have a gravity field " +
-                                      "when making relativistic acceleration caused by" + nameOfBodyExertingAcceleration );
+            std::cout<<"Warning: " + nameOfBodyUndergoingAcceleration + " does not have a gravity field " +
+                                      "when making relativistic acceleration caused by" + nameOfBodyExertingAcceleration <<std::endl;
+            std::cout<<"Using gravitational parameter = 0"<<std::endl;
+            acceleratedBodyGravitationalParameterFunction = [ = ]( ){ return 0.0; };
         }
         else
         {

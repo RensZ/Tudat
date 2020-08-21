@@ -200,7 +200,8 @@ public:
 
             for( typename SingleObservablePodInputType::const_iterator dataIterator =
                  observablesIterator->second.begin( ); dataIterator != observablesIterator->second.end( ); dataIterator++  ){
-                weightsMatrixDiagonals_[ observablesIterator->first ][ dataIterator->first ] = dataIterator->second.first;
+                    ObservationVectorType currentDiagonal = dataIterator->second.first;
+                    weightsMatrixDiagonals_[ observablesIterator->first ][ dataIterator->first ] = currentDiagonal.template cast<double>();
             }
         }
     }

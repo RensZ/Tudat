@@ -844,16 +844,27 @@ BOOST_AUTO_TEST_CASE( testIndividualTermsOfRelativisticAccelerationPartial )
                 ppnParameterAlpha2, accelerationModel, 100.0, emptyFunction, 1.0E6 );
 
 
-    double stateTolerance = 1.0E-3; //orginally E-7?
+    double stateTolerance; //orginally E-7?
     double parameterTolerance = 1.0E-4; //originally E-8
 
     // Compare numerical and analytical results.
     for (unsigned int i=1; i<4; i++){
 
+
+
         switch(i){
-            case 1: {std::cout<<"---- Conventional Schwarzschild correction:"<<std::endl; break;}
-            case 2: {std::cout<<"---- Schwarzschild alpha correction:"<<std::endl; break;}
-            case 3: {std::cout<<"---- Lense-thirring correction:"<<std::endl; break;}
+            case 1: {
+                        std::cout<<"---- Conventional Schwarzschild correction:"<<std::endl;
+                        stateTolerance = 1.0E-4;
+                        break; }
+            case 2: {
+                        std::cout<<"---- Schwarzschild alpha correction:"<<std::endl;
+                        stateTolerance = 1.0E-4;
+                        break; }
+            case 3: {
+                        std::cout<<"---- Lense-thirring correction:"<<std::endl;
+                        stateTolerance = 1.0E-5;
+                        break; }
         }
 
         std::cout<<"wrt sun position:"
@@ -1125,7 +1136,7 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 
 
     // Compare numerical and analytical results.
-    double stateTolerance = 1.0E-3; //orginally E-7?
+    double stateTolerance = 1.0E-4; //orginally E-7?
     double parameterTolerance = 1.0E-4; //originally E-8
 
 
@@ -1538,8 +1549,8 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 
 
         // Compare numerical and analytical results.
-        double stateTolerance = 1.0E-3; //orginally E-7?
-        double parameterTolerance = 1.0E-4; //originally E-8
+        double stateTolerance = 1.0E-4; //orginally E-7?
+        double parameterTolerance = 1.0E-5; //originally E-8
 
 
         std::cout<<"wrt sun position:"
@@ -1747,8 +1758,8 @@ BOOST_AUTO_TEST_CASE( testTimeVaryingGravitationalParameterPartial )
 
 
     // Compare numerical and analytical results.
-    double stateTolerance = 1.0E-3; //orginally E-7?
-    double parameterTolerance = 1.0E-4; //originally E-8
+    double stateTolerance = 1.0E-5; //orginally E-7?
+    double parameterTolerance = 1.0E-5; //originally E-8
 
 
     std::cout<<"wrt sun position:"
@@ -2222,7 +2233,7 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
 
 
     // Compare numerical and analytical results.
-    double parameterTolerance = 1.0E-1; //originally E-8
+    double parameterTolerance = 1.0E-3; //originally E-8
 
     std::cout<<"wrt J2 amplitude:"
              <<std::endl<<partialWrtAmplitude.transpose()
@@ -2232,6 +2243,8 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
 
     TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtAmplitude, partialWrtAmplitude, parameterTolerance );
 
+    parameterTolerance = 1.0E-1; //originally E-8
+
     std::cout<<"wrt J2 period:"
              <<std::endl<<partialWrtPeriod.transpose()
              <<std::endl<<testPartialWrtPeriod.transpose()
@@ -2239,6 +2252,8 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
              <<std::endl;
 
     TUDAT_CHECK_MATRIX_CLOSE_FRACTION( testPartialWrtPeriod, partialWrtPeriod, parameterTolerance );
+
+    parameterTolerance = 1.0E-1; //originally E-8
 
     std::cout<<"wrt J2 phase:"
              <<std::endl<<partialWrtPhase.transpose()
