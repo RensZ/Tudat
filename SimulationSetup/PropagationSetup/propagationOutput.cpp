@@ -404,6 +404,9 @@ int getDependentVariableSize(
     case de_sitter_acceleration_correction:
         variableSize = 3;
         break;
+    case sep_violation_position_correction:
+        variableSize = 3;
+        break;
     default:
         std::string errorMessage = "Error, did not recognize dependent variable size of type: " +
                 std::to_string( dependentVariableSettings->dependentVariableType_ );

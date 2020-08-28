@@ -947,15 +947,26 @@ double getGravitationalSelfEnergy(
 {
     double gravitationalSelfEnergy;
 
+    double mass = gravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT;
+
     // bodies for which gravitational self energy value is quite well known
     if (bodyName == "Sun"){
-        gravitationalSelfEnergy = -3.52E-6;
+        gravitationalSelfEnergy = -3.52E-6
+                *mass
+                *physical_constants::SPEED_OF_LIGHT
+                *physical_constants::SPEED_OF_LIGHT;
     }
     else if (bodyName == "Earth"){
-        gravitationalSelfEnergy = -4.64E-10;
+        gravitationalSelfEnergy = -4.64E-10
+                *mass
+                *physical_constants::SPEED_OF_LIGHT
+                *physical_constants::SPEED_OF_LIGHT;
     }
     else if (bodyName == "Moon"){
-        gravitationalSelfEnergy = -1.88E-11;
+        gravitationalSelfEnergy = -1.88E-11
+                *mass
+                *physical_constants::SPEED_OF_LIGHT
+                *physical_constants::SPEED_OF_LIGHT;
     }
 
     // for the other planets, approximate by assuming a sphere with uniform density
@@ -977,7 +988,7 @@ double getGravitationalSelfEnergy(
 
         gravitationalSelfEnergy =
                 (-3.0/5.0) *
-                (gravitationalParameter*gravitationalParameter/physical_constants::GRAVITATIONAL_CONSTANT)
+                (gravitationalParameter*mass)
                 /bodyRadius;
     }
 

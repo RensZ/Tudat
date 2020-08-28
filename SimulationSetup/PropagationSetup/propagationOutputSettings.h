@@ -118,7 +118,8 @@ enum PropagationDependentVariables
     schwarzschild_acceleration_correction = 47,
     schwarzschild_alphaterms_acceleration_correction = 48,
     lense_thirring_acceleration_correction = 49,
-    de_sitter_acceleration_correction = 50
+    de_sitter_acceleration_correction = 50,
+    sep_violation_position_correction = 51
 };
 
 //! Functional base class for defining settings for dependent variables that are to be saved during propagation

@@ -407,7 +407,8 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
 
 
         break;
-    }
+    }  
+
     case single_acceleration_dependent_variable:
     {
         // Check input consistency.
@@ -482,6 +483,17 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
                         break; }
                     }
 
+                } else if (accelerationDependentVariableSettings->accelerationModelType_ ==
+                           basic_astrodynamics::AvailableAcceleration::sep_violation_acceleration
+                           && accelerationDependentVariableSettings->relativisticAccelerationTerm_ > 0){
+
+                    std::shared_ptr< relativity::SEPViolationAcceleration > sepAccelerationClass =
+                            std::dynamic_pointer_cast< relativity::SEPViolationAcceleration >(
+                                listOfSuitableAccelerationModels.at( 0 ) );
+
+                    variableFunction = std::bind(&relativity::SEPViolationAcceleration::getSEPPositionCorrection,
+                                             sepAccelerationClass );
+
                 } else{
                     //std::function< Eigen::Vector3d( ) > vectorFunction =
                     variableFunction = std::bind( &basic_astrodynamics::AccelerationModel3d::getAcceleration,
@@ -493,6 +505,8 @@ std::pair< std::function< Eigen::VectorXd( ) >, int > getVectorDependentVariable
         }
         break;
     }
+
+
     case spherical_harmonic_acceleration_norm_terms_dependent_variable:
     {
         // Check input consistency.
@@ -1352,6 +1366,10 @@ std::function< double( ) > getDoubleDependentVariableFunction(
 
             break;
         }
+
+
+
+
         case single_acceleration_norm_dependent_variable:
         {
             // Check input consistency

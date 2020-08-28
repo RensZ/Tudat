@@ -215,6 +215,9 @@ std::string getDependentVariableName( const PropagationDependentVariables propag
     case de_sitter_acceleration_correction:
         variableName = "de Sitter acceleration correction ";
         break;
+    case sep_violation_position_correction:
+        variableName = "SEP violation position correction ";
+        break;
     default:
         std::string errorMessage = "Error, dependent variable " +
                 std::to_string( propagationDependentVariables ) +

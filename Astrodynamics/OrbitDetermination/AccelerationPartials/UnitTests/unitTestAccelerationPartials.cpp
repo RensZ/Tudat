@@ -1236,8 +1236,16 @@ BOOST_AUTO_TEST_CASE( testRelativisticAccelerationPartial )
 BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 {
 
-    // Load spice kernel.
-    spice_interface::loadStandardSpiceKernels( );
+    // Load spice kernels.
+    std::cout<<"loading spice kernels..."<<std::endl;
+
+    std::string kernelsPath = input_output::getSpiceKernelPath( );
+
+    std::vector< std::string > customKernels;
+    customKernels.push_back( kernelsPath + "tudat_merged_spk_kernel_thesis4.bsp" );
+    spice_interface::loadStandardSpiceKernels( customKernels );
+//            spice_interface::loadStandardSpiceKernels( );
+
     std::shared_ptr< GravityFieldSettings > gravityFieldSettings = std::make_shared< GravityFieldSettings >( central_spice );
 
     // Define bodies
@@ -1277,7 +1285,6 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         bodyMap[ bodyNames.at(i) ] = body;
 
     }
-
 
 
 
@@ -1379,7 +1386,6 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
                            bodyMap, bodyNames,
                            nordtvedtParameterFunction);
 
-
         std::function< Eigen::Vector3d( ) > sepPositionCorrectionFunctionUnsimplified =
                 std::bind( getSEPCorrectedPositionUnsimplified,
                            bodyMap.at( "Sun" ), "Sun",
@@ -1387,7 +1393,7 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
                            nordtvedtParameterFunction);
 
 //        std::cout<<useNordtvedtConstraintFunction()<<std::endl;
-//        std::cout<<sepPositionCorrectionFunction().transpose()<<std::endl;
+        std::cout<<std::setprecision(15)<<"SEP Position Correction: "<<sepPositionCorrectionFunction().transpose()<<std::endl;
 //        std::cout<<nordtvedtPartialFunction().transpose()<<std::endl;
 
         // Create acceleration model.
@@ -1413,6 +1419,15 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
                   useNordtvedtConstraintFunction,
                   nordtvedtParameterFunction
                   );
+
+        // test gravitational self energies
+        for (unsigned int b=0; b<bodyNames.size(); b++){
+            std::string currentBodyName = bodyNames.at(b);
+            double gravitationalSelfEnergy =
+                    getGravitationalSelfEnergy(currentBodyName,
+                                               bodyMap.at( currentBodyName )->getGravityFieldModel()->getGravitationalParameter());
+            std::cout<<"self energy of body "<<currentBodyName<<": "<<gravitationalSelfEnergy<<std::endl;
+        }
 
 
         // Create acceleration partial object.
@@ -1453,8 +1468,8 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         std::cout<<"relative difference: "<<((currentAcceleration-currentAccelerationUnsimplified).cwiseQuotient(currentAccelerationUnsimplified)).transpose()<<std::endl;
 
 //        std::cout<<"mu sun: "<<bodyMap.at( "Sun" )->getGravityFieldModel()->getGravitationalParameter()<<std::endl;
-//        std::cout<<"state sun: "<<bodyMap.at( "Sun" )->getState().transpose()<<std::endl;
-//        std::cout<<"state mercury: "<<bodyMap.at( "Mercury" )->getState().transpose()<<std::endl;
+        std::cout<<"state sun: "<<bodyMap.at( "Sun" )->getState().transpose()<<std::endl;
+        std::cout<<"state mercury: "<<bodyMap.at( "Mercury" )->getState().transpose()<<std::endl;
 //        std::cout<<"acceleration: "<<accelerationModel->getAcceleration().transpose()<<std::endl;
 
         Eigen::MatrixXd partialWrtSunPosition = Eigen::Matrix3d::Zero( );
@@ -1495,44 +1510,47 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
         // To replace the unit test, SEPPartialUnitTest.py is available in python,
         // where it is shown that the partial and central difference matches with tolerance of approximately 10^-15
 
-        //        Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
-        //                    sunStateSetFunction, accelerationModel, sun->getState( ), positionPerturbation, 0 );
-        //        Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
-        //                    gravitationalParameterParameter, accelerationModel, 1.0E19 );
-
-
         Eigen::Matrix3d testPartialWrtSunPosition;
-        Eigen::Vector3d testPartialWrtSunGravitationalParameter;
+//        Eigen::Vector3d testPartialWrtSunGravitationalParameter;
         if (useNordtvedtConstraintFunction()){
             testPartialWrtSunPosition
-                    << -5.254917872395E-27, 2.41689255306E-26, 1.45063710477E-26,
-                       2.4168925530635E-26, 8.8214542175E-28, -7.3907355489E-27,
-                       1.4506371047675E-26, -7.39073554885E-27, 4.37277245065E-27;
-            testPartialWrtSunGravitationalParameter
-                    << 6.9104839E-50, 9.1491455E-50, 4.1317575E-50;
+                    << 1.71045225871337E-24, -9.1653561437622E-24, -5.5179430022167E-24,
+                   -9.165356143762125E-24, -4.9310122757E-26, 3.14361797407095E-24,
+                   -5.517943002216675E-24, 3.1436179740709E-24, -1.66114213595655E-24;
+//            testPartialWrtSunGravitationalParameter
+//                    << 6.9104839E-50, 9.1491455E-50, 4.1317575E-50;
         } else{
             testPartialWrtSunPosition
-                    << -3.9411884042995E-26, 1.812669414795E-25, 1.087977828576E-25,
-                       1.81266941479565E-25, 6.6160906632E-27, -5.543051661675E-26,
-                       1.087977828576E-25, -5.54305166168E-26, 3.279579337975E-26;
-            testPartialWrtSunGravitationalParameter
-                    << 3.887147085E-48, 5.14639427E-48, 2.32411352E-48;
+                    << 1.282839193470717E-23, -6.874017107607085E-23, -4.138457251486525E-23,
+                   -6.8740171076070905E-23, -3.6982591584645E-25, 2.35771348079949E-23,
+                   -4.1384572514865265E-23, 2.35771348079948E-23, -1.24585660188609E-23;
+//            testPartialWrtSunGravitationalParameter
+//                    << 3.887147085E-48, 5.14639427E-48, 2.32411352E-48;
         }
+
+//        Eigen::Matrix3d testPartialWrtSunPosition = calculateAccelerationWrtStatePartials(
+//                    std::bind( &Body::setState, bodyMap.at( "Sun" ), std::placeholders::_1  ),
+//                    accelerationModel, bodyMap.at("Sun")->getState( ), positionPerturbation, 0 );
 
         Eigen::Matrix3d testPartialWrtSunVelocity = calculateAccelerationWrtStatePartials(
                     std::bind( &Body::setState, bodyMap.at( "Sun" ), std::placeholders::_1  ),
-                    accelerationModel,
-                    bodyMap.at( "Sun" )->getState( ),
-                    velocityPerturbation, 3 );
+                    accelerationModel, bodyMap.at( "Sun" )->getState( ), velocityPerturbation, 3 );
 
         Eigen::Matrix3d testPartialWrtMercuryPosition =
                 -1.0 * testPartialWrtSunPosition;
 
+//        Eigen::Matrix3d testPartialWrtMercuryPosition =
+//                calculateAccelerationWrtStatePartials(
+//                            std::bind( &Body::setState, bodyMap.at( "Mercury" ), std::placeholders::_1  ),
+//                            accelerationModel, bodyMap.at("Mercury")->getState( ), positionPerturbation, 0 );
+
         Eigen::Matrix3d testPartialWrtMercuryVelocity = calculateAccelerationWrtStatePartials(
                     std::bind( &Body::setState, bodyMap.at( "Mercury" ), std::placeholders::_1  ),
-                    accelerationModel,
-                    bodyMap.at( "Mercury" )->getState( ),
-                    velocityPerturbation, 3 );
+                    accelerationModel, bodyMap.at( "Mercury" )->getState( ), velocityPerturbation, 3 );
+
+
+//        Eigen::Vector3d testPartialWrtSunGravitationalParameter = calculateAccelerationWrtParameterPartials(
+//                    gravitationalParameterParameter, accelerationModel, 1.0E19 );
 
         Eigen::Vector3d testPartialWrtPpnParameterGamma = calculateAccelerationWrtParameterPartials(
                     ppnParameterGamma, accelerationModel, 100.0 );
@@ -1549,7 +1567,7 @@ BOOST_AUTO_TEST_CASE( testSEPViolationAccelerationPartial )
 
 
         // Compare numerical and analytical results.
-        double stateTolerance = 1.0E-4; //orginally E-7?
+        double stateTolerance = 1.0E-6; //orginally E-7?
         double parameterTolerance = 1.0E-5; //originally E-8
 
 

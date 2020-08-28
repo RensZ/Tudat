@@ -127,17 +127,17 @@ void computePartialOfSEPViolationAccelerationWrtGravitationalParameter(
 
     partialMatrix = partialMatrixLong.cast<double>();
 
-    std::cout<<"partial wrt grav parameter"<<std::endl;
-    std::cout<<gravitationalParameterOfCentralBody<<std::endl;
-//    std::cout<<currentConventionalAcceleration<<std::endl;
-//    std::cout<<currentCorrectedAcceleration<<std::endl;
-    std::cout<<currentAcceleration<<std::endl;
-    std::cout<<term1<<std::endl;
-    std::cout<<term2a<<std::endl;
-    std::cout<<term2b<<std::endl;
-    std::cout<<term2<<std::endl;
-    std::cout<<partialMatrixLong<<std::endl;
-    std::cout<<partialMatrix<<std::endl;
+//    std::cout<<"partial wrt grav parameter"<<std::endl;
+//    std::cout<<gravitationalParameterOfCentralBody<<std::endl;
+////    std::cout<<currentConventionalAcceleration<<std::endl;
+////    std::cout<<currentCorrectedAcceleration<<std::endl;
+//    std::cout<<currentAcceleration<<std::endl;
+//    std::cout<<term1<<std::endl;
+//    std::cout<<term2a<<std::endl;
+//    std::cout<<term2b<<std::endl;
+//    std::cout<<term2<<std::endl;
+//    std::cout<<partialMatrixLong<<std::endl;
+//    std::cout<<partialMatrix<<std::endl;
 
 
 
