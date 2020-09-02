@@ -849,8 +849,8 @@ public:
         //        propagatorSettings_->resetInitialStates(
         //                    estimatable_parameters::getInitialStateVectorOfBodiesToEstimate( parametersToEstimate_ ) );
 
-        dynamicsStateDerivative_->updateStateDerivativeModelSettings(
-                    propagatorSettings_->getInitialStates( ) );
+//        dynamicsStateDerivative_->updateStateDerivativeModelSettings(
+//                    propagatorSettings_->getInitialStates( ) );
 
         // Check if re-integration of variational equations is requested
         if( areVariationalEquationsToBeIntegrated )
