@@ -2072,6 +2072,7 @@ BOOST_AUTO_TEST_CASE( testEmpiricalAccelerationPartial )
 
 
 
+
 BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
 {
     // Define bodies
@@ -2083,11 +2084,6 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
 
     // Load spice kernel.
     spice_interface::loadStandardSpiceKernels( );
-
-    // Set vehicle and earth state.
-    double currentTime = 1.0E6;
-    double initialSimulationTime = currentTime - 3600.0*10.0;
-    double finalSimulationTime = currentTime + 3600.0*10.0;
 
     // Sun stuff
     Eigen::Vector6i solarMinimumDatetime; solarMinimumDatetime << 2008, 12, 15, 0, 0, 0;
@@ -2103,31 +2099,59 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
     double J4phase = phaseAccordingToSolarMinimum(solarMinimumEpoch, J4period); //antiphase?
 
 
-
-    // Create parameter objects.
-    std::shared_ptr< EstimatableParameter< double > > J2AmplitudeParameter
-            = std::make_shared< VariableJ2Amplitude >( "Sun", relativity::variableJ2Interface );
-    std::shared_ptr< EstimatableParameter< double > > J2PeriodParameter
-            = std::make_shared< VariableJ2Period >( "Sun", relativity::variableJ2Interface );
-    std::shared_ptr< EstimatableParameter< double > > J2PhaseParameter
-            = std::make_shared< VariableJ2Phase >( "Sun", relativity::variableJ2Interface );
-
-    std::shared_ptr< EstimatableParameter< double > > J4AmplitudeParameter
-            = std::make_shared< VariableJ4Amplitude >( "Sun", relativity::variableJ4Interface );
-    std::shared_ptr< EstimatableParameter< double > > J4PeriodParameter
-            = std::make_shared< VariableJ4Period >( "Sun", relativity::variableJ4Interface );
-    std::shared_ptr< EstimatableParameter< double > > J4PhaseParameter
-            = std::make_shared< VariableJ4Phase >( "Sun", relativity::variableJ4Interface );
-
+    // Set vehicle and earth state.
+    double currentTime = solarMinimumEpoch;// + 0.25*solarCycleDuration;
+    std::cout<<"currentTime: "<<currentTime<<std::endl;
+    double initialSimulationTime = currentTime - 3600.0*10.0;
+    double finalSimulationTime = currentTime + 3600.0*10.0;
 
     // Loop over different cases
-    double deltaAmplitude = J2amplitude/10.0;
-    double deltaPeriod = J2period/10.0;
-    double deltaPhase = J2phase/10.0;
+    double deltaAmplitude = J2amplitude*100.0;
+    double deltaPeriod = J2period*0.9;
+    double deltaPhase = J2phase/2.0;
     std::shared_ptr< SphericalHarmonicsGravitationalAccelerationModel > accelerationModel;
     std::vector< Eigen::Vector3d > accelerationVectors;
 
     for (int i=0; i<7; i++){
+
+        // Set parameters depending on loop entry
+        switch (i){
+        case 1: {
+            variableJ2Interface->setAmplitude(J2amplitude+deltaAmplitude);
+            variableJ2Interface->setPeriod(J2period+deltaPeriod);
+            variableJ2Interface->setPhase(J2phase);
+            break; };
+        case 2: {
+            variableJ2Interface->setAmplitude(J2amplitude-deltaAmplitude);
+            variableJ2Interface->setPeriod(J2period+deltaPeriod);
+            variableJ2Interface->setPhase(J2phase);
+            break; };
+        case 3: {
+            variableJ2Interface->setAmplitude(J2amplitude);
+            variableJ2Interface->setPeriod(J2period+deltaPeriod);
+            variableJ2Interface->setPhase(J2phase);
+            break; };
+        case 4: {
+            variableJ2Interface->setAmplitude(J2amplitude);
+            variableJ2Interface->setPeriod(J2period-deltaPeriod);
+            variableJ2Interface->setPhase(J2phase);
+            break; };
+        case 5: {
+            variableJ2Interface->setAmplitude(J2amplitude);
+            variableJ2Interface->setPeriod(J2period);
+            variableJ2Interface->setPhase(J2phase+deltaPhase);
+            break; };
+        case 6: {
+            variableJ2Interface->setAmplitude(J2amplitude);
+            variableJ2Interface->setPeriod(J2period);
+            variableJ2Interface->setPhase(J2phase-deltaPhase);
+            break; };
+        default:
+            variableJ2Interface->setAmplitude(J2amplitude);
+            variableJ2Interface->setPeriod(J2period);
+            variableJ2Interface->setPhase(J2phase);
+            break;
+        }
 
         // Default body settings
         std::map< std::string, std::shared_ptr< BodySettings > > bodySettings;
@@ -2138,14 +2162,19 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
         Eigen::MatrixXd cosineCoefficients = Eigen::MatrixXd::Zero(3,3);
         cosineCoefficients(0,0) = 1.0;
 
-        double sunJ2 = 2.0E-7 / calculateLegendreGeodesyNormalizationFactor(2,0);
+        double sunJ2 = 1000.0*2.0E-7 / calculateLegendreGeodesyNormalizationFactor(2,0);
+
+        // for calculating central differences, we need to know what the J2 is at the point in time after the sine has changed
+        // here manually is added what the J2 including correction should be after a certain change
+        // values are taken from myApplications/Output/SHtable/
         switch (i){
-        case 0: {sunJ2 += 1.00539772566339e-07;}; break;
-        case 1: {sunJ2 += 8.22598139179135e-08;}; break;
-        case 2: {sunJ2 += 9.10638720606101e-08;}; break;
-        case 3: {sunJ2 += 9.18100274104794e-08;}; break;
-        case 4: {sunJ2 += 1.9822515289775e-07;}; break;
-        case 5: {sunJ2 += -5.47860394859948e-08;}; break;
+        case 0: {sunJ2 += -2.25842865727479e-05;}; break;
+        case 1: {sunJ2 += 2.21370729772479e-05;}; break;
+        case 2: {sunJ2 += 1.6832688234686e-07;}; break;
+        case 3: {sunJ2 += 1.04303591421461e-07;}; break;
+        case 4: {sunJ2 += 2.19082972768739e-07;}; break;
+        case 5: {sunJ2 += 2.19082972768739e-07;}; break;
+        case 6: {sunJ2 += -2.23606797749979e-07;}; break;
         default: {sunJ2 += 0;} break;
         }
 
@@ -2186,22 +2215,10 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
 
         bodySettings[ "Sun" ]->gravityFieldVariationSettings = gravityFieldVariationSettings;
 
-        relativity::variableJ2Interface->setAmplitude(J2amplitude);
-        relativity::variableJ2Interface->setPeriod(J2period);
-        relativity::variableJ2Interface->setPhase(J2phase);
-
-        switch (i){
-        case 0: {variableJ2Interface->setAmplitude(J2amplitude+deltaAmplitude);}; break;
-        case 1: {variableJ2Interface->setAmplitude(J2amplitude-deltaAmplitude);}; break;
-        case 2: {variableJ2Interface->setPeriod(J2period+deltaPeriod);}; break;
-        case 3: {variableJ2Interface->setPeriod(J2period-deltaPeriod);}; break;
-        case 4: {variableJ2Interface->setPhase(J2phase+deltaPhase);}; break;
-        case 5: {variableJ2Interface->setPhase(J2phase-deltaPhase);}; break;
-        }
 
         // Create body map
         NamedBodyMap bodyMap = createBodies( bodySettings );
-        setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
+        setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );        
 
         bodyMap.at("Sun")->setState( getBodyCartesianStateAtEpoch(  "Sun", "SSB", "J2000", "NONE", currentTime ) );
         bodyMap.at("Mercury")->setState( getBodyCartesianStateAtEpoch(  "Mercury", "SSB", "J2000", "NONE", currentTime ) );
@@ -2228,6 +2245,11 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
                  <<"case "<<i<<" acc: "<<currentAcceleration.transpose()
                  <<std::setprecision(5)<<std::endl;
 
+        accelerationModel->updateMembers( currentTime + 3600.0*9.0);
+        std::cout<<std::setprecision(15)
+                 <<"9h later: "<<accelerationModel->getAcceleration().transpose()
+                 <<std::setprecision(5)<<std::endl;
+
     }
 
 
@@ -2236,6 +2258,21 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
             std::make_shared< SphericalHarmonicsGravityPartial >(
                 "Mercury", "Sun", accelerationModel);
 
+    // Create parameter objects.
+    std::shared_ptr< EstimatableParameter< double > > J2AmplitudeParameter
+            = std::make_shared< VariableJ2Amplitude >( "Sun", relativity::variableJ2Interface );
+    std::shared_ptr< EstimatableParameter< double > > J2PeriodParameter
+            = std::make_shared< VariableJ2Period >( "Sun", relativity::variableJ2Interface );
+    std::shared_ptr< EstimatableParameter< double > > J2PhaseParameter
+            = std::make_shared< VariableJ2Phase >( "Sun", relativity::variableJ2Interface );
+
+    std::shared_ptr< EstimatableParameter< double > > J4AmplitudeParameter
+            = std::make_shared< VariableJ4Amplitude >( "Sun", relativity::variableJ4Interface );
+    std::shared_ptr< EstimatableParameter< double > > J4PeriodParameter
+            = std::make_shared< VariableJ4Period >( "Sun", relativity::variableJ4Interface );
+    std::shared_ptr< EstimatableParameter< double > > J4PhaseParameter
+            = std::make_shared< VariableJ4Phase >( "Sun", relativity::variableJ4Interface );
+
     // Calculate analytical partials.
     accelerationPartial->update( currentTime );
     Eigen::Vector3d partialWrtAmplitude = accelerationPartial->wrtParameter( J2AmplitudeParameter );
@@ -2243,15 +2280,15 @@ BOOST_AUTO_TEST_CASE( testTimeVariableGraviationalMoments )
     Eigen::Vector3d partialWrtPhase = accelerationPartial->wrtParameter( J2PhaseParameter );
 
     Eigen::Vector3d testPartialWrtAmplitude =
-            (accelerationVectors.at(0) - accelerationVectors.at(1)) / (2.0 * deltaAmplitude);
+            (accelerationVectors.at(1) - accelerationVectors.at(2)) / (2.0 * deltaAmplitude);
     Eigen::Vector3d testPartialWrtPeriod =
-            (accelerationVectors.at(2) - accelerationVectors.at(3)) / (2.0 * deltaPeriod);
+            (accelerationVectors.at(3) - accelerationVectors.at(4)) / (2.0 * deltaPeriod);
     Eigen::Vector3d testPartialWrtPhase =
-            (accelerationVectors.at(4) - accelerationVectors.at(5)) / (2.0 * deltaPhase);
+            (accelerationVectors.at(5) - accelerationVectors.at(6)) / (2.0 * deltaPhase);
 
 
     // Compare numerical and analytical results.
-    double parameterTolerance = 1.0E-3; //originally E-8
+    double parameterTolerance = 1.0E-5; //originally E-8
 
     std::cout<<"wrt J2 amplitude:"
              <<std::endl<<partialWrtAmplitude.transpose()

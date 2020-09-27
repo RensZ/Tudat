@@ -12,6 +12,8 @@
 #define TUDAT_VARIABLEJ2INTERFACE_H
 
 #include <memory>
+#include <iostream>
+#include <iomanip>
 
 #include <Eigen/Core>
 
@@ -38,11 +40,15 @@ public:
     //! Destructor
     ~VariableJ2Interface( ){ }
 
-    double getAmplitude( ){ return amplitude_; }
+    double getAmplitude( ){
+        std::cout<<std::setprecision(15)<<"J2 amplitude is retreived: "<<amplitude_<<std::setprecision(5)<<std::endl;
+        return amplitude_; }
     double getPeriod( ){return period_; }
     double getPhase( ){return phase_; }
 
-    void setAmplitude( const double amplitude ){ amplitude_ = amplitude; }
+    void setAmplitude( const double amplitude ){
+        std::cout<<std::setprecision(15)<<"J2 amplitude gets an update. old value: "<<amplitude_<<" new value: "<<amplitude<<std::setprecision(5)<<std::endl;
+        amplitude_ = amplitude; }
     void setPeriod( const double period ){ period_ = period; }
     void setPhase( const double phase ){ phase_ = phase; }
 

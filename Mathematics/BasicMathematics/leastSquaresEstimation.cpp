@@ -112,8 +112,8 @@ std::pair< Eigen::VectorXd, Eigen::MatrixXd > performLeastSquaresAdjustmentFromI
 //    std::cout<<"informationMatrix "<<informationMatrix<<std::endl;
 //    std::cout<<"Weight diag. "<<diagonalOfWeightMatrix.transpose( )<<std::endl;
 
-    std::cout<<"cMult "<<constraintMultiplier<<std::endl;
-    std::cout<<"cRHS "<<constraintRightHandside.transpose( )<<std::endl;
+//    std::cout<<"cMult "<<constraintMultiplier<<std::endl;
+//    std::cout<<"cRHS "<<constraintRightHandside.transpose( )<<std::endl;
 
 
     Eigen::VectorXd rightHandSide = informationMatrix.transpose( ) *
@@ -150,8 +150,8 @@ std::pair< Eigen::VectorXd, Eigen::MatrixXd > performLeastSquaresAdjustmentFromI
         rightHandSide.segment( numberOfParameters, numberOfConstraints ) = constraintRightHandside;
     }
 
-    std::cout<<"RHS "<<rightHandSide.transpose( )<<std::endl;
-    std::cout<<"Inv cov "<<inverseOfCovarianceMatrix<<std::endl;
+//    std::cout<<"RHS "<<rightHandSide.transpose( )<<std::endl;
+//    std::cout<<"Inv cov "<<inverseOfCovarianceMatrix<<std::endl;
 
     return std::make_pair( solveSystemOfEquationsWithSvd(
                                inverseOfCovarianceMatrix, rightHandSide, checkConditionNumber, maximumAllowedConditionNumber ),

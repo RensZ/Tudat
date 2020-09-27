@@ -451,8 +451,8 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
     calculateSphericalHarmonicGravityWrtCCoefficients(
                 bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
                 gravitationalParameterFunction_( ), sphericalHarmonicCache_,
-                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(
-                    bodyFixedPosition_ ), fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(bodyFixedPosition_ ),
+                fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
                 2, 0 );
 
     double secondPartialTerm = sin(
@@ -463,6 +463,12 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
               );
 
     partialDerivatives = firstPartialTerm * secondPartialTerm;
+
+//    std::cout<<"t: "<<currentTime_
+//             <<" 1stTerm: "<<firstPartialTerm.transpose()
+//             <<" 2ndTerm: "<<secondPartialTerm
+//             <<" partial: "<<partialDerivatives.transpose()
+//             <<std::endl;
 
 }
 
