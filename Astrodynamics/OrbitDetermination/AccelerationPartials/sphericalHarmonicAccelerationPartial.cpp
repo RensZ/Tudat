@@ -374,6 +374,7 @@ void SphericalHarmonicsGravityPartial::update( const double currentTime )
         // Get spherical harmonic coefficients
         currentCosineCoefficients_ = cosineCoefficients_( );
         currentSineCoefficients_ = sineCoefficients_( );
+        std::cout<<currentTime<<currentCosineCoefficients_(2,0)<<std::endl;
 
         // Update trogonometric functions of multiples of longitude.
         sphericalHarmonicCache_->update(
@@ -448,12 +449,14 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
     J2indices.push_back(std::make_pair(2, 0));
 
     Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
-    calculateSphericalHarmonicGravityWrtCCoefficients(
-                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
-                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
-                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(bodyFixedPosition_ ),
-                fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
-                2, 0 );
+//    calculateSphericalHarmonicGravityWrtCCoefficients(
+//                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
+//                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
+//                J2indices, coordinate_conversions::getSphericalToCartesianGradientMatrix(bodyFixedPosition_ ),
+//                fromBodyFixedToIntegrationFrameRotation_( ), firstPartialTerm,
+//                2, 0 );
+
+    wrtCosineCoefficientBlock(J2indices, firstPartialTerm );
 
     double secondPartialTerm = sin(
                 2.0 * mathematical_constants::PI
@@ -462,7 +465,7 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
                 + relativity::variableJ2Interface->getPhase()
               );
 
-    partialDerivatives = firstPartialTerm * secondPartialTerm;
+    partialDerivatives = firstPartialTerm * secondPartialTerm;// * -554.5851368433528;
 
 //    std::cout<<"t: "<<currentTime_
 //             <<" 1stTerm: "<<firstPartialTerm.transpose()
