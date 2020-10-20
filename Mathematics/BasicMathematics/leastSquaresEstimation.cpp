@@ -103,7 +103,7 @@ std::pair< Eigen::VectorXd, Eigen::MatrixXd > performLeastSquaresAdjustmentFromI
         const bool checkConditionNumber,
         const double maximumAllowedConditionNumber,
         const Eigen::MatrixXd& constraintMultiplier,
-        const Eigen::VectorXd& constraintRightHandside )
+        const Eigen::VectorXd& constraintRightHandside)
 {
 //    std::cout<<"Residuals "<<observationResiduals.transpose( )<<std::endl;
 //    std::cout<<"Weight diag. "<<diagonalOfWeightMatrix.transpose( )<<std::endl;
@@ -112,14 +112,17 @@ std::pair< Eigen::VectorXd, Eigen::MatrixXd > performLeastSquaresAdjustmentFromI
 //    std::cout<<"informationMatrix "<<informationMatrix<<std::endl;
 //    std::cout<<"Weight diag. "<<diagonalOfWeightMatrix.transpose( )<<std::endl;
 
-//    std::cout<<"cMult "<<constraintMultiplier<<std::endl;
-//    std::cout<<"cRHS "<<constraintRightHandside.transpose( )<<std::endl;
-
+    std::cout<<"cMult "<<constraintMultiplier<<std::endl;
+    std::cout<<"cRHS "<<constraintRightHandside.transpose( )<<std::endl;
 
     Eigen::VectorXd rightHandSide = informationMatrix.transpose( ) *
             ( diagonalOfWeightMatrix.cwiseProduct( observationResiduals ) );
     Eigen::MatrixXd inverseOfCovarianceMatrix = calculateInverseOfUpdatedCovarianceMatrix(
                 informationMatrix, diagonalOfWeightMatrix, inverseOfAPrioriCovarianceMatrix );
+
+    Eigen::MatrixXd inverseOfCovarianceMatrixBeforeConstraints = inverseOfCovarianceMatrix;
+
+//    Eigen::MatrixXd inverseOfAlternativeCovariance;
 
     // Add constraints to inverse covariance matrix if required
     if( constraintMultiplier.rows( ) != 0 )
@@ -148,14 +151,25 @@ std::pair< Eigen::VectorXd, Eigen::MatrixXd > performLeastSquaresAdjustmentFromI
 
         rightHandSide.conservativeResize( numberOfParameters + numberOfConstraints );
         rightHandSide.segment( numberOfParameters, numberOfConstraints ) = constraintRightHandside;
+
+//        // Calculate alternative covariance matrix
+//        std::cout<<"Covariance: "<<inverseOfCovarianceMatrix.inverse()<<std::endl;
+//        Eigen::MatrixXd YZ = constraintMultiplier.transpose().householderQr().householderQ();
+//        std::cout<<"YZ: "<<YZ<<std::endl;
+//        Eigen::MatrixXd Z = YZ.block(0,numberOfConstraints,numberOfParameters,numberOfParameters-numberOfConstraints);
+//        std::cout<<"Z: "<<Z<<std::endl;
+//        Eigen::MatrixXd alternativeCovariance = Z * ( Z.transpose() * inverseOfCovarianceMatrixBeforeConstraints * Z ).inverse() * Z.transpose();
+//        std::cout<<"Alternative Covariance: "<<alternativeCovariance<<std::endl;
+//        inverseOfCovarianceMatrixBeforeConstraints = alternativeCovariance.inverse();
+
     }
 
-//    std::cout<<"RHS "<<rightHandSide.transpose( )<<std::endl;
-//    std::cout<<"Inv cov "<<inverseOfCovarianceMatrix<<std::endl;
+    std::cout<<"RHS "<<rightHandSide.transpose( )<<std::endl;
+    std::cout<<"Inv cov "<<inverseOfCovarianceMatrix<<std::endl;
 
     return std::make_pair( solveSystemOfEquationsWithSvd(
                                inverseOfCovarianceMatrix, rightHandSide, checkConditionNumber, maximumAllowedConditionNumber ),
-                           inverseOfCovarianceMatrix );
+                           inverseOfCovarianceMatrixBeforeConstraints );
 
 }
 

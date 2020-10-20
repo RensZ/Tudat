@@ -24,6 +24,7 @@ namespace relativity
 std::shared_ptr< VariableJ2Interface > variableJ2Interface =
         std::make_shared< VariableJ2Interface >( 0.0,
                                                  11.0*physical_constants::JULIAN_YEAR,
+                                                 0.0,
                                                  0.0);
 
 

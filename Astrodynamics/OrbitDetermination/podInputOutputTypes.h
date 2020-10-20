@@ -226,7 +226,8 @@ public:
                                    const bool printOutput = 1,
                                    const bool saveResidualsAndParametersFromEachIteration = 1,
                                    const bool saveStateHistoryForEachIteration = 0,
-                                   const bool enforceNordtvedtConstraintInEstimation = 0 )
+                                   const bool enforceNordtvedtConstraintInEstimation = 0,
+                                   const bool useCentralDifferencePartialsForAmplitude = 0)
     {
         reintegrateEquationsOnFirstIteration_ = reintegrateEquationsOnFirstIteration;
         reintegrateVariationalEquations_ = reintegrateVariationalEquations;
@@ -235,6 +236,7 @@ public:
         saveResidualsAndParametersFromEachIteration_ = saveResidualsAndParametersFromEachIteration;
         saveStateHistoryForEachIteration_ = saveStateHistoryForEachIteration;
         enforceNordtvedtConstraintInEstimation_ = enforceNordtvedtConstraintInEstimation;
+        useCentralDifferencePartialsForAmplitude_ = useCentralDifferencePartialsForAmplitude;
     }
 
     //! Function to return the total data structure of observations and associated times/link ends/type (by reference)
@@ -345,6 +347,11 @@ public:
         return enforceNordtvedtConstraintInEstimation_;
     }
 
+    bool getUseCentralDifferencePartialsForAmplitude( )
+    {
+        return useCentralDifferencePartialsForAmplitude_;
+    }
+
 
 private:
     //! Total data structure of observations and associated times/link ends/type
@@ -380,6 +387,8 @@ private:
 
     //! Boolean denoting whether the nordtvedt constraint is to be enforced in the estimation.
     bool enforceNordtvedtConstraintInEstimation_;
+
+    bool useCentralDifferencePartialsForAmplitude_;
 
     int numberOfPPNParameters_;
 
@@ -537,7 +546,8 @@ struct PodOutput
      */
     Eigen::MatrixXd getUnnormalizedCovarianceMatrix( )
     {
-        Eigen::MatrixXd unnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.block(0,0,numberOfParameters_,numberOfParameters_).inverse( );
+        //Eigen::MatrixXd unnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.block(0,0,numberOfParameters_,numberOfParameters_).inverse( );
+        Eigen::MatrixXd unnormalizedCovarianceMatrix = inverseNormalizedCovarianceMatrix_.inverse( ).block(0,0,numberOfParameters_,numberOfParameters_);
 
         for( int i = 0; i < informationMatrixTransformationDiagonal_.rows( ); i++ )
         {

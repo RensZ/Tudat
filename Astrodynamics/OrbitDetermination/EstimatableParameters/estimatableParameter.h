@@ -586,6 +586,17 @@ public:
         return estimatedVectorParameters_;
     }
 
+    int getAmplitudeIndex( ){
+        int amplitudeIndex = -1;
+        for( auto parameterIterator : doubleParameters_ )
+        {
+            if( parameterIterator.second->getParameterName( ).first == estimatable_parameters::variable_J2_amplitude )
+            {
+                amplitudeIndex = parameterIterator.first;
+            }
+        }
+    }
+
     //! Function to retrieve the start index and size of (a) parameters(s) with a given identifier
     /*!
      * Function to retrieve the start index and size of (a) parameters(s) with a given identifier
@@ -755,7 +766,8 @@ public:
     }
 
     void getNordtvedtConstraint( Eigen::MatrixXd& constraintStateMultiplier,
-                                 Eigen::VectorXd& constraintRightHandSide){
+                                 Eigen::VectorXd& constraintRightHandSide,
+                                 const double weightOnConstraint){
 
         // Resize amount of constraints if nordvedt constraint should be enforced
         totalConstraintSize_ = 1;
@@ -777,16 +789,16 @@ public:
             switch(parameterName){
             case estimatable_parameters::ppn_parameter_gamma:
                 gammaIsPresent = true;
-                coeffInNordtvedtConstraint = 1.0; break;
+                coeffInNordtvedtConstraint = weightOnConstraint*1.0; break;
             case estimatable_parameters::ppn_parameter_beta:
                 betaIsPresent = true;
-                coeffInNordtvedtConstraint = -4.0; break;
+                coeffInNordtvedtConstraint = weightOnConstraint*-4.0; break;
             case estimatable_parameters::ppn_parameter_alpha1:
-                coeffInNordtvedtConstraint = 1.0; break;
+                coeffInNordtvedtConstraint = weightOnConstraint*1.0; break;
             case estimatable_parameters::ppn_parameter_alpha2:
-                coeffInNordtvedtConstraint = 2.0/3.0; break;
+                coeffInNordtvedtConstraint = weightOnConstraint*2.0/3.0; break;
             case estimatable_parameters::ppn_nordtvedt_parameter:
-                coeffInNordtvedtConstraint = 1.0; break;
+                coeffInNordtvedtConstraint = weightOnConstraint*1.0; break;
             default:
                 break;
             }
@@ -796,12 +808,12 @@ public:
         }
 
         // if gamma or beta are not present, the outcome has to change (e.g. when gamma/beta is a consider parameter)
-        constraintRightHandSide(totalConstraintSize_-1, 0 ) = -3.0;
+        constraintRightHandSide(totalConstraintSize_-1, 0 ) = weightOnConstraint*-3.0;
         if (gammaIsPresent == false){
-            constraintRightHandSide(totalConstraintSize_-1, 0 ) += -1.0;
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += weightOnConstraint*-1.0;
         }
         if (betaIsPresent == false){
-            constraintRightHandSide(totalConstraintSize_-1, 0 ) += 4.0;
+            constraintRightHandSide(totalConstraintSize_-1, 0 ) += weightOnConstraint*4.0;
         }
 
 //        std::cout<<"constraintStateMultiplier:"<<std::endl;

@@ -511,6 +511,30 @@ public:
             calculateObservationMatrixAndResiduals(
                         podInput->getObservationsAndTimes( ), parameterVectorSize, totalNumberOfObservations, residualsAndPartials );
 
+            // Manually set amplitude partials
+            if (podInput->getUseCentralDifferencePartialsForAmplitude()){
+
+//               int amplitudeParameterIndex = parametersToEstimate_->getAmplitudeIndex();
+               int amplitudeParameterIndex = numberOfEstimatedParameters-2;
+               std::cout<<"Amplitude index HARDCODED to be the een-na-laatste parameter"<<std::endl;
+
+                if (amplitudeParameterIndex < 0){
+                    std::cout<<"no index for amplitude found, assuming it is not included in the estimation, moving on."<<std::endl;
+                }
+                else {
+                    Eigen::MatrixXd centralDifferencesAmplitude =
+                            input_output::readMatrixFromFile("/home/rens/tudatBundle/tudatApplications/thesis/MyApplications/Input/CentralDifferenceDelta10.txt");
+
+                    std::cout<<"dimensions residualsAndPartials: "<<residualsAndPartials.second.rows()<<" "<<residualsAndPartials.second.cols()
+                             <<" dimensions centralDifferencesAmplitude: "<<centralDifferencesAmplitude.rows()<<" "<<centralDifferencesAmplitude.cols()
+                             <<" amplitude index: "<<amplitudeParameterIndex<<std::endl;
+
+                    residualsAndPartials.second.block(0,amplitudeParameterIndex,residualsAndPartials.second.rows(),1) = centralDifferencesAmplitude;
+                }
+            }
+
+            // partials amplitude uit bestand laden (met een minnetje)
+            
             Eigen::VectorXd transformationData = normalizeObservationMatrix( residualsAndPartials.second );
 
             Eigen::MatrixXd normalizedInverseAprioriCovarianceMatrix = Eigen::MatrixXd::Zero(
@@ -537,12 +561,13 @@ public:
                 std::cout<<"warning: function getConstraints is commented out"<<std::endl;
 
                 if (podInput->getEnforceNordtvedtConstraintInEstimation()){
-                    parametersToEstimate_->getNordtvedtConstraint( constraintStateMultiplier, constraintRightHandSide );
+                    parametersToEstimate_->getNordtvedtConstraint( constraintStateMultiplier, constraintRightHandSide, 100000.0 );
                 }
 
 //                std::cout<<"csMult "<<constraintStateMultiplier<<std::endl;
 //                std::cout<<"csRHS "<<constraintRightHandSide.transpose( )<<std::endl;
 
+//                Eigen::MJ1TJ1
 
                 leastSquaresOutput =
                         std::move( linear_algebra::performLeastSquaresAdjustmentFromInformationMatrix(
@@ -552,6 +577,7 @@ public:
 
                 if( constraintStateMultiplier.rows( ) > 0 )
                 {
+                    std::cout<<"solution constrained LS problem:"<<leastSquaresOutput.first.transpose()<<std::endl;
                     leastSquaresOutput.first.conservativeResize( parameterVectorSize );
                 }
             }

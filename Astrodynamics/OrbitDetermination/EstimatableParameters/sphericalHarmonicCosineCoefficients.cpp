@@ -9,6 +9,7 @@
  */
 
 #include "Tudat/Astrodynamics/OrbitDetermination/EstimatableParameters/sphericalHarmonicCosineCoefficients.h"
+#include "Tudat/Astrodynamics/Relativity/variableJ2Interface.h"
 
 namespace tudat
 {
@@ -39,6 +40,12 @@ void SphericalHarmonicsCosineCoefficients::setParameterValue( const Eigen::Vecto
     for( unsigned int i = 0; i < blockIndices_.size( ); i++ )
     {
         coefficients( blockIndices_.at( i ).first, blockIndices_.at( i ).second ) = parameterValue( i );
+
+        // if J2, set global coefficient
+        if (blockIndices_.at( i ).first == 2 && blockIndices_.at( i ).second == 0){
+            using namespace tudat::relativity;
+            relativity::variableJ2Interface->setMeanJ2( parameterValue( i ) );
+        }
     }
     setCosineCoefficients_( coefficients );
 }

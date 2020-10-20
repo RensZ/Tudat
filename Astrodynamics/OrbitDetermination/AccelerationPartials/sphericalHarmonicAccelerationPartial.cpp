@@ -122,7 +122,6 @@ std::pair< std::function< void( Eigen::MatrixXd& ) >, int > SphericalHarmonicsGr
         numberOfRows = 1;
     }
 
-
     else if( parameter->getParameterName( ).second.first == acceleratingBody_ )
     {
         // Check if partial is a rotational property of body exerting acceleration.
@@ -374,7 +373,11 @@ void SphericalHarmonicsGravityPartial::update( const double currentTime )
         // Get spherical harmonic coefficients
         currentCosineCoefficients_ = cosineCoefficients_( );
         currentSineCoefficients_ = sineCoefficients_( );
-        std::cout<<currentTime<<currentCosineCoefficients_(2,0)<<std::endl;
+
+        // HARDCODED
+//        using namespace tudat::relativity;
+//        currentCosineCoefficients_(2,0) = relativity::variableJ2Interface->getMeanJ2( );
+//        std::cout<<currentTime<<currentCosineCoefficients_(2,0)<<std::endl;
 
         // Update trogonometric functions of multiples of longitude.
         sphericalHarmonicCache_->update(
@@ -448,7 +451,7 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
     std::vector< std::pair< int, int> > J2indices;
     J2indices.push_back(std::make_pair(2, 0));
 
-    Eigen::MatrixXd firstPartialTerm( partialDerivatives.rows(), partialDerivatives.cols() );
+    Eigen::MatrixXd firstPartialTerm = Eigen::MatrixXd::Zero( 3, 1 );
 //    calculateSphericalHarmonicGravityWrtCCoefficients(
 //                bodyFixedSphericalPosition_, bodyReferenceRadius_( ),
 //                gravitationalParameterFunction_( ), sphericalHarmonicCache_,
@@ -458,14 +461,14 @@ void SphericalHarmonicsGravityPartial::wrtVariableJ2Amplitude(
 
     wrtCosineCoefficientBlock(J2indices, firstPartialTerm );
 
-    double secondPartialTerm = sin(
-                2.0 * mathematical_constants::PI
-                * currentTime_
-                / relativity::variableJ2Interface->getPeriod()
-                + relativity::variableJ2Interface->getPhase()
-              );
+    double period = relativity::variableJ2Interface->getPeriod();
+    double phase = relativity::variableJ2Interface->getPhase();
 
-    partialDerivatives = firstPartialTerm * secondPartialTerm;// * -554.5851368433528;
+    double secondPartialTerm = sin( 2.0 * mathematical_constants::PI * currentTime_ / period + phase );
+
+//    std::cout<<currentTime_<<period<<" "<<phase<<std::endl;
+
+    partialDerivatives = firstPartialTerm * secondPartialTerm; //*-0.5;
 
 //    std::cout<<"t: "<<currentTime_
 //             <<" 1stTerm: "<<firstPartialTerm.transpose()

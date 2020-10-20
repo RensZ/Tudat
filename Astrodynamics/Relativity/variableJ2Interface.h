@@ -31,10 +31,12 @@ public:
 
     VariableJ2Interface( const double amplitude,
                          const double period,
-                         const double phase):
+                         const double phase,
+                         const double meanJ2):
         amplitude_( amplitude ),
         period_( period ),
-        phase_( phase )
+        phase_( phase ),
+        meanJ2_( meanJ2 )
     { }
 
     //! Destructor
@@ -45,18 +47,25 @@ public:
         return amplitude_; }
     double getPeriod( ){return period_; }
     double getPhase( ){return phase_; }
+    double getMeanJ2( ){
+        //std::cout<<std::setprecision(15)<<"J2 mean is retreived: "<<meanJ2_<<std::setprecision(5)<<std::endl;
+        return meanJ2_; }
 
     void setAmplitude( const double amplitude ){
         std::cout<<std::setprecision(15)<<"J2 amplitude gets an update. old value: "<<amplitude_<<" new value: "<<amplitude<<std::setprecision(5)<<std::endl;
         amplitude_ = amplitude; }
     void setPeriod( const double period ){ period_ = period; }
     void setPhase( const double phase ){ phase_ = phase; }
+    void setMeanJ2( const double meanJ2 ){
+        std::cout<<std::setprecision(15)<<"J2 mean gets an update. old value: "<<meanJ2_<<" new value: "<<meanJ2<<std::setprecision(5)<<std::endl;
+        meanJ2_ = meanJ2; }
 
 protected:
 
     double amplitude_;
     double period_;
     double phase_;
+    double meanJ2_;
 
 };
 
